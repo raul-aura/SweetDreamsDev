@@ -33,7 +33,7 @@ public:
 
 
 protected:
-	void BeginPlay() override;
+	virtual void PostInitializeComponents() override;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TArray<TSubclassOf<USweetDreamsWidget>> DefaultWidgets;

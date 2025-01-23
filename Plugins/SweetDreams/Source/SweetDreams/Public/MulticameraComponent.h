@@ -13,12 +13,15 @@ struct FCameraViews
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Sweet Dreams Multicamera", meta = (DisplayName = "Camera Location"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams Multicamera", meta = (DisplayName = "Camera Location"))
 	FVector Location;
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Sweet Dreams Multicamera", meta = (DisplayName = "Camera Rotation"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams Multicamera", meta = (DisplayName = "Camera Rotation"))
 	FRotator Rotation;
 
-	FCameraViews() {}
+	FCameraViews()
+		: Location(FVector(0)),
+		Rotation(FRotator(0))
+	{}
 };
 
 UCLASS(ClassGroup = ("SweetDreams"), meta = (BlueprintSpawnableComponent, ToolTip = "This component enables the management of multiple cameras on the same actor. Similar to a View Target Blend, but with internal cameras inside a single actor.\n\nUse the function SetNewCameraView() to transfer the settings of a secondary camera to the primary one."))

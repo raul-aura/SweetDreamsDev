@@ -30,11 +30,20 @@ bool UBattleState::IsTriggerableAction(UBattleAction* Action) const
 
 void UBattleState::ApplyState(UObject* Instigator)
 {
-	if (!Instigator) return;
+	if (!IsValid(Instigator)) return;
 	StateInstigator = Instigator;
 	AddStacks();
 	ResetLifetime();
+	ShowMessage();
+	if (bAlreadyAppliedOnce)
+	{
+		OnReapplied();
+		RecalculateParams();
+		return;
+	}
 	OnApplied();
+	OnUpdateParams();
+	ApplyParams();
 	bAlreadyAppliedOnce = true;
 }
 
@@ -108,9 +117,10 @@ void UBattleState::ConsumeLifetime(EStateLifetime LifetimeToConsume)
 
 void UBattleState::RemoveState()
 {
-	if (Owner)
+	UBattlerDataComponent* Data = UBattlerDataComponent::GetBattlerDataComponent(GetOwner());
+	if (IsValid(Data))
 	{
-		Owner->RemoveState(GetClass());
+		Data->RemoveState(GetClass());
 	}
 }
 
@@ -122,4 +132,66 @@ int32 UBattleState::GetRemainingLifetime() const
 float UBattleState::GetRemainingLifetimeSeconds() const
 {
 	return FloatLifetime;
+}
+
+void UBattleState::ApplyParams()
+{
+	if (IsValid(GetOwner()))
+	{
+		UBattlerDataComponent* Data = UBattlerDataComponent::GetBattlerDataComponent(GetOwner());
+		if (IsValid(Data))
+		{
+			Data->UpdateHealthValue(Health, HealthPercentage);
+			Data->UpdateManaValue(Mana, ManaPercentage);
+			Data->UpdateForceValue(Force, ForcePercentage);
+			Data->UpdateForceMultiplier(ForceMultiplier);
+			Data->UpdateResistenceValue(Resistence, ResistencePercentage);
+			Data->UpdateResistenceMultiplier(ResistenceMultiplier);
+			Data->UpdateSpeedValue(Speed, SpeedPercentage);
+			Data->UpdateSpeedMultiplier(SpeedMultiplier);
+			Data->UpdateDamageDealtMultiplier(DamageDealtMultiplier);
+			Data->UpdateDamageReceivedMultiplier(DamageReceivedMultiplier);
+			Data->UpdateHealMultiplier(HealMultiplier);
+			Data->UpdateManaRestoreMultiplier(ManaRestoreMultiplier);
+			Data->UpdateAdditionalActions(Actions);
+			Data->UpdateAdditionalLives(Lives);
+		}
+	}
+}
+
+void UBattleState::RemoveParams()
+{
+	if (IsValid(GetOwner()))
+	{
+		UBattlerDataComponent* Data = UBattlerDataComponent::GetBattlerDataComponent(GetOwner());
+		if (IsValid(Data))
+		{
+			Data->UpdateHealthValue(-Health, -HealthPercentage);
+			Data->UpdateManaValue(-Mana, -ManaPercentage);
+			Data->UpdateForceValue(-Force, -ForcePercentage);
+			Data->UpdateForceMultiplier(-ForceMultiplier);
+			Data->UpdateResistenceValue(-Resistence, -ResistencePercentage);
+			Data->UpdateResistenceMultiplier(-ResistenceMultiplier);
+			Data->UpdateSpeedValue(-Speed, -SpeedPercentage);
+			Data->UpdateSpeedMultiplier(-SpeedMultiplier);
+			Data->UpdateDamageDealtMultiplier(-DamageDealtMultiplier);
+			Data->UpdateDamageReceivedMultiplier(-DamageReceivedMultiplier);
+			Data->UpdateHealMultiplier(-HealMultiplier);
+			Data->UpdateManaRestoreMultiplier(-ManaRestoreMultiplier);
+			Data->UpdateAdditionalActions(-Actions);
+			Data->UpdateAdditionalLives(-Lives);
+		}
+	}
+}
+
+void UBattleState::RecalculateParams()
+{
+	RemoveParams();
+	OnUpdateParams();
+	ApplyParams();
+}
+
+float UBattleState::OnPreDamageReceived_Implementation(float DamageAmount, AActor* DamageInstigator)
+{
+	return DamageAmount;
 }

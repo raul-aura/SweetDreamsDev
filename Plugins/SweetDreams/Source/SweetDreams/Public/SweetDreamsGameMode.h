@@ -4,12 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "SweetDreamsCore.h"
-#include "SweetDreamsState.h"
 #include "GameFramework/GameModeBase.h"
 #include "SweetDreamsGameMode.generated.h"
 
 class USweetDreamsCore;
-class ASweetDreamsState;
 struct FDreamUserSettings;
 
 UCLASS()
@@ -22,34 +20,18 @@ class SWEETDREAMS_API ASweetDreamsGameMode : public AGameModeBase
 public:
 	virtual void BeginPlay() override;
 
-	// STATE
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Game Mode")
-	ASweetDreamsState* GetStateByName(FName StateName) const;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Game Mode")
-	ASweetDreamsState* GetStateByIndex(int32 Index) const;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Game Mode")
-	void StartState(ASweetDreamsState* State);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Game Mode", meta = (DisplayName = "Create And Add State", ReturnDisplayName = "Success"))
-	bool CreateAddState(TSubclassOf<ASweetDreamsState> StateClass);
-
 	// LEVEL LOAD
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
 	ULoadingWidget* CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class);
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams Core|Loading")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams|Core")
 	float LoadingDelay = 3.f;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Sweet Dreams|Core")
 	ULoadingWidget* LoadingWidget;
 
 protected:
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly, Category = "Sweet Dreams|Core")
 	USweetDreamsCore* Core = nullptr;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams Core|Loading")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams|Core")
 	TSubclassOf<ULoadingWidget> LoadingWidgetClass;
-
-	// STATE
-	UPROPERTY(BlueprintReadWrite, Category = "States")
-	TArray<ASweetDreamsState*> DreamStates;
-	UPROPERTY(BlueprintReadOnly, Category = "States")
-	ASweetDreamsState* CurrentState;
 };

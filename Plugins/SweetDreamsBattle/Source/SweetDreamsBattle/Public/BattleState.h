@@ -15,73 +15,157 @@ enum class EStateLifetime : uint8
 	Second UMETA(DisplayName = "Seconds"),
 };
 
+UENUM(BlueprintType)
+enum class EStateType : uint8
+{
+	NONE,
+	POSITIVE,
+	NEGATIVE,
+};
+
 UCLASS()
 class SWEETDREAMSBATTLE_API UBattleState : public UBattleElement
 {
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Battle State")
 	UObject* StateInstigator = nullptr;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	virtual UObject* GetStateInstigator() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	virtual TArray<UObject*> GetInstigatorAsArray() const;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle State")
 	TArray<TSubclassOf<UBattleAction>> TriggerableActions;
-	// add an TArray of triggerable actions
-	// create enum with State Type: Positive, Negative, None
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle State")
+	EStateType StateType;
 
 	// STACKS
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stacks")
 	bool bIsStackable = true;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stacks")
 	bool bConsumeStacks = true;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (DisplayName = "Auto Consume Stacks on Lifetime"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stacks", meta = (DisplayName = "Auto Consume Stacks on Lifetime"))
 	bool bAutoConsumeStacks = false;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (ClampMin = "1"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stacks", meta = (ClampMin = "1"))
 	int32 InitialStacks = 1;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (ClampMin = "1"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stacks", meta = (ClampMin = "1"))
 	int32 MaxStacks = 1;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Stacks")
 	int32 Stacks = 0;
 
 	// LIFETIME
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Lifetime")
 	bool bAlreadyAppliedOnce = false;
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Lifetime")
 	EStateLifetime Lifetime = EStateLifetime::Permanent;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (EditCondition = "Lifetime==EStateLifetime::Turn", ClampMin = "1"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lifetime", meta = (EditCondition = "Lifetime==EStateLifetime::Turn", ClampMin = "1"))
 	int32 TurnsToEnd = 1;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (EditCondition = "Lifetime==EStateLifetime::Action", ClampMin = "1"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lifetime", meta = (EditCondition = "Lifetime==EStateLifetime::Action", ClampMin = "1"))
 	int32 ActionsToEnd = 1;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (EditCondition = "Lifetime==EStateLifetime::Second", ClampMin = "0.1"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lifetime", meta = (EditCondition = "Lifetime==EStateLifetime::Second", ClampMin = "0.1"))
 	float SecondsToEnd = 0.1f;
-	UPROPERTY(BlueprintReadOnly, meta = (DisplayName = "Lifetime (Turns/Actions)"))
+	UPROPERTY(BlueprintReadOnly, Category = "Lifetime", meta = (DisplayName = "Lifetime (Turns/Actions)"))
 	int32 IntLifetime = 0;
-	UPROPERTY(BlueprintReadOnly, meta = (DisplayName = "Lifetime (Seconds)"))
+	UPROPERTY(BlueprintReadOnly, Category = "Lifetime", meta = (DisplayName = "Lifetime (Seconds)"))
 	float FloatLifetime = 0.f;
+
+	// PARAMS
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Base Params")
+	float BaseHealth = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Base Params", meta = (Units = "%"))
+	float BaseHealthPercentage = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Base Params")
+	float BaseMana = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Base Params", meta = (Units = "%"))
+	float BaseManaPercentage = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Base Params")
+	float BaseForce = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Base Params", meta = (Units = "%"))
+	float BaseForcePercentage = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Base Params")
+	float BaseResistence = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Base Params", meta = (Units = "%"))
+	float BaseResistencePercentage = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Base Params")
+	int32 BaseSpeed = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Base Params", meta = (Units = "%"))
+	float BaseSpeedPercentage = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Base Params")
+	int32 BaseActions = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Base Params")
+	int32 BaseLives = 0;
+	UPROPERTY(BlueprintReadWrite, Category = "Params")
+	float Health = 0;
+	UPROPERTY(BlueprintReadWrite, Category = "Params")
+	float HealthPercentage = 0;
+	UPROPERTY(BlueprintReadWrite, Category = "Params")
+	float Mana = 0;
+	UPROPERTY(BlueprintReadWrite, Category = "Params")
+	float ManaPercentage = 0;
+	UPROPERTY(BlueprintReadWrite, Category = "Params")
+	float Force = 0;
+	UPROPERTY(BlueprintReadWrite, Category = "Params")
+	float ForcePercentage = 0;
+	UPROPERTY(BlueprintReadWrite, Category = "Params")
+	float Resistence = 0;
+	UPROPERTY(BlueprintReadWrite, Category = "Params")
+	float ResistencePercentage = 0;
+	UPROPERTY(BlueprintReadWrite, Category = "Params")
+	int32 Speed = 0;
+	UPROPERTY(BlueprintReadWrite, Category = "Params")
+	float SpeedPercentage = 0;
+	UPROPERTY(BlueprintReadWrite, Category = "Params")
+	int32 Actions = 0;
+	UPROPERTY(BlueprintReadWrite, Category = "Params")
+	int32 Lives = 0;
+	// MULTIPLIERS
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Multipliers", meta = (Units = "%"))
+	float ForceMultiplier = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Multipliers", meta = (Units = "%"))
+	float ResistenceMultiplier = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Multipliers", meta = (Units = "%"))
+	float SpeedMultiplier = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Multipliers", meta = (Units = "%"))
+	float DamageDealtMultiplier = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Multipliers", meta = (Units = "%"))
+	float DamageReceivedMultiplier = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Multipliers", meta = (Units = "%"))
+	float HealMultiplier = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Multipliers", meta = (Units = "%"))
+	float ManaRestoreMultiplier = 0;
 
 public:
 	// EVENTS
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	void OnApplied();
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
+	void OnReapplied();
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	void OnTurnStart(int32 Turn = 0);
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	void OnActionEnd(UBattleAction* Action);
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
+	void OnActionCountIncremented(int32 ActionCount);
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	void OnOwnerTick(float DeltaTime);
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
+	void OnManaRestored(float RestoredAmount);
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
+	void OnManaConsumed(float ConsumedAmount);
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
+	void OnHealed(float HealedAmount);
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
+	void OnDamageDealt(float DamageAmount, bool bKilledTarget);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
+	float OnPreDamageReceived(float DamageAmount, AActor* DamageInstigator);
+	float OnPreDamageReceived_Implementation(float DamageAmount, AActor* DamageInstigator);
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
+	void OnPostDamageReceived(float DamageAmount, AActor* DamageInstigator);
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	void OnRemoved();
-	// CREATE EVENTS:
-	// OnManaRestored
-	// OnHealed
-	// OnDamageDealt
-	// OnDamageReceived
-	
 	//
-	UFUNCTION(BlueprintCallable, meta = (ExpandBoolAsExecs = "ReturnValue"))
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|State", meta = (ExpandBoolAsExecs = "ReturnValue"))
 	virtual bool IsTriggerableAction(UBattleAction* Action) const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	virtual void ApplyState(UObject* Instigator);
@@ -104,4 +188,15 @@ public:
 	FText GetDurationAsText() const;
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	FText GetInstigatorAsText() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|State")
+	EStateType GetStateType() const { return StateType; }
+	// PARAMS
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Item")
+	virtual void ApplyParams();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Item")
+	virtual void RemoveParams();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Item")
+	virtual void RecalculateParams();
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
+	void OnUpdateParams();
 };

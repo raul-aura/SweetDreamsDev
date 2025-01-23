@@ -39,17 +39,15 @@ ASweetDreamsCharacter::ASweetDreamsCharacter()
 
 void ASweetDreamsCharacter::BeginPlay()
 {
-	Super::BeginPlay();
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	}
 	if (GetDreamController())
 	{
 		GetDreamController()->SetOrigin(this);
 	}
-}
-
-void ASweetDreamsCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+	Super::BeginPlay();
 }
 
 ASweetDreamsController* ASweetDreamsCharacter::GetDreamController() const

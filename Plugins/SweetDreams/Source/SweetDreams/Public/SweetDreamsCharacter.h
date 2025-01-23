@@ -29,38 +29,37 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Camera)
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Components")
 	ECameraPerspective CameraPerspective;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* Camera;
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UMulticameraComponent* MulticameraComponent;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams|Core|Character")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
 	float WalkSpeed = 600.f;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams|Core|Character")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
 	float RunSpeed = 900.f;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams|Core|Character")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
 	float MaxRunTime = 0.f;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Core")
 	bool bIsRunning = false;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Core")
 	bool bCanRun = false;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Core")
 	float CurrentRunTime = 0.f;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Core")
 	FTimerHandle RunTimer;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
 	bool bCanMove = true;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
 	bool bCanMoveCamera = true;
 
 public:	
-	virtual void Tick(float DeltaTime) override;
 	//
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
 	ASweetDreamsController* GetDreamController() const;

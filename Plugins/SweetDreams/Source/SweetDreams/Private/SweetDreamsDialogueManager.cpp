@@ -2,6 +2,13 @@
 
 #include "SweetDreamsDialogueManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Camera/CameraComponent.h"
+#include "MulticameraComponent.h"
+#include "SweetDreamsHUD.h"
+#include "Components/AudioComponent.h"
+#include "DialogueWidget.h"
+#include "LevelSequencePlayer.h"
+#include "LevelSequenceActor.h"
 #include "GameFramework/Character.h"
 
 ASweetDreamsDialogueManager::ASweetDreamsDialogueManager()
@@ -16,18 +23,46 @@ ASweetDreamsDialogueManager::ASweetDreamsDialogueManager()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Primary Camera"));
 	CameraComponent->SetupAttachment(CameraGroup);
 
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("Audio Component"));
+	AudioComponent->SetupAttachment(RootComponent);
+
 	MulticameraComponent = CreateDefaultSubobject<UMulticameraComponent>(TEXT("Multicamera Component"));
 	AddOwnedComponent(MulticameraComponent);
 }
 
 void ASweetDreamsDialogueManager::BeginPlay()
 {
+	if (bGetDataTableDialogues) GetDialoguesFromDataTable(DialogueTable);
+	if (bGetDataTableChoiceDialogues) GetChoiceDialoguesFromDataTable(ChoiceDialogueTable);
 	Super::BeginPlay();
 }
 
 void ASweetDreamsDialogueManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (bIsDialogueActive && bUseAnimatedDialogue)
+	{
+		if (IsValid(DialogueWidget))
+		{
+			DialogueWidget->AnimatedDialogueBody = DialogueBodyAnimated;
+		}
+		if (!CurrentDialogue.DialogueBody.IsEmpty() && !CurrentDialogue.DialogueBody.EqualTo(DialogueBodyAnimated))
+		{
+			bIsAnimating = true;
+			LetterDisplayElapsed += DeltaTime;
+			if (LetterDisplayElapsed >= LetterDisplayRate && CurrentLetterIndex < FullDialogueBody.Len())
+			{
+				FString AnimatedText = FullDialogueBody.Left(CurrentLetterIndex + 1);
+				DialogueBodyAnimated = FText::FromString(AnimatedText);
+				++CurrentLetterIndex;
+				LetterDisplayElapsed = 0.f;
+			}
+		}
+		else
+		{
+			bIsAnimating = false;
+		}
+	}
 }
 
 void ASweetDreamsDialogueManager::StartDialogue(float TransitionDuration)
@@ -49,6 +84,19 @@ void ASweetDreamsDialogueManager::StartDialogue(float TransitionDuration)
 			Player->SetViewTargetWithBlend(this, TransitionDuration);
 		}
 	}
+	if (IsValid(DialogueWidgetClass))
+	{
+		if (ASweetDreamsHUD* SweetDreamsHUD = Cast<ASweetDreamsHUD>(GetWorld()->GetFirstPlayerController()->GetHUD()))
+		{
+			DialogueWidget = Cast<UDialogueWidget>(ASweetDreamsHUD::FindWidgetByClass(DialogueWidgetClass));
+			if (IsValid(DialogueWidget))
+			{
+				DialogueWidget->DialogueManager = this;
+				SweetDreamsHUD->ShowWidget(DialogueWidget);
+				DialogueWidget->OnDialogueStarted();
+			}
+		}
+	}
 	bIsDialogueActive = true;
 	UpdateDialogue();
 	OnDialogueStarted();
@@ -56,6 +104,12 @@ void ASweetDreamsDialogueManager::StartDialogue(float TransitionDuration)
 
 void ASweetDreamsDialogueManager::UpdateDialogue()
 {
+	if (bIsSelectingChoices) return;
+	if (bUseAnimatedDialogue && bIsAnimating)
+	{
+		DialogueBodyAnimated = CurrentDialogue.DialogueBody;
+		return;
+	}
 	if (CurrentDialogueID >= Dialogues.Num() - 1)
 	{
 		EndDialogue();
@@ -63,13 +117,32 @@ void ASweetDreamsDialogueManager::UpdateDialogue()
 	}
 	CurrentDialogueID = FMath::Clamp(++CurrentDialogueID, 0, Dialogues.Num());
 	CurrentDialogue = Dialogues[CurrentDialogueID];
-	AddDialogueToLog(CurrentDialogueID);
-	UGameplayStatics::PlaySound2D(this, CurrentDialogue.DialogueAudio);
-	if (bPossessThis)
+	EDialogueMode CurrentMode = CurrentDialogue.Mode;
+	switch (CurrentMode)
 	{
-		MulticameraComponent->SetNewCameraView(CurrentDialogue.CameraID, CurrentDialogue.CameraBlend);
+	case EDialogueMode::DIALOGUE:
+		ProcessDialogue(CurrentDialogue);
+		break;
+	case EDialogueMode::SEQUENCE:
+		StartSequence(CurrentDialogue);
+		break;
+	default:
+		break;
 	}
-	OnDialogueChanged(CurrentDialogue, CurrentDialogueID);
+}
+
+void ASweetDreamsDialogueManager::ApplyChoiceAndContinue(int32 ChoiceIndex)
+{
+	if (!AllChoiceDialogues.IsValidIndex(ChoiceIndex)) return;
+	DialogueLog[CurrentDialogueID].UpdateChoice(CurrentDialogue.Choices[ChoiceIndex]);
+	bIsSelectingChoices = false;
+	TArray<FSweetDreamsDialogue> SelectedChoiceDialogues = AllChoiceDialogues[ChoiceIndex].ChoiceDialogues;
+	int32 InsertIndex = FMath::Min(CurrentDialogueID + 1, Dialogues.Num());
+	for (int32 i = 0; i < SelectedChoiceDialogues.Num(); ++i)
+	{
+		Dialogues.Insert(SelectedChoiceDialogues[i], InsertIndex + i);
+	}
+	UpdateDialogue();
 }
 
 void ASweetDreamsDialogueManager::EndDialogue()
@@ -97,6 +170,11 @@ void ASweetDreamsDialogueManager::EndDialogue()
 		{
 			Character->SetActorHiddenInGame(false);
 		}
+	}
+	if (IsValid(DialogueWidget))
+	{
+		DialogueWidget->OnDialogueEnded();
+		DialogueWidget->DialogueManager = nullptr;
 	}
 	OnDialogueEnded();
 }
@@ -163,36 +241,101 @@ void ASweetDreamsDialogueManager::AddDialogueToLog(int32 DialogueID)
 {
 	FText LogText = Dialogues[DialogueID].DialogueBody;
 	FText LogName = Dialogues[DialogueID].DialogueName;
-	FSweetDreamsDialogueLog NewLog = FSweetDreamsDialogueLog(LogName, LogText);
+	FSweetDreamsDialogueLog NewLog = FSweetDreamsDialogueLog(LogText, LogName, FText());
 	DialogueLog.Add(NewLog);
 }
 
-void ASweetDreamsDialogueManager::DisplayAnimatedDialogue(const FSweetDreamsDialogue& OriginalDialogue, FSweetDreamsDialogue& UpdatedDialogue)
+void ASweetDreamsDialogueManager::GetDialoguesFromDataTable(UDataTable* Data)
 {
-	OriginalBody = OriginalDialogue.DialogueBody.ToString();
-	if (OriginalBody.IsEmpty()) return;
-	AnimatedIndex = 0;
-	AnimatedDialogue = OriginalDialogue;
-	AnimatedDialogue.DialogueBody = FText::GetEmpty();
-	UpdatedDialogueInstance = AnimatedDialogue;
-	UpdatedDialogue = UpdatedDialogueInstance;
-	GetWorldTimerManager().SetTimer(DialogueTimer, this, &ASweetDreamsDialogueManager::DisplayNextLetter, LetterDisplayRate, true);
+	if (!IsValid(Data)) return;
+	TArray<FSweetDreamsDialogue*> LoadedDialogues;
+	Data->GetAllRows<FSweetDreamsDialogue>(TEXT("Populate Dialogues"), LoadedDialogues);
+	Dialogues.Empty(); 
+	for (FSweetDreamsDialogue* Row : LoadedDialogues)
+	{
+		if (Row)
+		{
+			Dialogues.Add(*Row);
+		}
+	}
 }
 
-void ASweetDreamsDialogueManager::DisplayNextLetter()
+void ASweetDreamsDialogueManager::GetChoiceDialoguesFromDataTable(UDataTable* Data)
 {
-	if (AnimatedIndex < OriginalBody.Len())
+	if (!IsValid(Data)) return;
+	TArray<FSweetDreamsChoiceDialogues*> LoadedChoiceDialogues;
+	Data->GetAllRows<FSweetDreamsChoiceDialogues>(TEXT("Populate Dialogues"), LoadedChoiceDialogues);
+	AllChoiceDialogues.Empty();
+	for (FSweetDreamsChoiceDialogues* Row : LoadedChoiceDialogues)
 	{
-		FString AnimatedBody = AnimatedDialogue.DialogueBody.ToString();
-		AnimatedBody.AppendChar(OriginalBody[AnimatedIndex]);
-		AnimatedDialogue.DialogueBody = FText::FromString(AnimatedBody);
-		UpdatedDialogueInstance = AnimatedDialogue;
-		AnimatedIndex++;
+		if (Row)
+		{
+			AllChoiceDialogues.Add(*Row);
+		}
 	}
-	else
+}
+
+void ASweetDreamsDialogueManager::StartSequence(FSweetDreamsDialogue Dialogue)
+{
+	if (!IsValid(Dialogue.DialogueSequence))
 	{
-		GetWorldTimerManager().ClearTimer(DialogueTimer);
+		UpdateDialogue();
+		return;
 	}
+	SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), Dialogue.DialogueSequence, FMovieSceneSequencePlaybackSettings(), SequenceActor);
+	if (!IsValid(SequencePlayer)) return;
+	SequencePlayer->Play();
+	SequencePlayer->OnFinished.AddDynamic(this, &ASweetDreamsDialogueManager::EndSequence);
+	if (IsValid(DialogueWidget))
+	{
+		DialogueWidget->OnSequenceStarted();
+	}
+}
+
+void ASweetDreamsDialogueManager::EndSequence()
+{
+	if (IsValid(DialogueWidget))
+	{
+		DialogueWidget->OnSequenceEnded();
+	}
+	SequencePlayer = nullptr;
+	if (IsValid(SequenceActor))
+	{
+		SequenceActor->Destroy();
+		SequenceActor = nullptr;
+	}
+	UpdateDialogue();
+}
+
+void ASweetDreamsDialogueManager::ProcessDialogue(FSweetDreamsDialogue Dialogue)
+{
+	FullDialogueBody = CurrentDialogue.DialogueBody.ToString();
+	CurrentLetterIndex = 0;
+	LetterDisplayElapsed = 0.f;
+	AddDialogueToLog(CurrentDialogueID);
+	if (CurrentDialogue.DialogueAudio)
+	{
+		AudioComponent->SetSound(CurrentDialogue.DialogueAudio);
+		AudioComponent->Play();
+	}
+	if (bPossessThis && CurrentDialogue.CameraID >= 0)
+	{
+		MulticameraComponent->SetNewCameraView(CurrentDialogue.CameraID, CurrentDialogue.CameraBlend);
+	}
+	bIsSelectingChoices = CurrentDialogue.Choices.Num() > 0;
+	if (IsValid(DialogueWidget))
+	{
+		DialogueWidget->SetCurrentDialogue(CurrentDialogue);
+		if (bIsSelectingChoices)
+		{
+			DialogueWidget->ShowChoices();
+		}
+		else
+		{
+			DialogueWidget->HideChoices();
+		}
+	}
+	OnDialogueChanged(CurrentDialogue, CurrentDialogueID);
 }
 
 

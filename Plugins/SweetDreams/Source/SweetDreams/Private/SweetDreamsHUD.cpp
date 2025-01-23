@@ -6,9 +6,9 @@
 
 TArray<USweetDreamsWidget*> ASweetDreamsHUD::AllWidgets;
 
-void ASweetDreamsHUD::BeginPlay()
+void ASweetDreamsHUD::PostInitializeComponents()
 {
-	Super::BeginPlay();
+	Super::PostInitializeComponents();
 	CreateWidgets();
 }
 

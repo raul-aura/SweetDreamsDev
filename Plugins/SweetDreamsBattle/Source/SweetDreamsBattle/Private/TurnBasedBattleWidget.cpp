@@ -3,6 +3,11 @@
 
 #include "TurnBasedBattleWidget.h"
 
+UTurnBasedBattleWidget::UTurnBasedBattleWidget()
+{
+	WidgetName = "TurnbasedBattle";
+}
+
 void UTurnBasedBattleWidget::SetBattleManager(ATurnBasedBattle* Battle)
 {
 	if (!Battle)

@@ -13,6 +13,9 @@ class SWEETDREAMSBATTLE_API UBattlerParameterWidget : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void DefineActor(AActor* ParamaterOwner);
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void UpdateParameters(class UBattlerDataComponent* BattlerParameters);
 };
 

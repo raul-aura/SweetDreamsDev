@@ -17,7 +17,7 @@ struct FEnemyGroups
 public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	TArray<TSoftClassPtr<ABattleCharacter>> EnemyGroup;
+	TArray<TSoftClassPtr<AActor>> EnemyGroup;
 
 	FEnemyGroups() {}
 };
@@ -33,24 +33,38 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	// BATTLE
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings", meta = (ClampMin = "0"))
+	float BattleSpeed = 1.f;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings")
+	bool bHandleDuplicateEnemyNames = true;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings")
+	bool bHandleDuplicateAllyNames = false;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings")
+	bool bUseAlphabeticalSuffix = false;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings")
+	bool bIgnoreZForTransform = true;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings")
+	float TransformDistanceTolerance = 25.f;
+
 	// UI
 	UPROPERTY(BlueprintReadWrite, Category = "UI")
-	UTurnBasedBattleWidget* TurnBattleWidget;
+	UTurnBasedBattleWidget* TurnBattleWidget = nullptr;
 
 	// BATTLERS
 	UPROPERTY(BlueprintReadOnly, Category = "Battlers")
-	TArray<ABattleCharacter*> AllBattlers;
+	TArray<AActor*> AllBattlers;
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
 	USceneComponent* AllyRoot; 
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
 	USceneComponent* EnemyRoot;
 	//
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battlers", meta = (DisplayName = "Enemies"))
-	TArray<TSoftClassPtr<ABattleCharacter>> EnemyClasses;
+	TArray<TSoftClassPtr<AActor>> EnemyClasses;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battlers")
 	TArray<FTransform> EnemyTransforms;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battlers", meta = (DisplayName = "Allies", EditCondition = "bGetAlliesFromPlayerController==false", EditConditionHides))
-	TArray<TSoftClassPtr<ABattleCharacter>> AllyClasses;
+	TArray<TSoftClassPtr<AActor>> AllyClasses;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battlers")
 	TArray<FTransform> AllyTransforms;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battlers")
@@ -76,10 +90,10 @@ protected:
 	TArray<UBattleAction*> Actions;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Action")
 	TSubclassOf<UBattleInputAction> InputActionClass;
-	UPROPERTY(BlueprintReadOnly, Category = "Action")
+	UPROPERTY(BlueprintReadWrite, Category = "Action")
 	int32 CurrentAction = 0;
 	UPROPERTY(BlueprintReadWrite, Category = "Action")
-	ABattleCharacter* CurrentActionBattler = nullptr;
+	AActor* CurrentActionBattler = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Action", meta = (ClampMin = "0"))
 	float ActionDelay = 0.5f;
 
@@ -92,37 +106,54 @@ public:
 	virtual void LoadBattlers_Implementation() override;
 	virtual bool EvaluateEndBattle_Implementation() override;
 	virtual void EndBattle(float BlendTime = 2.0f) override;
+	// LOAD SPAWN
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager", meta = (DisplayName = "Load and Spawn Battlers"))
-	virtual void LoadSpawnBattlers(TArray<TSoftClassPtr<ABattleCharacter>> Battlers, UPARAM(ref) TArray<ABattleCharacter*>& BattlerGroup, USceneComponent* BattlerRoot, TArray<FTransform> TransformGroup);
-	virtual bool IsNameEqual(const TArray<ABattleCharacter*>& BattlerGroup, const FText& NameToCheck);
-	
+	virtual void LoadSpawnBattlers(TArray<TSoftClassPtr<AActor>> Battlers, EBattlerType BattlerType, USceneComponent* BattlerRoot, TArray<FTransform> TransformGroup);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual void GetAlliesFromArray(TArray<TSoftClassPtr<ABattleCharacter>> NewAllies);
+	virtual void HandleDuplicateNames(const TArray<AActor*>& Battlers);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual void GetEnemiesFromArray(TArray<TSoftClassPtr<ABattleCharacter>> NewEnemies);
+	virtual void GetAlliesFromArray(TArray<TSoftClassPtr<AActor>> NewAllies);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
+	virtual void GetEnemiesFromArray(TArray<TSoftClassPtr<AActor>> NewEnemies);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual void LoadEnemiesGroup(int32 Index);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual TArray<FTransform> GetRandomAllyTransforms() const;
+	virtual void LoadRandomEnemyGroup();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual TArray<FTransform> GetRandomEnemyTransforms() const;
-	UFUNCTION()
-	virtual TArray<FTransform> GetRandomTransforms(const TArray<ABattleCharacter*>& BattlerGroup, const TArray<FTransform>& TransformGroup) const;
+	virtual AActor* SpawnEnemy(TSubclassOf<AActor> EnemyClass, bool bSpawnOnlyIfEmpty = true);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
+	virtual AActor* SpawnAlly(TSubclassOf<AActor> AllyClass, bool bSpawnOnlyIfEmpty = true);
+	// TRANSFORM
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
+	virtual FTransform GetFreeAllyTransform() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
+	virtual FTransform GetFreeEnemyTransform() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
+	virtual FTransform GetFreeTransform(EBattlerType BattlerType) const;
+	// SPEED
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
+	virtual float GetBattleSpeed() const { return BattleSpeed; }
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
+	virtual void ChangeBattleSpeed(float NewSpeed = 1.0f);
 	// UI
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual UTurnBasedBattleWidget* GetTurnBattleWidget() const;
 	// GETTERS
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual void GetTargetsAllPossible(UPARAM(ref) UBattleAction*& Action, bool bUpdateCameraView = false);
+	virtual void GetTargetsAllPossible(UPARAM(ref) UBattleAction*& Action, bool bUpdateCameraView = false, bool bOppositeGroup = false);
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG|Turn Battle Manager", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static ATurnBasedBattle* FindActiveTurnBattle(const UObject* WorldContext, UPARAM(DisplayName="Battle Index") int32& BattleId);
+	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG|Turn Battle Manager", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	static ATurnBasedBattle* FindTurnBattleByIndex(const UObject* WorldContext, int32 Index);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
+	FString GetBattlerBaseName(const FString& Name);
 	// TURNS
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual void StartTurn();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual void LoadTurnActions(TArray<ABattleCharacter*> Characters, bool bIsAlly);
+	virtual void LoadTurnActions(TArray<AActor*> Characters, bool bIsAlly);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual void AddTurnAction(UBattleAction* Action, bool bIgnoreSpeed = false);
+	virtual void AddTurnAction(UBattleAction* Action, bool bIgnoreSpeed = false, int32 IndexToAdd = -1);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager", meta = (ReturnDisplayName = "Found and Removed"))
 	virtual bool RemoveTurnAction(UBattleAction* Action);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")

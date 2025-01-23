@@ -19,7 +19,7 @@ USweetDreamsBPLibrary::USweetDreamsBPLibrary(const FObjectInitializer& ObjectIni
 USweetDreamsCore* USweetDreamsBPLibrary::GetSweetDreamsCore(const UObject* WorldContext)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")))
+	if (!IsValid(WorldContext) && !IsValid(World))
 	{
 		return nullptr;
 	}
@@ -33,7 +33,7 @@ USweetDreamsCore* USweetDreamsBPLibrary::GetSweetDreamsCore(const UObject* World
 ASweetDreamsGameMode* USweetDreamsBPLibrary::GetSweetDreamsGameMode(const UObject* WorldContext)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")))
+	if (!IsValid(WorldContext) && !IsValid(World))
 	{
 		return nullptr;
 	}
@@ -43,7 +43,7 @@ ASweetDreamsGameMode* USweetDreamsBPLibrary::GetSweetDreamsGameMode(const UObjec
 bool USweetDreamsBPLibrary::CreateSaveGame(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, bool bIsPersistent)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")))
+	if (!IsValid(WorldContext) && !IsValid(World))
 	{
 		return false;
 	}
@@ -61,7 +61,7 @@ bool USweetDreamsBPLibrary::CreateSaveGame(const UObject* WorldContext, TSubclas
 bool USweetDreamsBPLibrary::SaveGame(const UObject* WorldContext, USweetDreamsSaveFile* SaveObject, bool bIsPersistent)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")))
+	if (!IsValid(WorldContext) && !IsValid(World))
 	{
 		return false;
 	}
@@ -79,7 +79,7 @@ bool USweetDreamsBPLibrary::SaveGame(const UObject* WorldContext, USweetDreamsSa
 USweetDreamsSaveFile* USweetDreamsBPLibrary::LoadSaveGame(const UObject* WorldContext, bool bIsPersistent)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")))
+	if (!IsValid(WorldContext) && !IsValid(World))
 	{
 		return nullptr;
 	}
@@ -97,7 +97,7 @@ USweetDreamsSaveFile* USweetDreamsBPLibrary::LoadSaveGame(const UObject* WorldCo
 USweetDreamsSavePersistent* USweetDreamsBPLibrary::GetPersistentSave(const UObject* WorldContext)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")))
+	if (!IsValid(WorldContext) && !IsValid(World))
 	{
 		return nullptr;
 	}
@@ -115,7 +115,7 @@ USweetDreamsSavePersistent* USweetDreamsBPLibrary::GetPersistentSave(const UObje
 USweetDreamsSaveLocal* USweetDreamsBPLibrary::GetLocalSave(const UObject* WorldContext)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")))
+	if (!IsValid(WorldContext) && !IsValid(World))
 	{
 		return nullptr;
 	}
@@ -133,7 +133,7 @@ USweetDreamsSaveLocal* USweetDreamsBPLibrary::GetLocalSave(const UObject* WorldC
 FDreamUserSettings USweetDreamsBPLibrary::GetUserSettings(const UObject* WorldContext)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")))
+	if (!IsValid(WorldContext) && !IsValid(World))
 	{
 		return FDreamUserSettings();
 	}
@@ -152,7 +152,7 @@ FDreamUserSettings USweetDreamsBPLibrary::GetUserSettings(const UObject* WorldCo
 void USweetDreamsBPLibrary::SetUserSettings(const UObject* WorldContext, FDreamUserSettings Settings)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")))
+	if (!IsValid(WorldContext) && !IsValid(World))
 	{
 		return;
 	}
@@ -170,7 +170,7 @@ void USweetDreamsBPLibrary::SetUserSettings(const UObject* WorldContext, FDreamU
 void USweetDreamsBPLibrary::SetSettingsQuality(const UObject* WorldContext, int32 Quality)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")))
+	if (!IsValid(WorldContext) && !IsValid(World))
 	{
 		return;
 	}
@@ -190,7 +190,7 @@ void USweetDreamsBPLibrary::SetSettingsQuality(const UObject* WorldContext, int3
 void USweetDreamsBPLibrary::LoadLevel(const UObject* WorldContext, TSoftObjectPtr<UWorld> Level)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")))
+	if (!IsValid(WorldContext) && !IsValid(World))
 	{
 		return;
 	}
@@ -200,7 +200,7 @@ void USweetDreamsBPLibrary::LoadLevel(const UObject* WorldContext, TSoftObjectPt
 TSoftObjectPtr<UWorld> USweetDreamsBPLibrary::GetCurrentLoadingLevel(const UObject* WorldContext)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")))
+	if (!IsValid(WorldContext) && !IsValid(World))
 	{
 		return nullptr;
 	}
@@ -241,7 +241,7 @@ void USweetDreamsBPLibrary::DoSomething(const UObject* WorldContext)
 float USweetDreamsBPLibrary::IncrementAlpha(const UObject* WorldContext, float& Alpha, float MaxValue, UCurveFloat* AlphaCurve, bool bStopCondition)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")))
+	if (!IsValid(WorldContext) && !IsValid(World))
 	{
 		return Alpha;
 	}
@@ -265,7 +265,7 @@ float USweetDreamsBPLibrary::IncrementAlpha(const UObject* WorldContext, float& 
 void USweetDreamsBPLibrary::PrintDream(const UObject* DreamOrigin, FString Dream, EPrintType Severity, float Duration)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(DreamOrigin, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(DreamOrigin), TEXT("World Context was not valid.")))
+	if (!IsValid(DreamOrigin) && !IsValid(World))
 	{
 		return;
 	}

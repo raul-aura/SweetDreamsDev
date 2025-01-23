@@ -10,6 +10,7 @@
 #include "SweetDreams/Public/MulticameraComponent.h"
 #include "GameFramework/Actor.h"
 #include "LevelSequencePlayer.h"
+#include "SweetDreamsHUD.h"
 #include "BattleNumberWidget.h"
 #include "SweetDreamsBattleManager.generated.h"
 
@@ -22,6 +23,14 @@ enum class ECameraView : uint8
 	Allies = 1,
 	Enemies = 2,
 	Self = 3,
+};
+
+UENUM(BlueprintType)
+enum class EBattlerType : uint8
+{
+	None = 0,
+	Ally = 1,
+	Enemy = 2,
 };
 
 UCLASS()
@@ -48,7 +57,7 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void OnBattleEnd(bool bBattleVictorious);
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	void OnDamageApplied(ABattleCharacter* DamageOwner, float Damage, bool bIsAllyDamage, bool bApplyCalculations);
+	void OnDamageApplied(AActor* DamageOwner, float Damage, bool bIsAllyDamage, bool bApplyCalculations);
 
 	// COMPONENTS
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
@@ -58,27 +67,27 @@ protected:
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
 	USceneComponent* BattleRoot;
 	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")
-	APlayerController* Player;
+	APlayerController* Player = nullptr;
 	
 	// UI
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle Manager|UI")
-	TSubclassOf<UUserWidget> BattleWidgetClass;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle Manager|UI")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "UI")
+	FName BattleWidgetName = "Battle Widget";
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "UI")
 	TSubclassOf<UBattleNumberWidget> DamageIndicatorClass;
 	UPROPERTY(BlueprintReadWrite)
-	UUserWidget* BattleWidget;
+	class USweetDreamsWidget* BattleWidget = nullptr;
 
 	// BATLE
-	UPROPERTY(BlueprintReadWrite, EditInstanceOnly, Category = "Battle Manager|Battlers", meta = (DisplayName = "Enemies References"))
-	TArray<ABattleCharacter*> Enemies;
-	UPROPERTY(BlueprintReadWrite, Category = "Battle Manager|Battlers", meta = (DisplayName = "Allies References"))
-	TArray<ABattleCharacter*> Allies;
+	UPROPERTY(BlueprintReadWrite, EditInstanceOnly, Category = "Battlers", meta = (DisplayName = "Enemies References"))
+	TArray<AActor*> Enemies;
+	UPROPERTY(BlueprintReadWrite, Category = "Battlers", meta = (DisplayName = "Allies References"))
+	TArray<AActor*> Allies;
 	UPROPERTY(BlueprintReadWrite)
 	TArray<float> AllyDamage;
 	UPROPERTY(BlueprintReadWrite)
 	TArray<float> EnemyDamage;
 	//
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle Manager|Camera", meta = (DisplayName = "Battler Camera Blend Time", ClampMin = "0", Tooltip = "Time (in seconds) that the camera will blend between Battlers and between BattleManager camera to Battler camera."))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera", meta = (DisplayName = "Battler Camera Blend Time", ClampMin = "0", Tooltip = "Time (in seconds) that the camera will blend between Battlers and between BattleManager camera to Battler camera."))
 	float BattlerBlendTime = 1.0f;
 
 public:	
@@ -96,6 +105,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	virtual void StartBattle(float BlendTime = 2.0f);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	virtual AActor* SpawnBattler(TSubclassOf<AActor> Battler, FTransform Transform, EBattlerType BattlerType = EBattlerType::Ally, USceneComponent* Root = nullptr, bool bAddToReferences = true);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void LoadBattlers();
 	virtual void LoadBattlers_Implementation();
@@ -114,9 +125,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager", meta = (ToolTip = "When New View is Self and Actor Self Focus is valid, it will blend with the Camera Transform on Index 1 of the Actor instead."))
 	virtual void ChangeCameraView(ECameraView NewView = ECameraView::AllBattlers, AActor* SelfFocus = nullptr, float BlendTime = 1.0f);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	virtual void AddDamageToBattle(ABattleCharacter* DamageOwner, float Damage, bool bApplyCalculations);
+	virtual void AddDamageToBattle(AActor* DamageOwner, float Damage, bool bApplyCalculations);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	float GetAllAlliedDamage() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	float GetAllEnemyDamage() const;
+	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG|Battle Manager")
+	TArray<AActor*>& GetBattlerGroup(EBattlerType BattlerType);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	bool IsActorAlly(const AActor* Actor) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	bool IsActorEnemy(const AActor* Actor) const;
+	// UI
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	TSubclassOf<UBattleNumberWidget> GetDamageIndicatorClass() const;
 };

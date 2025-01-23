@@ -3,21 +3,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "SweetDreamsWidget.h"
 #include "TurnBasedBattleWidget.generated.h"
 
 class ATurnBasedBattle;
 
 UCLASS()
-class SWEETDREAMSBATTLE_API UTurnBasedBattleWidget : public UUserWidget
+class SWEETDREAMSBATTLE_API UTurnBasedBattleWidget : public USweetDreamsWidget
 {
 	GENERATED_BODY()
 	
 public:
+	UTurnBasedBattleWidget();
+
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void OnBattleStarted();
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void OnBattleEnded(bool bIsVictorious = true);
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void OnElementMessage(const FText& Message);
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void ShowPlayerInput(UBattleInputAction* InputAction);
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)

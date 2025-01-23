@@ -2,6 +2,7 @@
 
 #include "SweetDreamsBattleManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "SweetDreamsWidget.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "SweetDreamsGameMode.h"
 
@@ -22,17 +23,9 @@ ASweetDreamsBattleManager::ASweetDreamsBattleManager()
 
 void ASweetDreamsBattleManager::BeginPlay()
 {
-	Player = UGameplayStatics::GetPlayerController(this, 0);
-	if (UWorld* World = GetWorld())
-	{
-		BattleWidget = CreateWidget<UUserWidget>(World, BattleWidgetClass);
-	}
-	if (BattleWidget)
-	{
-		BattleWidget->SetVisibility(ESlateVisibility::Collapsed);
-		BattleWidget->AddToViewport();
-	}
 	Super::BeginPlay();
+	Player = UGameplayStatics::GetPlayerController(this, 0);
+	BattleWidget = ASweetDreamsHUD::FindWidgetByName(BattleWidgetName);
 }
 
 void ASweetDreamsBattleManager::Tick(float DeltaTime)
@@ -101,9 +94,28 @@ void ASweetDreamsBattleManager::StartBattle(float BlendTime)
 	}
 	if (BattleWidget)
 	{
-		BattleWidget->SetVisibility(ESlateVisibility::Visible);
+		ASweetDreamsHUD::ShowWidget(BattleWidget);
 	}
 	OnBattleStart();
+}
+
+AActor* ASweetDreamsBattleManager::SpawnBattler(TSubclassOf<AActor> Battler, FTransform Transform, EBattlerType BattlerType, USceneComponent* Root, bool bAddToReferences)
+{
+	if (IsValid(Battler))
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		AActor* SpawnedBattler = GetWorld()->SpawnActor<AActor>(Battler, SpawnParams);
+		SpawnedBattler->SetActorTransform(Transform, false, nullptr, ETeleportType::TeleportPhysics);
+		if (Root) SpawnedBattler->AttachToComponent(Root, FAttachmentTransformRules::KeepWorldTransform);
+		if (bAddToReferences)
+		{
+			TArray<AActor*>& TargetGroup = GetBattlerGroup(BattlerType);
+			TargetGroup.Add(SpawnedBattler);
+		}
+		return SpawnedBattler;
+	}
+	return nullptr;
 }
 
 void ASweetDreamsBattleManager::LoadBattlers_Implementation()
@@ -121,7 +133,7 @@ void ASweetDreamsBattleManager::EndBattle(float BlendTime)
 	}
 	if (BattleWidget)
 	{
-		BattleWidget->SetVisibility(ESlateVisibility::Collapsed);
+		ASweetDreamsHUD::HideWidget(BattleWidget);
 	}
 	OnBattleEnd(bIsVictorious);
 }
@@ -133,9 +145,18 @@ bool ASweetDreamsBattleManager::EvaluateEndBattle_Implementation()
 	bool bAllAlliesDead = true;
 	if (Enemies.Num() > 0)
 	{
-		for (ABattleCharacter* Enemy : Enemies)
+		for (AActor* Enemy : Enemies)
 		{
-			if (!Enemy->GetBattlerParameters()->IsDead())
+			UBattlerDataComponent* Data;
+			if (Cast<ABattleCharacter>(Enemy))
+			{
+				Data = Cast<ABattleCharacter>(Enemy)->GetBattlerParameters();
+			}
+			else
+			{
+				Data = Enemy->FindComponentByClass<UBattlerDataComponent>();
+			}
+			if (Data && !Data->IsDead())
 			{
 				bAllEnemiesDead = false;
 				break;
@@ -144,9 +165,18 @@ bool ASweetDreamsBattleManager::EvaluateEndBattle_Implementation()
 	}
 	if (Allies.Num() > 0)
 	{
-		for (ABattleCharacter* Ally : Allies)
+		for (AActor* Ally : Allies)
 		{
-			if (!Ally->GetBattlerParameters()->IsDead())
+			UBattlerDataComponent* Data;
+			if (Cast<ABattleCharacter>(Ally))
+			{
+				Data = Cast<ABattleCharacter>(Ally)->GetBattlerParameters();
+			}
+			else
+			{
+				Data = Ally->FindComponentByClass<UBattlerDataComponent>();
+			}
+			if (Data && !Data->IsDead())
 			{
 				bAllAlliesDead = false;
 				break;
@@ -196,19 +226,19 @@ void ASweetDreamsBattleManager::ChangeCameraView(ECameraView NewView, AActor* Se
 	{
 		Index = 1;
 	}
-	else if ((NewView != ECameraView::Self) || !SelfFocus)
+	else if ((NewView != ECameraView::Self) || !IsValid(SelfFocus))
 	{
 		SelfFocus = this;
 	}
 	ChangeCameraFocus(SelfFocus, BlendTime);
 	UMulticameraComponent* Multicamera = SelfFocus->FindComponentByClass<UMulticameraComponent>();
-	if (Multicamera && Index <= Multicamera->GetAllPossibleViews().Num() - 1)
+	if (IsValid(Multicamera) && Multicamera->GetAllPossibleViews().IsValidIndex(Index))
 	{
 		Multicamera->SetNewCameraView(Index, BlendTime);
 	}
 }
 
-void ASweetDreamsBattleManager::AddDamageToBattle(ABattleCharacter* DamageOwner, float Damage, bool bApplyCalculations)
+void ASweetDreamsBattleManager::AddDamageToBattle(AActor* DamageOwner, float Damage, bool bApplyCalculations)
 {
 	if (!DamageOwner || Damage <= 0.0f) return;
 	int32 Index = Enemies.Find(DamageOwner);
@@ -250,5 +280,34 @@ float ASweetDreamsBattleManager::GetAllEnemyDamage() const
 		}
 	}
 	return Damage;
+}
+
+TArray<AActor*>& ASweetDreamsBattleManager::GetBattlerGroup(EBattlerType BattlerType)
+{
+	switch (BattlerType)
+	{
+	case EBattlerType::Ally:
+		return Allies;
+	case EBattlerType::Enemy:
+		return Enemies;
+	default:
+		checkNoEntry();
+		return Allies;
+	}
+}
+
+bool ASweetDreamsBattleManager::IsActorAlly(const AActor* Actor) const
+{
+	return IsValid(Actor) && Allies.Contains(Actor);
+}
+
+bool ASweetDreamsBattleManager::IsActorEnemy(const AActor* Actor) const
+{
+	return IsValid(Actor) && Enemies.Contains(Actor);
+}
+
+TSubclassOf<UBattleNumberWidget> ASweetDreamsBattleManager::GetDamageIndicatorClass() const
+{
+	return DamageIndicatorClass;
 }
 
