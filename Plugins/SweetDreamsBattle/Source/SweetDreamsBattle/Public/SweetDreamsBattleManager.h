@@ -3,18 +3,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BattleAction.h"
-#include "BattleCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Blueprint/UserWidget.h"
-#include "SweetDreams/Public/MulticameraComponent.h"
 #include "GameFramework/Actor.h"
 #include "LevelSequencePlayer.h"
-#include "SweetDreamsHUD.h"
 #include "BattleNumberWidget.h"
 #include "SweetDreamsBattleManager.generated.h"
 
 class USceneComponent;
+class ASweetDreamsHUD;
+class UMulticameraComponent;
+class UBattleAction;
+class ABattleCharacter;
 
 UENUM(BlueprintType)
 enum class ECameraView : uint8

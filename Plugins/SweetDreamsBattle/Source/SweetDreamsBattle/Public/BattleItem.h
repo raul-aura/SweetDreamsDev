@@ -2,7 +2,7 @@
 
 #pragma once 
 
-#include "SweetDreamsItem.h"
+#include "Inventory/SweetDreamsItem.h"
 #include "BattleItem.generated.h"
 
 UCLASS(BlueprintType)

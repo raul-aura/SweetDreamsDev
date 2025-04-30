@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SweetDreamsCharacter.h"
+#include "Player/SweetDreamsCharacter.h"
 #include "BattlerDataComponent.h"
 #include "BattleAction.h"
 #include "BattleCharacter.generated.h"

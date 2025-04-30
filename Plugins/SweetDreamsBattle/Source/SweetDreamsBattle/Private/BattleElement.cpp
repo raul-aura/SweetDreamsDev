@@ -5,10 +5,10 @@
 #include "BattleCharacter.h"
 #include "SweetDreamsBattleManager.h"
 #include "Kismet/GameplayStatics.h"
-#include "SweetDreamsBPLibrary.h"
+#include "Core/SweetDreamsBPLibrary.h"
 #include "BattleState.h"
 #include "TurnBasedBattle.h"
-#include "SweetDreamsDialogueManager.h"
+#include "Dialogue/SweetDreamsDialogueManager.h"
 #include "Algo/AllOf.h"
 #include "BattlerDataComponent.h"
 

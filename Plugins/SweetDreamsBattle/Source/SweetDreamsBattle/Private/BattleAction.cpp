@@ -4,7 +4,7 @@
 #include "BattleCharacter.h"
 #include "TurnBasedBattle.h"
 #include "BattleState.h"
-#include "SweetDreamsBPLibrary.h"
+#include "Core/SweetDreamsBPLibrary.h"
 
 UBattleAction* UBattleAction::CreateLearnAction(AActor* ActionOwner, TSubclassOf<UBattleAction> Action)
 {
@@ -435,40 +435,6 @@ float UBattleAction::StartAnimation(UAnimSequence* Animation, TArray<AActor*> Ta
 		OnAnimationComplete(Animation);
 		}, AnimationTime, false);
 	return AnimationTime;
-}
-
-void UBattleAction::MoveToTarget(AActor* Target, int32 MovementID)
-{
-	if (!Owner || !Target) return;
-	APawn* PawnOwner = Cast<APawn>(GetOwner());
-	if (PawnOwner)
-	{
-		ASweetDreamsController* BattlerController = Cast<ASweetDreamsController>(PawnOwner->GetController());
-		if (BattlerController)
-		{
-			BattlerController->SetCurrentMovementID(MovementID);
-			BattlerController->OnDreamMovementCompleted.AddUniqueDynamic(this, &UBattleAction::OnMovementComplete);
-			BattlerController->MoveToActor(Target);
-		}
-	}
-}
-
-void UBattleAction::ReturnToPosition(float Delay)
-{
-	if (!Owner) return;
-	APawn* PawnOwner = Cast<APawn>(GetOwner());
-	if (PawnOwner)
-	{
-		ASweetDreamsController* BattlerController = Cast<ASweetDreamsController>(PawnOwner->GetController());
-		if (BattlerController)
-		{
-			if (Delay <= 0.0f) Delay = GetOwner()->GetWorld()->GetDeltaSeconds();
-			FTimerHandle ReturnTimer;
-			Owner->GetWorldTimerManager().SetTimer(ReturnTimer, [this, BattlerController] {
-				BattlerController->ResetPosition();
-				}, Delay, false);
-		}
-	}
 }
 
 float UBattleAction::PlayLevelSequence(ULevelSequence* Sequence)

@@ -2,15 +2,17 @@
 
 
 #include "TurnBasedBattleWidget.h"
+#include "TurnBasedBattle.h"
 
-UTurnBasedBattleWidget::UTurnBasedBattleWidget()
+UTurnBasedBattleWidget::UTurnBasedBattleWidget(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 	WidgetName = "TurnbasedBattle";
 }
 
 void UTurnBasedBattleWidget::SetBattleManager(ATurnBasedBattle* Battle)
 {
-	if (!Battle)
+	if (!IsValid(Battle))
 	{
 		return;
 	}

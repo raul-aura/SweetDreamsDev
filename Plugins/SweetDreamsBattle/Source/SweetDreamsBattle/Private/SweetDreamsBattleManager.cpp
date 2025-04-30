@@ -2,9 +2,13 @@
 
 #include "SweetDreamsBattleManager.h"
 #include "Kismet/GameplayStatics.h"
-#include "SweetDreamsWidget.h"
+#include "Game/SweetDreamsWidget.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "SweetDreamsGameMode.h"
+#include "Player/MulticameraComponent.h"
+#include "BattlerDataComponent.h"
+#include "BattleAction.h"
+#include "BattleCharacter.h"
+#include "Game/SweetDreamsGameMode.h"
 
 ASweetDreamsBattleManager::ASweetDreamsBattleManager()
 {

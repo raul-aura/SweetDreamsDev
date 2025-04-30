@@ -3,7 +3,7 @@
 #include "BattlerDataComponent.h"
 #include "BattleState.h"
 #include "BattleCharacter.h"
-#include "SweetDreamsBPLibrary.h"
+#include "Core/SweetDreamsBPLibrary.h"
 
 UBattlerDataComponent::UBattlerDataComponent()
 {

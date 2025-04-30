@@ -64,10 +64,6 @@ public:
 	//
 	virtual bool DamageTargets(TArray<AActor*> Targets, float& PostMitigatedDamage, int32& KilledTargets, float Damage = 100.0f, float ResistenceShred = 0.f, bool bCanBeMitigated = true, bool bApplyCalculations = true, bool bIsAdditionalDamage = false) override;
 	virtual float StartAnimation(UAnimSequence* Animation, TArray<AActor*> Targets) override;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Action")
-	virtual void MoveToTarget(AActor* Target, int32 MovementID);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Action")
-	virtual void ReturnToPosition(float Delay = 1.0f);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Action", meta = (ReturnDisplayName="Sequence Duration"))
 	virtual float PlayLevelSequence(ULevelSequence* Sequence);
 	//

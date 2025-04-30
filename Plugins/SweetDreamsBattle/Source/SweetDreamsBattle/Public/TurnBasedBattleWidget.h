@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SweetDreamsWidget.h"
+#include "Game/SweetDreamsWidget.h"
 #include "TurnBasedBattleWidget.generated.h"
 
 class ATurnBasedBattle;
@@ -14,7 +14,7 @@ class SWEETDREAMSBATTLE_API UTurnBasedBattleWidget : public USweetDreamsWidget
 	GENERATED_BODY()
 	
 public:
-	UTurnBasedBattleWidget();
+	UTurnBasedBattleWidget(const FObjectInitializer& ObjectInitializer);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void OnBattleStarted();

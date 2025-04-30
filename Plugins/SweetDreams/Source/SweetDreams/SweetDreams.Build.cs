@@ -10,16 +10,13 @@ public class SweetDreams : ModuleRules
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
-				// ... add public include paths required here ...
-			}
+            }
 			);
 				
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
-                "UnrealEd",
-				// ... add other private include paths required here ...
-			}
+            }
 			);
 			
 		
