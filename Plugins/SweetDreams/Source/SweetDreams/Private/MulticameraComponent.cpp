@@ -12,8 +12,8 @@ UMulticameraComponent::UMulticameraComponent()
 
 void UMulticameraComponent::BeginPlay()
 {
-	Super::BeginPlay();
 	FindCamera();
+	Super::BeginPlay();
 }
 
 void UMulticameraComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -31,6 +31,7 @@ void UMulticameraComponent::SetNewCameraView(int32 CameraToMatch, float BlendTim
 	{
 		BlendTime = GetWorld()->GetDeltaSeconds();
 	}
+	if (!IsValid(ActiveCamera)) return;
 	StartLocation = ActiveCamera->GetRelativeLocation();
 	StartRotation = ActiveCamera->GetRelativeRotation();
 	EndLocation = CameraViews[CameraToMatch].Location;

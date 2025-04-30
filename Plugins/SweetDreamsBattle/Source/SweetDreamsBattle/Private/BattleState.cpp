@@ -4,6 +4,23 @@
 #include "BattleState.h"
 #include "BattleCharacter.h"
 
+void UBattleState::PostInitProperties()
+{
+	Super::PostInitProperties();
+	Health = BaseHealth;
+	Mana = BaseMana;
+	Force = BaseForce;
+	Resistence = BaseResistence;
+	Speed = BaseSpeed;
+	HealthPercentage = BaseHealthPercentage;
+	ManaPercentage = BaseManaPercentage;
+	ForcePercentage = BaseForcePercentage;
+	ResistencePercentage = BaseResistencePercentage;
+	SpeedPercentage = BaseSpeedPercentage;
+	Actions = BaseActions;
+	Lives = BaseLives;
+}
+
 UObject* UBattleState::GetStateInstigator() const
 {
 	return StateInstigator;
@@ -67,25 +84,28 @@ void UBattleState::ResetLifetime()
 	}
 }
 
-void UBattleState::AddStacks()
+void UBattleState::AddStacks(int32 Amount)
 {
-	Stacks = (Stacks == 0) ? InitialStacks : Stacks + 1;
 	if (!bIsStackable)
 	{
 		MaxStacks = InitialStacks;
 	}
-	Stacks = FMath::Clamp(Stacks, InitialStacks, MaxStacks);
+	Stacks = FMath::Clamp(Stacks + Amount, InitialStacks, MaxStacks);
 }
 
-void UBattleState::ConsumeStacks()
+void UBattleState::ConsumeStacks(int32 Amount)
 {
-	if (!bConsumeStacks) return;
-	int32 LocalMinStacks = (Lifetime == EStateLifetime::Permanent) ? InitialStacks : 0;
-	Stacks = FMath::Clamp(--Stacks, LocalMinStacks, MaxStacks);
-	if (Stacks == 0)
+	if (!bCanConsumeStacks) return;
+	Stacks = FMath::Clamp(Stacks - Amount, InitialStacks, MaxStacks);
+	if (bRemoveOnZeroStacks && Stacks == 0)
 	{
 		RemoveState();
 	}
+}
+
+bool UBattleState::IsMaxStacks() const
+{
+	return Stacks == MaxStacks;
 }
 
 void UBattleState::ConsumeLifetime(EStateLifetime LifetimeToConsume)
@@ -109,7 +129,7 @@ void UBattleState::ConsumeLifetime(EStateLifetime LifetimeToConsume)
 	default:
 		break;
 	}
-	if (bAutoConsumeStacks)
+	if (bCanConsumeStacksOnLifetime)
 	{
 		ConsumeStacks();
 	}
@@ -189,9 +209,4 @@ void UBattleState::RecalculateParams()
 	RemoveParams();
 	OnUpdateParams();
 	ApplyParams();
-}
-
-float UBattleState::OnPreDamageReceived_Implementation(float DamageAmount, AActor* DamageInstigator)
-{
-	return DamageAmount;
 }

@@ -41,7 +41,6 @@ void UBattleAction::StartAction(bool bUseCooldown)
 		UBattlerDataComponent* BattleParams = UBattlerDataComponent::GetBattlerDataComponent(GetOwner());
 		if (IsValid(BattleParams))
 		{
-			BattleParams->IncrementActionCount();
 			if (BattleParams->IsDead() || !BattleParams->GetIsAbleToAct())
 			{
 				if (bTurnBasedAction)
@@ -50,14 +49,24 @@ void UBattleAction::StartAction(bool bUseCooldown)
 				}
 				return;
 			}
+			if (bRandomizeTargetsOnStart)
+			{
+				LoadRandomTurnTargets();
+			}
+			BattleParams->IncrementActionCount();
 		}
 	}
-	if (!IsValid(GetOwner()) || bSkipThis)
+	if (!IsValid(GetOwner()))
 	{
 		if (bTurnBasedAction)
 		{
 			StartNextTurnAction(0.1f);
 		}
+		return;
+	}
+	if (bTurnBasedAction && !UpdateValidTargets())
+	{
+		StartNextTurnAction(0.1f);
 		return;
 	}
 	if (bAutoConsumeCost)
@@ -94,11 +103,11 @@ void UBattleAction::StartActionForced(bool bUseCooldown)
 		{
 			bSkipThis = false;
 			UBattleAction* ThisAction = this;
-			TurnBattle->GetTargetsAllPossible(ThisAction, false);
+			TurnBattle->GetAllPossibleTargets(ThisAction, false);
 			SetTargetRandom(ElementTargets, TargetAmount);
 			if (bUseCooldown)
 			{
-				RefreshCooldown();
+				EvaluateCooldown();
 			}
 			TurnBattle->AddTurnAction(this, bAddedLast);
 			return;
@@ -107,43 +116,47 @@ void UBattleAction::StartActionForced(bool bUseCooldown)
 	StartAction(bUseCooldown);
 }
 
-void UBattleAction::RefreshCooldown()
+void UBattleAction::EvaluateCooldown()
 {
 	if (!IsValid(Owner)) return;
+	if ((bTurnBasedAction && CooldownTurns <= 0) || (!bTurnBasedAction && Cooldown <= 0))
+	{
+		ResetCooldown();
+		return;
+	}
+	if (bIsOnCooldown)
+	{
+		UpdateTurnCooldown();
+		return;
+	}
+	ApplyCooldown();
+}
+
+void UBattleAction::ApplyCooldown()
+{
 	bIsOnCooldown = true;
-	TurnsPassed = -1;
+	TurnsPassed = 0;
 	if (!bTurnBasedAction)
 	{
-		Owner->GetWorldTimerManager().SetTimer(ActionCooldown, this, &UBattleAction::UpdateCooldown, Cooldown, false);
-	}
-	else
-	{
-		if (CooldownTurns <= 0)
-		{
-			bIsOnCooldown = false;
-			return;
-		}
-		UpdateCooldown();
+		Owner->GetWorldTimerManager().SetTimer(ActionCooldown, this, &UBattleAction::ResetCooldown, Cooldown, false);
 	}
 }
 
-void UBattleAction::UpdateCooldown()
+void UBattleAction::UpdateTurnCooldown()
 {
-	if (bIsOnCooldown)
+	if (!bTurnBasedAction || !bIsOnCooldown) return;
+	if (TurnsPassed >= CooldownTurns)
 	{
-		if (!bTurnBasedAction)
-		{
-			bIsOnCooldown = false;
-		}
-		else
-		{
-			TurnsPassed = FMath::Clamp(TurnsPassed + 1, 0, CooldownTurns);
-			if (TurnsPassed >= CooldownTurns)
-			{
-				bIsOnCooldown = false;
-			}
-		}
+		ResetCooldown();
+		return;
 	}
+	TurnsPassed = FMath::Clamp(TurnsPassed + 1, 0, CooldownTurns);
+}
+
+void UBattleAction::ResetCooldown()
+{
+	TurnsPassed = -1;
+	bIsOnCooldown = false;
 }
 
 float UBattleAction::GetPriorityWeight() const
@@ -158,8 +171,14 @@ void UBattleAction::RemoveSelfBattle()
 		ATurnBasedBattle* TurnBattle = Cast<ATurnBasedBattle>(CurrentBattle);
 		if (TurnBattle)
 		{
-			bSkipThis = true;
-			TurnBattle->RemoveTurnAction(this);
+			int32 ActionCount = 0;
+			if (TurnBattle->RemoveTurnAction(this, ActionCount))
+			{
+				if (++RemovedCount >= ActionCount)
+				{
+					bSkipThis = true;
+				}
+			}
 		}
 	}
 }
@@ -192,25 +211,25 @@ void UBattleAction::EndAction(float Delay)
 	FTimerHandle LocalTimer;
 	Owner->GetWorldTimerManager().SetTimer(LocalTimer, [this, BattleParams](){
 		OnActionEnd();
-		if (BattleParams)
+		if (IsValid(BattleParams))
 		{
 			if (HealAmount > 0) BattleParams->ReceiveHeal(HealAmount * (BattleParams->GetHealMultiplier() / 100));
 			if (ManaRestoreAmount > 0) BattleParams->ReceiveManaRestore(ManaRestoreAmount * (BattleParams->GetManaRestoreMultiplier() / 100));
 		}
 	}, Delay, false);
-	if (Owner)
+	if (IsValid(Owner))
 	{
-		TArray<UBattleState*> States;
-		if (BattleParams)
+		if (IsValid(BattleParams))
 		{
-			States = BattleParams->GetAllStates();
-		}
-		if (States.Num() > 0)
-		{
+			TArray<UBattleElement*> AllElements = BattleParams->GetAllElements();
+			for (UBattleElement* Element : AllElements)
+			{
+				if (IsValid(Element)) Element->OnOwnerActionEnd(this);
+			}
+			TArray<UBattleState*> States = BattleParams->GetAllStates();
 			for (UBattleState* State : States)
 			{
-				State->ConsumeLifetime(EStateLifetime::Action);
-				State->OnActionEnd(this);
+				if (IsValid(State)) State->ConsumeLifetime(EStateLifetime::Action);
 			}
 		}
 		Owner->GetWorldTimerManager().ClearTimer(ActionTimer);
@@ -241,16 +260,16 @@ void UBattleAction::StartNextTurnAction(float Delay)
 
 void UBattleAction::ResetAction()
 {
-	ResetSkipAction();
-	TurnsPassed = -1;
-	bIsOnCooldown = false;
+	ResetCooldown();
 	RemoveSelfBattle();
+	ResetSkipAction();
 	ElementTargets.Empty();
 }
 
 void UBattleAction::ResetSkipAction()
 {
 	bSkipThis = false;
+	RemovedCount = 0;
 }
 
 bool UBattleAction::IsActionAvailable()
@@ -355,9 +374,33 @@ bool UBattleAction::ApplyConsumeCost() // this function consumes its cost indepe
 	return false;
 }
 
-bool UBattleAction::DamageTargets(TArray<AActor*> Targets, float& PostMitigatedDamage, int32& KilledTargets, float Damage, float ResistenceShred, bool bCanBeMitigated, bool bApplyCalculations)
+bool UBattleAction::UpdateValidTargets()
 {
-	bool bTargetsKilled = Super::DamageTargets(Targets, PostMitigatedDamage, KilledTargets, Damage, ResistenceShred, bCanBeMitigated, bApplyCalculations);
+	if (ElementTargets.Num() == 0) return false;
+	for (int32 i = ElementTargets.Num() - 1; i >= 0; --i)
+	{
+		AActor* Target = ElementTargets[i];
+		if (!IsValid(Target))
+		{
+			ElementTargets.RemoveAt(i);
+		}
+		else if (TargetType != ETargetType::DeadAlly && (IsValid(Target->FindComponentByClass<UBattlerDataComponent>()) && Target->FindComponentByClass<UBattlerDataComponent>()->IsDead()))
+		{
+			ElementTargets.RemoveAt(i);
+		}
+	}
+	return ElementTargets.Num() > 0;
+}
+
+void UBattleAction::LoadRandomTurnTargets()
+{
+	if (!IsValid(CurrentBattle)) return;
+	SetTargetRandom(CurrentBattle->GetAllPossibleTargets(this, false), TargetAmount, !(TargetType == ETargetType::DeadAlly));
+}
+
+bool UBattleAction::DamageTargets(TArray<AActor*> Targets, float& PostMitigatedDamage, int32& KilledTargets, float Damage, float ResistenceShred, bool bCanBeMitigated, bool bApplyCalculations, bool bIsAdditionalDamage)
+{
+	bool bTargetsKilled = Super::DamageTargets(Targets, PostMitigatedDamage, KilledTargets, Damage, ResistenceShred, bCanBeMitigated, bApplyCalculations, bIsAdditionalDamage);
 	AActor* ParamOwner;
 	if (bGetManaFromBattleManager)
 	{

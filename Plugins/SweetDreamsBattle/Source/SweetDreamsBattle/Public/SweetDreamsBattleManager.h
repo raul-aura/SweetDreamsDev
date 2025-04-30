@@ -51,6 +51,8 @@ protected:
 	bool bIsBattleActive = false;
 	UPROPERTY(BlueprintReadWrite, Category = "Battle Manager")
 	bool bIsVictorious = true;
+	UPROPERTY(BlueprintReadWrite, Category = "Battle Manager")
+	bool bBattlePaused = false;
 	//
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void OnBattleStart();
@@ -87,6 +89,8 @@ protected:
 	UPROPERTY(BlueprintReadWrite)
 	TArray<float> EnemyDamage;
 	//
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera")
+	bool bAutoMoveCamera = true;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera", meta = (DisplayName = "Battler Camera Blend Time", ClampMin = "0", Tooltip = "Time (in seconds) that the camera will blend between Battlers and between BattleManager camera to Battler camera."))
 	float BattlerBlendTime = 1.0f;
 
@@ -102,7 +106,8 @@ public:
 	static ASweetDreamsBattleManager* FindBattleByIndex(const UObject* WorldContext, int32 Index);
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static ASweetDreamsBattleManager* FindActiveBattle(const UObject* WorldContext, UPARAM(DisplayName="Battle Index")int32& BattleId);
-
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	virtual void SetBattlePaused(bool bPaused = true);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	virtual void StartBattle(float BlendTime = 2.0f);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
@@ -132,6 +137,8 @@ public:
 	float GetAllEnemyDamage() const;
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG|Battle Manager")
 	TArray<AActor*>& GetBattlerGroup(EBattlerType BattlerType);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
+	virtual TArray<AActor*> GetAllPossibleTargets(UBattleAction* Action, bool bUpdateCameraView = false);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	bool IsActorAlly(const AActor* Actor) const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")

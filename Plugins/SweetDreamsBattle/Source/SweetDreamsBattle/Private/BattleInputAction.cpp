@@ -22,13 +22,20 @@ void UBattleInputAction::StartAction(bool bUseCooldown)
 
 bool UBattleInputAction::LoadWidget()
 {
-	if (CurrentBattle)
+	ATurnBasedBattle* TurnBattle = Cast<ATurnBasedBattle>(CurrentBattle);
+	if (!IsValid(TurnBattle))
 	{
-		if (ATurnBasedBattle* TurnBattle = Cast<ATurnBasedBattle>(CurrentBattle))
-		{
-			InputWidget = TurnBattle->GetTurnBattleWidget();
-			return (InputWidget != nullptr);
-		}
+		int32 Temp = 0;
+		TurnBattle = ATurnBasedBattle::FindActiveTurnBattle(GetOwner(), Temp);
 	}
-	return false;
+	if (IsValid(TurnBattle))
+	{
+		InputWidget = TurnBattle->GetTurnBattleWidget();
+	}
+	return InputWidget != nullptr;
+}
+
+bool UBattleInputAction::UpdateValidTargets()
+{
+	return IsValid(GetOwner());
 }

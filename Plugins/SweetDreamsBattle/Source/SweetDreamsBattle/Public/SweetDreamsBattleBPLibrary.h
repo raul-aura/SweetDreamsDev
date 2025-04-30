@@ -5,28 +5,35 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "SweetDreamsBattleBPLibrary.generated.h"
 
-/* 
-*	Function library class.
-*	Each function in it is expected to be static and represents blueprint node that can be called in any blueprint.
-*
-*	When declaring function you can define metadata for the node. Key function specifiers will be BlueprintPure and BlueprintCallable.
-*	BlueprintPure - means the function does not affect the owning object in any way and thus creates a node without Exec pins.
-*	BlueprintCallable - makes a function which can be executed in Blueprints - Thus it has Exec pins.
-*	DisplayName - full name of the node, shown when you mouse over the node and in the blueprint drop down menu.
-*				Its lets you name the node using characters not allowed in C++ function names.
-*	CompactNodeTitle - the word(s) that appear on the node.
-*	Keywords -	the list of keywords that helps you to find node when you search for it using Blueprint drop-down menu. 
-*				Good example is "Print String" node which you can find also by using keyword "log".
-*	Category -	the category your node will be under in the Blueprint drop-down menu.
-*
-*	For more info on custom blueprint nodes visit documentation:
-*	https://wiki.unrealengine.com/Custom_Blueprint_Node_Creation
-*/
 UCLASS()
 class USweetDreamsBattleBPLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_UCLASS_BODY()
 
-	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Execute Sample function", Keywords = "SweetDreamsBattle sample test testing"), Category = "SweetDreamsBattleTesting")
-	static float SweetDreamsBattleSampleFunction(float Param);
+public:
+	static class USweetDreamsBattleCore* SweetDreamsBattleCore;
+
+	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	static USweetDreamsBattleCore* GetSweetDreamsBattleCore(const UObject* WorldContext);
+	// DIFFICULTY
+	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	static int32 GetDifficulty(const UObject* WorldContext);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	static void SetDifficulty(const UObject* WorldContext, int32 NewDifficulty = 1);
+	// LEVEL
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	static int32 UpdateLevelsByAverage(const UObject* WorldContext, const TArray<AActor*>& TargetActors, const TArray<AActor*> AvarageActors);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	static int32 GetAverageLevel(const UObject* WorldContext, const TArray<AActor*>& Actors);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	static void OverrideLevels(const UObject* WorldContext, const TArray<AActor*>& Actors, int32 NewLevel = 1);
+	// PARAM MATH
+	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG")
+	static float IncreaseParameterLinear(UPARAM(ref)float& Parameter, float BaseParameter, float AdditionalParameter, float Multiplier);
+	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG")
+	static float IncreaseParameterExponential(UPARAM(ref)float& Parameter, float BaseParameter, float AdditionalParameter, float Multiplier, float Power = 2.f);
+	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG")
+	static float IncreaseParameterLogarithmic(UPARAM(ref)float& Parameter, float BaseParameter, float AdditionalParameter, float Multiplier, float LogBase = 2.f);
+	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG")
+	static float IncreaseParameterDiminishing(UPARAM(ref)float& Parameter, float BaseParameter, float AdditionalParameter, float Multiplier, float DiminishFactor = 0.1f);
 };

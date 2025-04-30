@@ -6,9 +6,6 @@
 #include "SweetDreamsSaveFile.h"
 #include "SweetDreamsSaveLocal.generated.h"
 
-/**
- * 
- */
 UCLASS(Blueprintable)
 class SWEETDREAMS_API USweetDreamsSaveLocal : public USweetDreamsSaveFile
 {

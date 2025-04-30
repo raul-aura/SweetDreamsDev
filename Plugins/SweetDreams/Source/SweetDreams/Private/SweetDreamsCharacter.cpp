@@ -57,7 +57,7 @@ ASweetDreamsController* ASweetDreamsCharacter::GetDreamController() const
 
 void ASweetDreamsCharacter::MoveForward(float Value)
 {
-	if (Controller && Value != 0.0f && bCanMove)
+	if (IsValid(Controller) && Value != 0.0f && bCanMove)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -68,7 +68,7 @@ void ASweetDreamsCharacter::MoveForward(float Value)
 
 void ASweetDreamsCharacter::MoveRight(float Value)
 {
-	if (Controller && Value != 0.0f && bCanMove)
+	if (IsValid(Controller) && Value != 0.0f && bCanMove)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -117,27 +117,6 @@ void ASweetDreamsCharacter::CameraHorizontal(float Value, float Sensitivity)
 	if (!bCanMoveCamera) return;
 	if (Sensitivity < 0.f) Sensitivity = 1.f;
 	AddControllerYawInput(Value * Sensitivity);
-}
-
-void ASweetDreamsCharacter::EvaluateCameraPerspective()
-{
-	float NewLength = 0.0f;
-	FVector NewOffset = FVector();
-	switch (CameraPerspective)
-	{
-	case ECameraPerspective::FIRST:
-		NewLength = 0.0f;
-		NewOffset = FVector(0.0f, 25.0f, GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight());
-		break;
-	case ECameraPerspective::THIRD:
-		NewLength = 350.0f;
-		NewOffset = FVector(25.0f, 0.0f, GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() - 20.0f);
-		break;
-	default:
-		break;
-	}
-	CameraBoom->TargetArmLength = NewLength;
-	CameraBoom->SocketOffset = NewOffset;
 }
 
 

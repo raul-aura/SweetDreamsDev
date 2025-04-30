@@ -2,10 +2,9 @@
 
 #include "InventoryComponent.h"
 
-void UInventoryComponent::BeginPlay()
+UInventoryComponent::UInventoryComponent()
 {
-	Super::BeginPlay();
-	AddStartingItems();
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
 UInventoryComponent* UInventoryComponent::GetInventoryFromActor(const AActor* Actor)
@@ -19,136 +18,68 @@ UInventoryComponent* UInventoryComponent::GetInventoryFromActor(const AActor* Ac
 	return Component;
 }
 
-void UInventoryComponent::AddStartingItems()
+void UInventoryComponent::AddItem(const TSoftObjectPtr<USweetDreamsItem>& Item)
 {
-	if (StartingItems.Num() > 0)
-	{
-		for (TSubclassOf<USweetDreamsItem> ItemClass : StartingItems)
-		{
-			ObtainItem(CreateItem(ItemClass));
-		}
-	}
+    if (Item.IsValid())
+    {
+        Items.Add(FInventoryItem(Item));
+    }
 }
 
-USweetDreamsItem* UInventoryComponent::CreateItem(TSubclassOf<USweetDreamsItem> Item)
+void UInventoryComponent::UseItem(int32 Index)
 {
-	USweetDreamsItem* NewItem = nullptr;
-	if (IsValid(Item))
-	{
-		NewItem = NewObject<USweetDreamsItem>(this, Item);
-		if (IsValid(NewItem))
-		{
-			NewItem->OnCreateItem();
-		}
-	}
-	return NewItem;
+    if (Items.IsValidIndex(Index))
+    {
+        FInventoryItem& Item = Items[Index];
+        if (USweetDreamsItem* ItemData = Item.GetItemData())
+        {
+            
+        }
+    }
 }
 
-void UInventoryComponent::ObtainItem(USweetDreamsItem* Item)
+void UInventoryComponent::InspectItem(int32 Index)
 {
-	if (IsValid(Item))
-	{
-		if (ObtainedItems.Contains(Item))
-		{
-			if (Item->IsStackable())
-			{
-				Item->IncreaseAmount();
-				Item->OnAddItem();
-				return;
-			}
-			else
-			{
-				if (HasReachedMaxCopies(Item->GetClass())) return;
-				USweetDreamsItem* NewItem = CreateItem(Item->GetClass());
-				if (IsValid(NewItem))
-				{
-					NewItem->IncreaseAmount();
-					NewItem->OnAddItem();
-					ObtainedItems.Add(NewItem);
-					return;
-				}
-			}
-		}
-		Item->SetItemOwner(GetOwner());
-		Item->IncreaseAmount();
-		Item->OnAddItem();
-		ObtainedItems.Add(Item);
-	}
+    if (Items.IsValidIndex(Index))
+    {
+        FInventoryItem& Item = Items[Index];
+        if (USweetDreamsItem* ItemData = Item.GetItemData())
+        {
+
+        }
+    }
 }
 
-bool UInventoryComponent::UseItem(USweetDreamsItem* Item, bool bEquipOnUse)
+void UInventoryComponent::UseItemByName(FName ItemName)
 {
-	if (IsValid(Item) && Item->IsUsable())
-	{
-		Item->OnUseItem();
-		if (Item->IsConsumable())
-		{
-			Item->DecreaseAmount();
-			if (Item->GetAmount() <= 0 && ObtainedItems.Num() > 0)
-			{
-				RemoveItem(Item);
-			}
-		}
-		if (Item->IsEquippable() && bEquipOnUse)
-		{
-			EquipItem(Item);
-		}
-		return true;
-	}
-	return false;
+    const int32 Index = FindItemIndex(ItemName);
+    if (Index != INDEX_NONE)
+    {
+        UseItem(Index);
+    }
 }
 
-bool UInventoryComponent::EquipItem(USweetDreamsItem* Item)
+void UInventoryComponent::InspectItemByName(FName ItemName)
 {
-	if (IsValid(Item) && Item->IsEquippable() && !Item->IsBeingEquipped() && !EquippedItems.Contains(Item))
-	{
-		Item->SetBeingEquipped(true);
-		Item->OnEquipItem();
-		EquippedItems.Add(Item);
-		return true;
-	}
-	return false;
+    const int32 Index = FindItemIndex(ItemName);
+    if (Index != INDEX_NONE)
+    {
+        InspectItem(Index);
+    }
 }
 
-bool UInventoryComponent::UnequipItem(USweetDreamsItem* Item)
+int32 UInventoryComponent::GetItemCountByName(FName ItemName) const
 {
-	if (IsValid(Item) && EquippedItems.Contains(Item))
-	{
-		Item->SetBeingEquipped(false);
-		Item->OnUnequipItem();
-		EquippedItems.Remove(Item);
-		return true;
-	}
-	return false;
+    return INDEX_NONE;
 }
 
-void UInventoryComponent::RemoveItem(USweetDreamsItem* Item)
+bool UInventoryComponent::HasItem(FName ItemName) const
 {
-	if (!IsValid(Item) || !ObtainedItems.Contains(Item)) return;
-	Item->OnRemoveItem();
-	ObtainedItems.Remove(Item);
-	if (EquippedItems.Contains(Item))
-	{
-		Item->OnUnequipItem();
-		EquippedItems.Remove(Item);
-	}
-	Item->ConditionalBeginDestroy();
+    return FindItemIndex(ItemName) != INDEX_NONE;
 }
 
-bool UInventoryComponent::HasReachedMaxCopies(TSubclassOf<USweetDreamsItem> ItemClass) const
+int32 UInventoryComponent::FindItemIndex(FName ItemName) const
 {
-	int32 Count = 0;
-	for (USweetDreamsItem* Item : ObtainedItems)
-	{
-		if (IsValid(Item) && Item->IsA(ItemClass))
-		{
-			Count++;
-			if (Count >= Item->GetMaxAmountOrCopies())
-			{
-				return true;
-			}
-		}
-	}
-	return false;
+    return INDEX_NONE;
 }
 

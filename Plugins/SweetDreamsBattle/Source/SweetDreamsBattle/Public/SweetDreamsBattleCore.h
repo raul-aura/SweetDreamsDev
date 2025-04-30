@@ -18,24 +18,21 @@ public:
 	~USweetDreamsBattleCore();
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
-	static USweetDreamsBattleCore* GetSweetDreamsBattleCore(const UObject* WorldContext);
-
 	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|RPG")
 	FOnDifficultySet OnDifficultySet;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Difficulty")
+	UFUNCTION()
 	int32 GetDifficulty() const { return BattleDifficulty; }
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Difficulty")
+	UFUNCTION()
 	void SetDifficulty(int32 NewDifficulty = 1);
 
-	int32 UpdateLevelsByAvarage(const TArray<AActor*> TargetActors, const TArray<AActor*> AvarageActors);
-	int32 GetAvarageLevel(const TArray<AActor*> Actors);
+	UFUNCTION()
+	int32 UpdateLevelsByAverage(const TArray<AActor*> TargetActors, const TArray<AActor*> AvarageActors);
+	UFUNCTION()
+	int32 GetAverageLevel(const TArray<AActor*> Actors);
+	UFUNCTION()
 	void OverrideLevels(const TArray<AActor*> Actors, int32 NewLevel = 1);
 
 protected:
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Difficulty", meta = (ClampMin = "0"))
+	UPROPERTY()
 	int32 BattleDifficulty = 0;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Level", meta = (ClampMin = "0"))
-	float LevelAdjustMultiplier = 1.f;
 };

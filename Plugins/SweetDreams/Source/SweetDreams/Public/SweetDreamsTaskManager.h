@@ -15,9 +15,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Tasks", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static ASweetDreamsTaskManager* GetTaskManager(const UObject* WorldContext);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Tasks")
-	ASweetDreamsTask* FindTaskByName(const FName& Name) const;
+	ASweetDreamsTask* FindTaskByName(FName Name) const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Tasks")
-	ASweetDreamsTask* FindTaskByIndex(const int32& Index) const;
+	ASweetDreamsTask* FindTaskByIndex(int32 Index = 0) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Tasks")
+	ASweetDreamsTask* CompleteTaskByName(bool& bFoundTask, FName Name);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Tasks")
+	ASweetDreamsTask* CompleteTaskByIndex(bool& bFoundTask, int32 Index = 0);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Tasks")
 	TArray<ASweetDreamsTask*> GetActiveTasks() const;
 
@@ -64,6 +68,8 @@ class SWEETDREAMS_API ASweetDreamsTask : public AActor
 	GENERATED_BODY()
 
 public:
+	virtual void BeginPlay() override;
+
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Task")
 	void StartTask();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Task")
@@ -87,6 +93,8 @@ public:
 	int32 GetCountOfRemainingObjectives() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Task")
 	bool IsTaskActive() const { return bIsActive; }
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Task")
+	bool IsTaskComplete() const { return bIsComplete; }
 
 	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Core|Task")
 	FTaskEvent OnTaskStarted;
@@ -104,7 +112,9 @@ protected:
 	FText TaskDescription = NSLOCTEXT("Task", "TaskDescription", "A task for your game.");
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Task")
 	bool bIsActive = false;
+	UPROPERTY(BlueprintReadWrite, Category = "Task")
+	bool bIsComplete = false;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Quest")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Task")
 	TArray<FTaskObjective> Objectives;
 };

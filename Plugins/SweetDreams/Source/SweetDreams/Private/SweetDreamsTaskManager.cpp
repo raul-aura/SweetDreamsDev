@@ -12,7 +12,7 @@ ASweetDreamsTaskManager* ASweetDreamsTaskManager::GetTaskManager(const UObject* 
 	return Cast<ASweetDreamsTaskManager>(UGameplayStatics::GetActorOfClass(WorldContext, ASweetDreamsTaskManager::StaticClass()));
 }
 
-ASweetDreamsTask* ASweetDreamsTaskManager::FindTaskByName(const FName& Name) const
+ASweetDreamsTask* ASweetDreamsTaskManager::FindTaskByName(FName Name) const
 {
 	if (Tasks.Num() == 0) return nullptr;
 	for (ASweetDreamsTask* Task : Tasks)
@@ -25,7 +25,7 @@ ASweetDreamsTask* ASweetDreamsTaskManager::FindTaskByName(const FName& Name) con
 	return nullptr;
 }
 
-ASweetDreamsTask* ASweetDreamsTaskManager::FindTaskByIndex(const int32& Index) const
+ASweetDreamsTask* ASweetDreamsTaskManager::FindTaskByIndex(int32 Index) const
 {
 	if (Tasks.Num() == 0) return nullptr;
 	if (Tasks.IsValidIndex(Index))
@@ -33,6 +33,30 @@ ASweetDreamsTask* ASweetDreamsTaskManager::FindTaskByIndex(const int32& Index) c
 		return Tasks[Index];
 	}
 	return nullptr;
+}
+
+ASweetDreamsTask* ASweetDreamsTaskManager::CompleteTaskByName(bool& bFoundTask, FName Name)
+{
+	bFoundTask = false;
+	ASweetDreamsTask* Task = FindTaskByName(Name);
+	if (IsValid(Task))
+	{
+		Task->CompleteTask();
+		bFoundTask = true;
+	}
+	return Task;
+}
+
+ASweetDreamsTask* ASweetDreamsTaskManager::CompleteTaskByIndex(bool& bFoundTask, int32 Index)
+{
+	bFoundTask = false;
+	ASweetDreamsTask* Task = FindTaskByIndex(Index);
+	if (IsValid(Task))
+	{
+		Task->CompleteTask();
+		bFoundTask = true;
+	}
+	return Task;
 }
 
 TArray<ASweetDreamsTask*> ASweetDreamsTaskManager::GetActiveTasks() const
@@ -49,17 +73,23 @@ TArray<ASweetDreamsTask*> ASweetDreamsTaskManager::GetActiveTasks() const
 	return ActiveTasks;
 }
 
+void ASweetDreamsTask::BeginPlay()
+{
+	Super::BeginPlay();
+	if (bIsActive) OnTaskStarted.Broadcast();
+}
+
 void ASweetDreamsTask::StartTask()
 {
-	if (bIsActive) return;
 	bIsActive = true;
+	bIsComplete = false;
 	OnTaskStarted.Broadcast();
 }
 
 void ASweetDreamsTask::CompleteTask()
 {
-	if (!bIsActive) return;
 	bIsActive = false;
+	bIsComplete = true;
 	OnTaskCompleted.Broadcast();
 }
 

@@ -19,6 +19,7 @@ public:
 	virtual void StartAction(bool bUseCooldown) override;
 	UFUNCTION(BlueprintCallable)
 	virtual bool LoadWidget();
+	virtual bool UpdateValidTargets() override;
 
 protected:
 	UPROPERTY(BlueprintReadWrite)

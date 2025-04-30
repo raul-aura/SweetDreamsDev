@@ -58,7 +58,7 @@ void USweetDreamsCore::Initialize(FSubsystemCollectionBase& Collection)
 
 void USweetDreamsCore::Deinitialize()
 {
-	UGameplayStatics::DeleteGameInSlot(SaveSlotLocal, 0);
+	DeleteSave(false);
 	Super::Deinitialize();
 }
 
@@ -220,25 +220,29 @@ void USweetDreamsCore::ManageSaveData(bool bIsSaving, bool bIsPersistent)
 	}
 }
 
+bool USweetDreamsCore::DeleteSave(bool bIsPersistent)
+{
+	FString SaveSlot = bIsPersistent ? SaveSlotPersistent : SaveSlotLocal;
+	return UGameplayStatics::DeleteGameInSlot(SaveSlot, 0);
+}
+
 void USweetDreamsCore::LoadLevel(TSoftObjectPtr<UWorld> Level)
 {
 	if (Level.IsNull()) return;
 	CurrentLoadingLevel = Level;
 	TArray<FSoftObjectPath> AssetList;
 	AssetList.Add(Level.ToSoftObjectPath());
-
 	ASweetDreamsGameMode* DreamGameMode = Cast<ASweetDreamsGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
-	if (DreamGameMode && DreamGameMode->LoadingWidget)
+	if (IsValid(DreamGameMode))
 	{
-		DreamGameMode->LoadingWidget->OnStartLoading();
+		DreamGameMode->LevelLoadStarted(Level);
 	}
-
 	FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
 	FStreamableDelegate StreamableDelegate;
-	StreamableDelegate.BindLambda([this, DreamGameMode]() {
-		if (DreamGameMode && DreamGameMode->LoadingWidget)
+	StreamableDelegate.BindLambda([this, DreamGameMode, Level]() {
+		if (IsValid(DreamGameMode))
 		{
-			DreamGameMode->LoadingWidget->OnFinishLoading();
+			DreamGameMode->LevelLoadFinished(Level);
 		}
 		});
 	StreamableManager.RequestAsyncLoad(AssetList, StreamableDelegate);

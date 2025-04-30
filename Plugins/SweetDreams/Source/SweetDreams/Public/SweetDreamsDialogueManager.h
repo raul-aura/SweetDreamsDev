@@ -18,7 +18,7 @@ enum class EDialogueMode : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FSweetDreamsDialogue : public FTableRowBase
+struct SWEETDREAMS_API FSweetDreamsDialogue : public FTableRowBase
 {
 	GENERATED_BODY()
 
@@ -51,20 +51,47 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
 	USoundBase* DialogueAudio;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
+	USoundBase* AnimatedLetterAudio;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
+	TArray<FName> FunctionsToCall;
+
 	FSweetDreamsDialogue()
-		: DialogueName(NSLOCTEXT("Dialogue", "DialogueName", "Name")),
+		: Mode(EDialogueMode::DIALOGUE),
+		DialogueSequence(nullptr),
+		DialogueName(NSLOCTEXT("Dialogue", "DialogueName", "Name")),
 		DialogueBody(NSLOCTEXT("Dialogue", "DialogueBody", "Hello, I'm Name.")),
 		DialogueImage(nullptr),
 		CameraID(-1),
 		CameraBlend(0.f),
 		DialogueAudio(nullptr),
-		Mode(EDialogueMode::DIALOGUE),
-		DialogueSequence(nullptr)
+		AnimatedLetterAudio(nullptr)
 	{}
+
+	void GetNameAndBody(FText& Name, FText& Body) const
+	{
+		Name = DialogueName;
+		Body = DialogueBody;
+	}
 };
 
 USTRUCT(BlueprintType)
-struct FSweetDreamsDialogueLog
+struct SWEETDREAMS_API FDialogueGroup : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
+	FName GroupName;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
+	TArray<FSweetDreamsDialogue> Dialogues;
+	FDialogueGroup() {}
+};
+
+USTRUCT(BlueprintType)
+struct SWEETDREAMS_API FSweetDreamsDialogueLog
 {
 	GENERATED_BODY()
 
@@ -97,14 +124,17 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FSweetDreamsChoiceDialogues : public FTableRowBase
+struct SWEETDREAMS_API FChoiceDialogues : public FTableRowBase
 {
 	GENERATED_BODY()
 
 public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
-	TArray<FSweetDreamsDialogue> ChoiceDialogues;
-	FSweetDreamsChoiceDialogues() {}
+	FName GroupName;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
+	TMap<int32, FDialogueGroup> ChoiceDialogues;
+	FChoiceDialogues() {}
 };
 
 UCLASS()
@@ -115,25 +145,35 @@ class SWEETDREAMS_API ASweetDreamsDialogueManager : public AActor
 public:	
 	ASweetDreamsDialogueManager();
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogueStarted);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDialogueChanged, FSweetDreamsDialogue, Dialogue, int32, DialogueID);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogueEnded);
+
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void StartDialogue(float TransitionDuration = 2.0f);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void UpdateDialogue();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
+	void SkipAnimatedDialogue();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void ApplyChoiceAndContinue(int32 ChoiceIndex = 0);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void EndDialogue();
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Sweet Dreams|Core|Dialogue")
-	void OnDialogueStarted();
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Sweet Dreams|Core|Dialogue")
-	void OnDialogueChanged(FSweetDreamsDialogue Dialogue, int32 DialogueID);
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Sweet Dreams|Core|Dialogue")
-	void OnDialogueEnded();
+	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Core|Dialogue")
+	FOnDialogueStarted OnDialogueStarted;
+	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Core|Dialogue")
+	FOnDialogueChanged OnDialogueChanged;
+	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Core|Dialogue")
+	FOnDialogueEnded OnDialogueEnded;
 	//
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Dialogue", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static ASweetDreamsDialogueManager* GetActiveDialogue(const UObject* WorldContext);
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Dialogue", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
-	static ASweetDreamsDialogueManager* FindDialogueByName(const UObject* WorldContext, FName Name);
+	static ASweetDreamsDialogueManager* FindDialogueByName(const UObject* WorldContext, FName Name, bool bUpdateNameOnMultiple = true);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	static ASweetDreamsDialogueManager* StartDialogueByName(const UObject* WorldContext, FName Name, float StartTransition = 2.0f);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
+	void UpdateDialogueName(FName NewName);
 	//
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	int32 GetCurrentDialogueID() const;
@@ -144,7 +184,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	bool GetIsDialogueActive() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
-	FText GetAnimatedBody() const { return DialogueBodyAnimated; }
+	FText GetAnimatedBody() const { return AnimatedDialogueBody; }
 
 protected:
 	virtual void BeginPlay() override;
@@ -158,12 +198,19 @@ protected:
 	class UMulticameraComponent* MulticameraComponent;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
-	FName DialogueName;
-	//
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "!bGetDataTableDialogues", EditConditionHides))
+	bool bMultipleDialogues = false;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "!bMultipleDialogues", EditConditionHides))
+	FName DialogueName = NAME_None;
+	// MULTIPLE
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "!bGetDataTableDialogues&&bMultipleDialogues", EditConditionHides))
+	TMap<FName, FDialogueGroup> DialogueGroups;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "!bGetDataTableChoiceDialogues&&bMultipleDialogues", EditConditionHides))
+	TMap<FName, FChoiceDialogues> ChoiceGroups;
+	// SINGLE
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "!bGetDataTableDialogues&&!bMultipleDialogues", EditConditionHides))
 	TArray<FSweetDreamsDialogue> Dialogues;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "!bGetDataTableChoiceDialogues", EditConditionHides))
-	TArray<FSweetDreamsChoiceDialogues> AllChoiceDialogues;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "!bGetDataTableChoiceDialogues&&!bMultipleDialogues", EditConditionHides))
+	FChoiceDialogues AllChoiceDialogues;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "bGetDataTableDialogues", EditConditionHides))
 	UDataTable* DialogueTable;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "bGetDataTableChoiceDialogues", EditConditionHides))
@@ -172,6 +219,8 @@ protected:
 	bool bGetDataTableDialogues = false;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
 	bool bGetDataTableChoiceDialogues = false;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
+	bool bStopSequenceOnUpdate = false;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
 	bool bIsDialogueActive = false;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
@@ -185,9 +234,9 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
 	APawn* OriginalPawn = nullptr;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue Sequence")
-	class ALevelSequenceActor* SequenceActor = nullptr;
+	class ALevelSequenceActor* CurrentSequenceActor = nullptr;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue Sequence")
-	class ULevelSequencePlayer* SequencePlayer = nullptr;
+	class ULevelSequencePlayer* CurrentSequencePlayer = nullptr;
 	//
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void AddDialogueToLog(int32 DialogueID);
@@ -201,6 +250,12 @@ protected:
 	void EndSequence();
 	UFUNCTION(Category = "Sweet Dreams|Core|Dialogue")
 	void ProcessDialogue(FSweetDreamsDialogue Dialogue);
+	UFUNCTION(Category = "Sweet Dreams|Core|Dialogue")
+	void CallFunctionsFromDialogue(FSweetDreamsDialogue Dialogue);
+	UFUNCTION(Category = "Sweet Dreams|Core|Dialogue")
+	void ProcessRichTextTags(int32& LetterIndex);
+	UFUNCTION(Category = "Sweet Dreams|Core|Dialogue")
+	void UpdateAnimatedDialogue();
 	//
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue Settings")
 	bool bCanRepeatDialogue = true;
@@ -224,11 +279,13 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue UI")
 	float LetterDisplayRate = 0.1f;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue UI")
-	FText DialogueBodyAnimated = NSLOCTEXT("Dialogue", "DialogueBodyAnimated", "");
+	FText AnimatedDialogueBody;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue UI")
 	float LetterDisplayElapsed = 0.f;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue UI")
 	FString FullDialogueBody;
+	UPROPERTY(BlueprintReadWrite, Category = "Dialogue UI")
+	FString ProcessedDialogueBody;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue UI")
 	int32 CurrentLetterIndex = 0;
 };

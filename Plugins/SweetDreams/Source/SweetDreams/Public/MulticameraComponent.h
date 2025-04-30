@@ -6,10 +6,11 @@
 #include "Curves/CurveFloat.h"
 #include "Components/ActorComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Engine/DataTable.h"
 #include "MulticameraComponent.generated.h"
 
 USTRUCT(BlueprintType)
-struct FCameraViews
+struct SWEETDREAMS_API FCameraViews : public FTableRowBase
 {
 	GENERATED_BODY()
 

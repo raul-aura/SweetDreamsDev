@@ -5,18 +5,20 @@
 #include "SweetDreamsBPLibrary.h"
 #include "SweetDreamsCharacter.h"
 #include "SweetDreamsSettings.h"
+#include "SweetDreamsHUD.h"
 #include "SweetDreamsPlayerController.h"
 
 ASweetDreamsGameMode::ASweetDreamsGameMode()
 {
 	DefaultPawnClass = ASweetDreamsCharacter::StaticClass();
 	PlayerControllerClass = ASweetDreamsPlayerController::StaticClass();
+	HUDClass = ASweetDreamsHUD::StaticClass();
 }
 
 void ASweetDreamsGameMode::BeginPlay()
 {
 	Core = GetGameInstance()->GetSubsystem<USweetDreamsCore>();
-	if (Core && Core->CoreSettings)
+	if (IsValid(Core) && Core->CoreSettings)
 	{
 		if (Core->CoreSettings->bEnableAutoLoadData && Core->CoreSettings->bEnableAutoLoadSave)
 		{
@@ -24,24 +26,43 @@ void ASweetDreamsGameMode::BeginPlay()
 			Core->ManageSaveData(false, false);
 		}
 	}
-	LoadingWidget = CreateLoadingWidget(LoadingWidgetClass);
+	LoadingWidget = CreateLoadingWidget(LoadingWidgetClass, bShowLoadingScreenOnBeginPlay);
 	Super::BeginPlay();
 }
 
-ULoadingWidget* ASweetDreamsGameMode::CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class)
+ULoadingWidget* ASweetDreamsGameMode::CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class, bool bAddToViewport)
 {
-	if (!Class) return nullptr;
+	if (!IsValid(Class)) return nullptr;
 	ULoadingWidget* NewWidget = CreateWidget<ULoadingWidget>(GetWorld(), Class);
-	if (NewWidget)
+	if (IsValid(NewWidget))
 	{
-		NewWidget->AddToViewport(99);
+		if (bAddToViewport) NewWidget->AddToViewport(99);
+		if (LoadingDelay < 0.f) LoadingDelay = 0.1f;
 		FTimerHandle WidgetRemoveTimer;
-		GetWorld()->GetTimerManager().SetTimer(WidgetRemoveTimer, [NewWidget]()
+		GetWorld()->GetTimerManager().SetTimer(WidgetRemoveTimer, [this, NewWidget]()
 			{
-				NewWidget->SetVisibility(ESlateVisibility::Collapsed);
+				NewWidget->OnLoadingDelayFinished(LoadingDelay);
+				if (bHideLoadingScreenOnFinish) NewWidget->SetVisibility(ESlateVisibility::Collapsed);
 			}, LoadingDelay, false);
 	}
 	return NewWidget;
+}
+
+void ASweetDreamsGameMode::LevelLoadStarted(TSoftObjectPtr<UWorld> LoadingLevel)
+{
+	if (IsValid(LoadingWidget))
+	{
+		LoadingWidget->OnLoadingStart();
+	}
+}
+
+void ASweetDreamsGameMode::LevelLoadFinished(TSoftObjectPtr<UWorld> LoadingLevel)
+{
+	if (IsValid(LoadingWidget))
+	{
+		LoadingWidget->OnLoadingFinish();
+		if (bHideLoadingScreenOnFinish) LoadingWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
 }
 
 

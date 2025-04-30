@@ -27,9 +27,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Action")
 	virtual void StartActionForced(bool bUseCooldown);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Action")
-	virtual void RefreshCooldown();
+	virtual void EvaluateCooldown();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Action")
-	virtual void UpdateCooldown();
+	virtual void ApplyCooldown();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Action")
+	virtual void UpdateTurnCooldown();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Action")
+	virtual void ResetCooldown();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Action")
 	virtual float GetPriorityWeight() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Action", meta = (DisplayName = "Remove Self From Battle"))
@@ -54,8 +58,11 @@ public:
 	virtual float GetActionCost() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Action", meta = (ReturnDisplayName="Consumed with Success"))
 	virtual bool ApplyConsumeCost();
+	virtual bool UpdateValidTargets() override;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Action")
+	virtual void LoadRandomTurnTargets();
 	//
-	virtual bool DamageTargets(TArray<AActor*> Targets, float& PostMitigatedDamage, int32& KilledTargets, float Damage = 100.0f, float ResistenceShred = 0.f, bool bCanBeMitigated = true, bool bApplyCalculations = true) override;
+	virtual bool DamageTargets(TArray<AActor*> Targets, float& PostMitigatedDamage, int32& KilledTargets, float Damage = 100.0f, float ResistenceShred = 0.f, bool bCanBeMitigated = true, bool bApplyCalculations = true, bool bIsAdditionalDamage = false) override;
 	virtual float StartAnimation(UAnimSequence* Animation, TArray<AActor*> Targets) override;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Action")
 	virtual void MoveToTarget(AActor* Target, int32 MovementID);
@@ -66,6 +73,8 @@ public:
 	//
 	UPROPERTY(BlueprintReadWrite, Category = "Action")
 	bool bSkipThis = false;
+	UPROPERTY(BlueprintReadWrite, Category = "Action")
+	int32 RemovedCount = 0;
 
 protected:
 
@@ -141,6 +150,8 @@ protected:
 	bool bWaitSequenceToStart = true;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Settings")
 	bool bTurnBasedAction = false;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Settings", meta = (EditCondition = "bTurnBasedAction==true", EditConditionHides))
+	bool bRandomizeTargetsOnStart = false;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Settings", meta = (EditCondition = "bTurnBasedAction==true", EditConditionHides))
 	bool bOverrideOwnerSpeed = false;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Settings", meta = (DisplayName = "Is Last Action when Forced", EditCondition = "bTurnBasedAction==true", EditConditionHides))

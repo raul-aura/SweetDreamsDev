@@ -44,9 +44,11 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stacks")
 	bool bIsStackable = true;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stacks")
-	bool bConsumeStacks = true;
+	bool bCanConsumeStacks = true;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stacks", meta = (DisplayName = "Auto Consume Stacks on Lifetime"))
-	bool bAutoConsumeStacks = false;
+	bool bCanConsumeStacksOnLifetime = true;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stacks")
+	bool bRemoveOnZeroStacks = false;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stacks", meta = (ClampMin = "1"))
 	int32 InitialStacks = 1;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stacks", meta = (ClampMin = "1"))
@@ -57,17 +59,17 @@ protected:
 	// LIFETIME
 	UPROPERTY(BlueprintReadOnly, Category = "Lifetime")
 	bool bAlreadyAppliedOnce = false;
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Lifetime")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lifetime")
 	EStateLifetime Lifetime = EStateLifetime::Permanent;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lifetime", meta = (EditCondition = "Lifetime==EStateLifetime::Turn", ClampMin = "1"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lifetime", meta = (EditCondition = "Lifetime==EStateLifetime::Turn", ClampMin = "0"))
 	int32 TurnsToEnd = 1;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lifetime", meta = (EditCondition = "Lifetime==EStateLifetime::Action", ClampMin = "1"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lifetime", meta = (EditCondition = "Lifetime==EStateLifetime::Action", ClampMin = "0"))
 	int32 ActionsToEnd = 1;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lifetime", meta = (EditCondition = "Lifetime==EStateLifetime::Second", ClampMin = "0.1"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Lifetime", meta = (EditCondition = "Lifetime==EStateLifetime::Second", ClampMin = "0"))
 	float SecondsToEnd = 0.1f;
-	UPROPERTY(BlueprintReadOnly, Category = "Lifetime", meta = (DisplayName = "Lifetime (Turns/Actions)"))
+	UPROPERTY(BlueprintReadWrite, Category = "Lifetime", meta = (DisplayName = "Lifetime (Turns/Actions)"))
 	int32 IntLifetime = 0;
-	UPROPERTY(BlueprintReadOnly, Category = "Lifetime", meta = (DisplayName = "Lifetime (Seconds)"))
+	UPROPERTY(BlueprintReadWrite, Category = "Lifetime", meta = (DisplayName = "Lifetime (Seconds)"))
 	float FloatLifetime = 0.f;
 
 	// PARAMS
@@ -136,45 +138,27 @@ protected:
 	float ManaRestoreMultiplier = 0;
 
 public:
+	virtual void PostInitProperties() override;
 	// EVENTS
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	void OnApplied();
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	void OnReapplied();
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
-	void OnTurnStart(int32 Turn = 0);
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
-	void OnActionEnd(UBattleAction* Action);
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
-	void OnActionCountIncremented(int32 ActionCount);
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
-	void OnOwnerTick(float DeltaTime);
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
-	void OnManaRestored(float RestoredAmount);
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
-	void OnManaConsumed(float ConsumedAmount);
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
-	void OnHealed(float HealedAmount);
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
-	void OnDamageDealt(float DamageAmount, bool bKilledTarget);
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
-	float OnPreDamageReceived(float DamageAmount, AActor* DamageInstigator);
-	float OnPreDamageReceived_Implementation(float DamageAmount, AActor* DamageInstigator);
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
-	void OnPostDamageReceived(float DamageAmount, AActor* DamageInstigator);
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	void OnRemoved();
 	//
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|State", meta = (ExpandBoolAsExecs = "ReturnValue"))
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	virtual bool IsTriggerableAction(UBattleAction* Action) const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	virtual void ApplyState(UObject* Instigator);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	virtual void ResetLifetime();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|State")
-	virtual void AddStacks();
+	virtual void AddStacks(int32 Amount = 1);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|State")
-	virtual void ConsumeStacks();
+	virtual void ConsumeStacks(int32 Amount = 1);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|State")
+	virtual bool IsMaxStacks() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|State")
 	virtual void ConsumeLifetime(EStateLifetime LifetimeToConsume = EStateLifetime::Action);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|State")

@@ -113,7 +113,7 @@ public:
 	void PrintDream(const UObject* DreamOrigin, FString Dream, EPrintType Severity = EPrintType::INFO, float duration = 4.0f);
 
 	// SETTINGS
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Sweet Dreams|Core")
 	const class USweetDreamsSettings* CoreSettings;
 	UFUNCTION()
 	void SetUserSettings(FDreamUserSettings Settings);
@@ -129,6 +129,8 @@ public:
 	USweetDreamsSaveFile* LoadSave(bool bIsPersistent = true);
 	UFUNCTION()
 	void ManageSaveData(bool isSaving = true, bool bIsPersistent = true);
+	UFUNCTION()
+	bool DeleteSave(bool bIsPersistent = true);
 	UPROPERTY()
 	class USweetDreamsSavePersistent* SavePersistentRef = nullptr;
 	UPROPERTY()

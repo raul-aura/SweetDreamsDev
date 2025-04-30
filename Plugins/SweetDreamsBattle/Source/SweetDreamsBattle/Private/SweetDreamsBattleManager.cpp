@@ -82,17 +82,24 @@ ASweetDreamsBattleManager* ASweetDreamsBattleManager::FindActiveBattle(const UOb
 	return nullptr;
 }
 
+void ASweetDreamsBattleManager::SetBattlePaused(bool bPaused)
+{
+	bBattlePaused = bPaused;
+}
+
 void ASweetDreamsBattleManager::StartBattle(float BlendTime)
 {
 	if (bIsBattleActive) return;
+	AllyDamage.Empty();
+	EnemyDamage.Empty();
 	LoadBattlers();
 	bIsBattleActive = true;
-	if (Player)
+	if (IsValid(Player))
 	{
 		Player->StopMovement();
 		ChangeCameraFocus(this, BlendTime);
 	}
-	if (BattleWidget)
+	if (IsValid(BattleWidget))
 	{
 		ASweetDreamsHUD::ShowWidget(BattleWidget);
 	}
@@ -106,12 +113,20 @@ AActor* ASweetDreamsBattleManager::SpawnBattler(TSubclassOf<AActor> Battler, FTr
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		AActor* SpawnedBattler = GetWorld()->SpawnActor<AActor>(Battler, SpawnParams);
-		SpawnedBattler->SetActorTransform(Transform, false, nullptr, ETeleportType::TeleportPhysics);
-		if (Root) SpawnedBattler->AttachToComponent(Root, FAttachmentTransformRules::KeepWorldTransform);
-		if (bAddToReferences)
+		if (IsValid(SpawnedBattler))
 		{
-			TArray<AActor*>& TargetGroup = GetBattlerGroup(BattlerType);
-			TargetGroup.Add(SpawnedBattler);
+			SpawnedBattler->SetActorTransform(Transform, false, nullptr, ETeleportType::TeleportPhysics);
+			if (IsValid(Root)) SpawnedBattler->AttachToComponent(Root, FAttachmentTransformRules::KeepWorldTransform);
+			if (bAddToReferences)
+			{
+				TArray<AActor*>& TargetGroup = GetBattlerGroup(BattlerType);
+				TargetGroup.Add(SpawnedBattler);
+			}
+			UBattlerDataComponent* Data = UBattlerDataComponent::GetBattlerDataComponent(SpawnedBattler);
+			if (IsValid(Data))
+			{
+				Data->SetInBattle(this, true);
+			}
 		}
 		return SpawnedBattler;
 	}
@@ -122,6 +137,21 @@ void ASweetDreamsBattleManager::LoadBattlers_Implementation()
 {
 	EnemyDamage.Init(0.0f, Enemies.Num());
 	AllyDamage.Init(0.0f, Allies.Num());
+	TArray<AActor*> AllBattlers = Allies;
+	AllBattlers.Append(Enemies);
+	for (AActor* Battler : AllBattlers)
+	{
+		UBattlerDataComponent* Data = UBattlerDataComponent::GetBattlerDataComponent(Battler);
+		if (IsValid(Data))
+		{
+			Data->SetInBattle(this, true);
+			TArray<UBattleElement*> AllElements = Data->GetAllElements();
+			for (UBattleElement* Element : AllElements)
+			{
+				if (IsValid(Element)) Element->OnBattleStart(this);
+			}
+		}
+	}
 }
 
 void ASweetDreamsBattleManager::EndBattle(float BlendTime)
@@ -131,9 +161,24 @@ void ASweetDreamsBattleManager::EndBattle(float BlendTime)
 	{
 		ChangeCameraFocus(PlayerPawn, BlendTime);
 	}
-	if (BattleWidget)
+	if (IsValid(BattleWidget))
 	{
 		ASweetDreamsHUD::HideWidget(BattleWidget);
+	}
+	TArray<AActor*> AllBattlers = Allies;
+	AllBattlers.Append(Enemies);
+	for (AActor* Battler : AllBattlers)
+	{
+		UBattlerDataComponent* Data = UBattlerDataComponent::GetBattlerDataComponent(Battler);
+		if (IsValid(Data))
+		{
+			Data->SetInBattle(this, false);
+			TArray<UBattleElement*> AllElements = Data->GetAllElements();
+			for (UBattleElement* Element : AllElements)
+			{
+				if (IsValid(Element)) Element->OnBattleEnd(this);
+			}
+		}
 	}
 	OnBattleEnd(bIsVictorious);
 }
@@ -242,14 +287,14 @@ void ASweetDreamsBattleManager::AddDamageToBattle(AActor* DamageOwner, float Dam
 {
 	if (!DamageOwner || Damage <= 0.0f) return;
 	int32 Index = Enemies.Find(DamageOwner);
-	if (Index != INDEX_NONE)
+	if (EnemyDamage.IsValidIndex(Index))
 	{
 		EnemyDamage[Index] += Damage;
 		OnDamageApplied(DamageOwner, Damage, false, bApplyCalculations);
 		return;
 	}
 	Index = Allies.Find(DamageOwner);
-	if (Index != INDEX_NONE)
+	if (AllyDamage.IsValidIndex(Index))
 	{
 		AllyDamage[Index] += Damage;
 	}
@@ -294,6 +339,63 @@ TArray<AActor*>& ASweetDreamsBattleManager::GetBattlerGroup(EBattlerType Battler
 		checkNoEntry();
 		return Allies;
 	}
+}
+
+TArray<AActor*> ASweetDreamsBattleManager::GetAllPossibleTargets(UBattleAction* Action, bool bUpdateCameraView)
+{
+	auto FilterTargets = [](TArray<AActor*>& Actors, bool (*FilterFn)(AActor*)) {
+		TArray<AActor*> FilteredTargets;
+		for (AActor* Actor : Actors)
+		{
+			if (FilterFn(Actor))
+			{
+				FilteredTargets.Add(Actor);
+			}
+		}
+		Actors = MoveTemp(FilteredTargets);
+	};
+	TArray<AActor*> Targets;
+	ECameraView NewView = ECameraView::AllBattlers;
+	const bool bIsEnemy = IsActorEnemy(Action->GetOwner());
+	switch (Action->GetTargetType())
+	{
+	case ETargetType::Ally:
+	case ETargetType::AllAlly:
+		Targets = bIsEnemy ? Enemies : Allies;
+		NewView = bIsEnemy ? ECameraView::AllBattlers : ECameraView::Allies;
+		break;
+	case ETargetType::DeadAlly:
+		Targets = bIsEnemy ? Enemies : Allies;
+		NewView = ECameraView::Allies;
+		FilterTargets(Targets, [](AActor* Actor) {
+			if (UBattlerDataComponent* Data = Actor->FindComponentByClass<UBattlerDataComponent>())
+			{
+				return Data->IsDead();
+			}
+			return false;
+			});
+		break;
+	case ETargetType::Enemy:
+	case ETargetType::AllEnemy:
+		Targets = bIsEnemy ? Allies : Enemies;
+		NewView = ECameraView::Enemies;
+		break;
+	case ETargetType::Self:
+		Targets = Action->GetOwnerAsArray();
+		NewView = ECameraView::Self;
+		break;
+	default:
+		return {}; 
+	}
+	if (!Action->GetIfIncludeSelf())
+	{
+		Targets.Remove(Action->GetOwner());
+	}
+	if (bUpdateCameraView && bAutoMoveCamera)
+	{
+		ChangeCameraView(NewView, Action->GetOwner(), BattlerBlendTime);
+	}
+	return Targets;
 }
 
 bool ASweetDreamsBattleManager::IsActorAlly(const AActor* Actor) const

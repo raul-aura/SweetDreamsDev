@@ -35,6 +35,8 @@ public:
 	static USweetDreamsSavePersistent* GetPersistentSave(const UObject* WorldContext);
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static USweetDreamsSaveLocal* GetLocalSave(const UObject* WorldContext);
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	static bool DeleteSave(const UObject* WorldContext, bool bIsPersistent = true);
 	// SETTINGS
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static FDreamUserSettings GetUserSettings(const UObject* WorldContext);
@@ -52,15 +54,19 @@ public:
 	// MATH
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static float IncrementAlpha(const UObject* WorldContext, UPARAM(ref) float& Alpha, float MaxValue = 1.0f, class UCurveFloat* AlphaCurve = nullptr, bool bStopCondition = true);
-	UFUNCTION(BlueprintCallable, meta = (ExpandBoolAsExecs = "ReturnValue"))
+	UFUNCTION(BlueprintPure, meta = (ExpandBoolAsExecs = "ReturnValue"))
 	static bool CalculateChance(float& RandomizedValue, float Chance = 100.f);
-	UFUNCTION(BlueprintCallable, meta = (ExpandBoolAsExecs = "ReturnValue"))
+	UFUNCTION(BlueprintPure, meta = (ExpandBoolAsExecs = "ReturnValue"))
 	static bool CheckInterval(const float& Number, float Interval);
 	// HELPERS
-	UFUNCTION(BlueprintCallable, meta = (DevelopmentOnly, CompactNodeTitle = "Do Nothing"))
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Helpers", meta = (DevelopmentOnly, CompactNodeTitle = "Do Nothing"))
 	static void DoNothing() {}
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext, DevelopmentOnly, CompactNodeTitle = "Should Not Happen"))
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Helpers", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext, DevelopmentOnly, CompactNodeTitle = "Should Not Happen"))
 	static void ShouldNotHappen(const UObject* WorldContext);
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext, DevelopmentOnly, CompactNodeTitle = "Do Something"))
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Helpers", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext, DevelopmentOnly, CompactNodeTitle = "Do Something"))
 	static void DoSomething(const UObject* WorldContext);
+	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Helpers")
+	static bool IsRunningInEditor();
+	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Helpers")
+	static bool IsRunningInStandaloneGame();
 };

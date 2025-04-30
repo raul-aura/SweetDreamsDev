@@ -17,35 +17,20 @@ void USweetDreamsBattleCore::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 }
 
-USweetDreamsBattleCore* USweetDreamsBattleCore::GetSweetDreamsBattleCore(const UObject* WorldContext)
-{
-	USweetDreamsBattleCore* BattleCore = nullptr;
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
-	{
-		return BattleCore;
-	}
-	if (UGameInstance* GameInstance = World->GetGameInstance())
-	{
-		BattleCore = GameInstance->GetSubsystem<USweetDreamsBattleCore>();
-	}
-	return BattleCore;
-}
-
 void USweetDreamsBattleCore::SetDifficulty(int32 NewDifficulty)
 {
 	BattleDifficulty = NewDifficulty;
 	OnDifficultySet.Broadcast(BattleDifficulty);
 }
 
-int32 USweetDreamsBattleCore::UpdateLevelsByAvarage(const TArray<AActor*> TargetActors, const TArray<AActor*> AvarageActors)
+int32 USweetDreamsBattleCore::UpdateLevelsByAverage(const TArray<AActor*> TargetActors, const TArray<AActor*> AvarageActors)
 {
-	int32 Avarage = GetAvarageLevel(AvarageActors);
+	int32 Avarage = GetAverageLevel(AvarageActors);
 	OverrideLevels(TargetActors, Avarage);
 	return Avarage;
 }
 
-int32 USweetDreamsBattleCore::GetAvarageLevel(const TArray<AActor*> Actors)
+int32 USweetDreamsBattleCore::GetAverageLevel(const TArray<AActor*> Actors)
 {
 	int32 Avarage = 0;
 	if (Actors.Num() == 0) return 0;

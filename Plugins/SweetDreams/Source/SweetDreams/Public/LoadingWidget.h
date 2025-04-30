@@ -13,8 +13,10 @@ class SWEETDREAMS_API ULoadingWidget : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Loading")
-	void OnStartLoading();
+	void OnLoadingStart();
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Loading")
-	void OnFinishLoading();
+	void OnLoadingFinish();
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Loading")
+	void OnLoadingDelayFinished(float Delay);
 };
 

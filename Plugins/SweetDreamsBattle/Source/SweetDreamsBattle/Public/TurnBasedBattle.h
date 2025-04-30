@@ -71,13 +71,13 @@ protected:
 	bool bGetAlliesFromPlayerController = true;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Enemy Groups")
 	TArray<FEnemyGroups> EnemyGroups;
+	UPROPERTY(BlueprintReadWrite, Category = "Enemy Groups")
+	int32 CurrentEnemyGroup = 0;
 	// 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera", meta = (ClampMin = "0"))
 	float FirstTurnDelay = 2.0f;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera", meta = (DisplayName = "Camera Blend Delay", ClampMin = "0", ToolTip = "Delay (in seconds) before starting a camera view blend.\n\nThis is automatically called when a Battler starts its input turn."))
 	float CameraDelay = 0.8f;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera")
-	bool bAutoMoveCamera = true;
 	// TURN
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turn", meta = (ClampMin = "0"))
 	int32 MaxTurns = 0;
@@ -94,8 +94,12 @@ protected:
 	int32 CurrentAction = 0;
 	UPROPERTY(BlueprintReadWrite, Category = "Action")
 	AActor* CurrentActionBattler = nullptr;
-	UPROPERTY(EditAnywhere, Category = "Action", meta = (ClampMin = "0"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Action", meta = (ClampMin = "0"))
 	float ActionDelay = 0.5f;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Action")
+	bool bAutoLoadAllyActions = true;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Action")
+	bool bAutoLoadEnemyActions = true;
 
 public:
 
@@ -106,6 +110,11 @@ public:
 	virtual void LoadBattlers_Implementation() override;
 	virtual bool EvaluateEndBattle_Implementation() override;
 	virtual void EndBattle(float BlendTime = 2.0f) override;
+	virtual void SetBattlePaused(bool bPaused = true) override;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
+	virtual void PauseTurnBattle();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
+	virtual void UnpauseTurnBattle();
 	// LOAD SPAWN
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager", meta = (DisplayName = "Load and Spawn Battlers"))
 	virtual void LoadSpawnBattlers(TArray<TSoftClassPtr<AActor>> Battlers, EBattlerType BattlerType, USceneComponent* BattlerRoot, TArray<FTransform> TransformGroup);
@@ -116,9 +125,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual void GetEnemiesFromArray(TArray<TSoftClassPtr<AActor>> NewEnemies);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual void LoadEnemiesGroup(int32 Index);
+	virtual TArray<TSoftClassPtr<AActor>> LoadEnemiesGroup(int32 Index);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual void LoadRandomEnemyGroup();
+	virtual TArray<TSoftClassPtr<AActor>> LoadRandomEnemyGroup();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual AActor* SpawnEnemy(TSubclassOf<AActor> EnemyClass, bool bSpawnOnlyIfEmpty = true);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
@@ -139,8 +148,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual UTurnBasedBattleWidget* GetTurnBattleWidget() const;
 	// GETTERS
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual void GetTargetsAllPossible(UPARAM(ref) UBattleAction*& Action, bool bUpdateCameraView = false, bool bOppositeGroup = false);
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG|Turn Battle Manager", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static ATurnBasedBattle* FindActiveTurnBattle(const UObject* WorldContext, UPARAM(DisplayName="Battle Index") int32& BattleId);
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG|Turn Battle Manager", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
@@ -155,11 +162,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual void AddTurnAction(UBattleAction* Action, bool bIgnoreSpeed = false, int32 IndexToAdd = -1);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager", meta = (ReturnDisplayName = "Found and Removed"))
-	virtual bool RemoveTurnAction(UBattleAction* Action);
+	virtual bool RemoveTurnAction(UBattleAction* Action, int32& ActionCount);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual void StartTurnAction();
 	// ACTION
-	// GetActionOfClass()
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
+	virtual bool TurnContainsAction(UBattleAction* Action, int32& Amount) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
+	virtual bool TurnContainsActionOfClass(TSubclassOf<UBattleAction> Action, int32& Amount) const;
 	// ChangeActionOrder()
 	// GetAllActionsOfOwner()
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")

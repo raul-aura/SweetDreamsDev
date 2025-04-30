@@ -8,15 +8,18 @@
 
 ARenderActor::ARenderActor()
 {
+	RootComponent = CreateDefaultSubobject<USceneComponent>("Root");
 	SkyLight = CreateDefaultSubobject<USkyLightComponent>("Skylight");
 	SkyLight->SetupAttachment(RootComponent);
+	SkyLight->SetMobility(EComponentMobility::Movable);
 	SunLight = CreateDefaultSubobject<UDirectionalLightComponent>("Sunlight");
-	SunLight->SetupAttachment(SkyLight);
+	SunLight->SetupAttachment(RootComponent);
+	SunLight->SetMobility(EComponentMobility::Movable);
 	PostProcess = CreateDefaultSubobject<UPostProcessComponent>("Post Process");
-	PostProcess->SetupAttachment(SkyLight);
+	PostProcess->SetupAttachment(RootComponent);
 	PostProcess->bUnbound = true;
 	Fog = CreateDefaultSubobject<UExponentialHeightFogComponent>("Fog");
-	Fog->SetupAttachment(SkyLight);
+	Fog->SetupAttachment(RootComponent);
 }
 
 void ARenderActor::QuickChangeRender(int32 Index)
@@ -43,6 +46,7 @@ void ARenderActor::QuickChangeSky(int32 Index)
 		SkyLight->LightColor = SkyQuickRender[Index].SkyColor;
 		SkyLight->LowerHemisphereColor = SkyQuickRender[Index].LowerHemisphereColor;
 		SkyLight->bLowerHemisphereIsBlack = SkyQuickRender[Index].bUseLowerHemisphereColor;
+		SkyLight->RecaptureSky();
 	}
 }
 

@@ -11,13 +11,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "SweetDreamsCharacter.generated.h"
 
-UENUM(BlueprintType)
-enum class ECameraPerspective : uint8
-{
-	FIRST UMETA(DisplayName = "First-person"),
-	THIRD UMETA(DisplayName = "Third-person"),
-};
-
 UCLASS()
 class SWEETDREAMS_API ASweetDreamsCharacter : public ACharacter
 {
@@ -28,9 +21,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Components")
-	ECameraPerspective CameraPerspective;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
@@ -76,6 +66,4 @@ public:
 	void CameraVertical(float Value, float Sensitivity = 1.0f);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
 	void CameraHorizontal(float Value, float Sensitivity = 1.0f);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	void EvaluateCameraPerspective();
 };

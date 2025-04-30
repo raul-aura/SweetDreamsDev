@@ -22,16 +22,25 @@ public:
 
 	// LEVEL LOAD
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
-	ULoadingWidget* CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class);
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams|Core")
-	float LoadingDelay = 3.f;
-	UPROPERTY(BlueprintReadOnly, Category = "Sweet Dreams|Core")
-	ULoadingWidget* LoadingWidget;
+	ULoadingWidget* CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class, bool bAddToViewport);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
+	void LevelLoadStarted(TSoftObjectPtr<UWorld> LoadingLevel);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
+	void LevelLoadFinished(TSoftObjectPtr<UWorld> LoadingLevel);
 
 protected:
-	UPROPERTY(BlueprintReadOnly, Category = "Sweet Dreams|Core")
+	UPROPERTY(BlueprintReadOnly, Category = "Core")
 	USweetDreamsCore* Core = nullptr;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams|Core")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
 	TSubclassOf<ULoadingWidget> LoadingWidgetClass;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
+	bool bShowLoadingScreenOnBeginPlay = true;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
+	bool bHideLoadingScreenOnFinish = true;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core", meta = (ClampMin = "0"))
+	float LoadingDelay = 3.f;
+	UPROPERTY(BlueprintReadOnly, Category = "Core")
+	ULoadingWidget* LoadingWidget = nullptr;
+
 };

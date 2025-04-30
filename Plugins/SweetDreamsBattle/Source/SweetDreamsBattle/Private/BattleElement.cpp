@@ -8,6 +8,8 @@
 #include "SweetDreamsBPLibrary.h"
 #include "BattleState.h"
 #include "TurnBasedBattle.h"
+#include "SweetDreamsDialogueManager.h"
+#include "Algo/AllOf.h"
 #include "BattlerDataComponent.h"
 
 void UBattleElement::SetOwner(AActor* InputOwner)
@@ -50,7 +52,6 @@ void UBattleElement::ShowMessage()
 
 void UBattleElement::UpdateElementDescription(FText NewDescription)
 {
-	if (NewDescription.IsEmpty()) return;
 	ElementDescription = NewDescription;
 }
 
@@ -59,7 +60,7 @@ void UBattleElement::SetElementHidden(bool bIsHidden)
 	bIsElementHidden = bIsHidden;
 }
 
-void UBattleElement::SetBattle(ASweetDreamsBattleManager* Battle)
+void UBattleElement::SetCurrentBattle(ASweetDreamsBattleManager* Battle)
 {
 	CurrentBattle = Battle;
 }
@@ -154,7 +155,11 @@ void UBattleElement::AddAdjacentTargets(AActor* PrimaryTarget, const TArray<AAct
 
 AActor* UBattleElement::GetFirstElementTarget() const
 {
-	return ElementTargets[0];
+	if (ElementTargets.Num() > 0) 
+	{
+		return ElementTargets[0];
+	}
+	return nullptr;
 }
 
 bool UBattleElement::UpdateValidTargets()
@@ -163,7 +168,7 @@ bool UBattleElement::UpdateValidTargets()
 	for (int32 i = ElementTargets.Num() - 1; i >= 0; --i)
 	{
 		AActor* Target = ElementTargets[i];
-		if (!IsValid(Target) || (IsValid(Target->FindComponentByClass<UBattlerDataComponent>()) && Target->FindComponentByClass<UBattlerDataComponent>()->IsDead()))
+		if (!IsValid(Target))
 		{
 			ElementTargets.RemoveAt(i);
 		}
@@ -171,7 +176,7 @@ bool UBattleElement::UpdateValidTargets()
 	return ElementTargets.Num() > 0;
 }
 
-bool UBattleElement::DamageTargets(TArray<AActor*> Targets, float& PostMitigatedDamage, int32& KilledTargets, float Damage, float ResistenceShred, bool bCanBeMitigated, bool bApplyCalculations)
+bool UBattleElement::DamageTargets(TArray<AActor*> Targets, float& PostMitigatedDamage, int32& KilledTargets, float Damage, float ResistenceShred, bool bCanBeMitigated, bool bApplyCalculations, bool bIsAdditionalDamage)
 {
 	PostMitigatedDamage = 0.0f;
 	KilledTargets = 0;
@@ -196,7 +201,7 @@ bool UBattleElement::DamageTargets(TArray<AActor*> Targets, float& PostMitigated
 				{
 					continue;
 				}
-				float SinglePostMitigated = Data->ReceiveDamage(Damage, ResistenceShred, bCanBeMitigated, GetOwner());
+				float SinglePostMitigated = Data->ReceiveDamage(Damage, ResistenceShred, bCanBeMitigated, GetOwner(), bIsAdditionalDamage);
 				PostMitigatedDamage += SinglePostMitigated;
 				if (!Data->IsDead())
 				{
@@ -207,10 +212,10 @@ bool UBattleElement::DamageTargets(TArray<AActor*> Targets, float& PostMitigated
 				{
 					KilledTargets++;
 				}
-				TArray<UBattleState*> States = Data->GetAllStates();
-				for (UBattleState* State : States)
+				TArray<UBattleElement*> AllElements = OwnerData->GetAllElements();
+				for (UBattleElement* Element : AllElements)
 				{
-					State->OnDamageDealt(SinglePostMitigated, bTargetDead);
+					Element->OnDamageDealt(Targets, SinglePostMitigated, bTargetDead);
 				}
 				int32 Index = 1;
 				ASweetDreamsBattleManager* Battle = ASweetDreamsBattleManager::FindActiveBattle(GetOwner(), Index);
@@ -249,6 +254,11 @@ void UBattleElement::HealTargets(TArray<AActor*> Targets, float& HealedAmount, f
 				}
 				HealedAmount += Data->ReceiveHeal(Heal);
 				OverhealAmount += Heal - HealedAmount;
+				TArray<UBattleElement*> AllElements = OwnerData->GetAllElements();
+				for (UBattleElement* Element : AllElements)
+				{
+					Element->OnHealingGranted(Targets, HealedAmount, OverhealAmount);
+				}
 			}
 		}
 	}
@@ -278,6 +288,11 @@ void UBattleElement::RestoreManaTargets(TArray<AActor*> Targets, float& Restored
 				}
 				RestoredAmount += Data->ReceiveHeal(Restore);
 				OverflowAmount += Restore - RestoredAmount;
+				TArray<UBattleElement*> AllElements = OwnerData->GetAllElements();
+				for (UBattleElement* Element : AllElements)
+				{
+					Element->OnManaRestoreGranted(Targets, RestoredAmount, OverflowAmount);
+				}
 			}
 		}
 	}
@@ -374,7 +389,7 @@ void UBattleElement::CleanseTargets(TArray<AActor*> Targets, int32& StatesRemove
 	}
 }
 
-bool UBattleElement::DoesTargetHasStates(TArray<AActor*> Targets, TArray<TSubclassOf<UBattleState>> States)
+bool UBattleElement::DoesTargetsHasStates(TArray<AActor*> Targets, TArray<TSubclassOf<UBattleState>> States, EStateMatchCondition MatchCondition)
 {
 	if (!AreTargetsValid(Targets)) return false;
 	for (AActor* Target : Targets)
@@ -383,12 +398,23 @@ bool UBattleElement::DoesTargetHasStates(TArray<AActor*> Targets, TArray<TSubcla
 		{
 			if (UBattlerDataComponent* Data = UBattlerDataComponent::GetBattlerDataComponent(Target))
 			{
-				for (UBattleState* State : Data->GetAllStates())
+				TArray<UBattleState*> AllStates = Data->GetAllStates();
+				if (MatchCondition == EStateMatchCondition::AnyMatch)
 				{
-					if (State && States.ContainsByPredicate([&](TSubclassOf<UBattleState> StateClass) { return State->IsA(StateClass); }))
+					for (UBattleState* State : AllStates)
 					{
-						return true;
+						if (IsValid(State) && States.ContainsByPredicate([&](TSubclassOf<UBattleState> StateClass) { return State->IsA(StateClass); }))
+						{
+							return true;
+						}
 					}
+				}
+				else if (MatchCondition == EStateMatchCondition::AllMatch)
+				{
+					return Algo::AllOf(States, [&](TSubclassOf<UBattleState> StateClass)
+					{
+						return AllStates.ContainsByPredicate([&](UBattleState* State) { return IsValid(State) && State->IsA(StateClass); });
+					});
 				}
 			}
 		}
@@ -411,7 +437,7 @@ void UBattleElement::KillTargets(TArray<AActor*> Targets)
 				{
 					continue;
 				}
-				Data->Kill();
+				Data->Kill(GetOwner());
 			}
 		}
 	}
@@ -517,7 +543,27 @@ void UBattleElement::TriggerSoundAtLocation(USoundBase* Sound, FVector Location,
 	}
 }
 
+ASweetDreamsDialogueManager* UBattleElement::StartDialogue(FName DialogueName, float StartTransition)
+{
+	if (!DialogueName.IsNone())
+	{
+		ASweetDreamsDialogueManager* FoundDialogue = ASweetDreamsDialogueManager::StartDialogueByName(GetOwner(), DialogueName, StartTransition);
+		if (IsValid(FoundDialogue))
+		{
+			FoundDialogue->OnDialogueEnded.AddDynamic(this, &UBattleElement::OnDialogueEnded);
+			OnDialogueStarted();
+			return FoundDialogue;
+		}
+	}
+	return nullptr;
+}
+
 bool UBattleElement::AreTargetsValid(const TArray<AActor*>& Targets)
 {
 	return (Targets.Num() > 0);
+}
+
+float UBattleElement::OnPreDamageReceived_Implementation(float DamageAmount, AActor* DamageInstigator)
+{
+	return DamageAmount;
 }

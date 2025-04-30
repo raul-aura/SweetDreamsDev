@@ -7,7 +7,7 @@
 #include "RenderActor.generated.h"
 
 USTRUCT(BlueprintType)
-struct FFogQuickRender
+struct SWEETDREAMS_API FFogQuickRender
 {
 	GENERATED_BODY()
 
@@ -25,7 +25,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FSunQuickRender
+struct SWEETDREAMS_API FSunQuickRender
 {
 	GENERATED_BODY()
 
@@ -43,7 +43,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FSkyQuickRender
+struct SWEETDREAMS_API FSkyQuickRender
 {
 	GENERATED_BODY()
 
@@ -78,6 +78,15 @@ public:
 	class UDirectionalLightComponent* SunLight;
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Sweet Dreams Render")
 	class USkyLightComponent* SkyLight;
+
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Render")
+	UPostProcessComponent* GetPostProcess() const { return PostProcess; }
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Render")
+	UExponentialHeightFogComponent* GetFog() const { return Fog; } 
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Render")
+	UDirectionalLightComponent* GetSunLight() const { return SunLight; } 
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Render")
+	USkyLightComponent* GetSkyLight() const { return SkyLight; } 
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Render")
 	void QuickChangeRender(int32 Index);

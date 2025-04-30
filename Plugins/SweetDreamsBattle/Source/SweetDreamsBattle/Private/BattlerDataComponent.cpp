@@ -3,6 +3,7 @@
 #include "BattlerDataComponent.h"
 #include "BattleState.h"
 #include "BattleCharacter.h"
+#include "SweetDreamsBPLibrary.h"
 
 UBattlerDataComponent::UBattlerDataComponent()
 {
@@ -11,29 +12,35 @@ UBattlerDataComponent::UBattlerDataComponent()
 
 void UBattlerDataComponent::BeginPlay()
 {
-	MaxHealth = BaseHealth; 
+	MaxHealth = BaseHealth;
 	Health = MaxHealth;
 	MaxMana = BaseMana;
 	Mana = bOverrideStartingMana ? StartingMana : MaxMana;
-	CurrentLives = AdditionalLives + 1;
+	CurrentLives = FMath::Max(1, AdditionalLives + 1);
 	Force = BaseForce;
 	Resistence = BaseResistence;
 	Speed = BaseSpeed;
-	LevelObject = NewObject<USweetDreamsLevel>(this, LevelClass);
-	LevelObject->OnLevelUpgraded.AddDynamic(this, &UBattlerDataComponent::UpdateParametersByLevel);
+	if (IsValid(LevelClass))
+	{
+		LevelObject = NewObject<USweetDreamsLevel>(this, LevelClass);
+		if (IsValid(LevelObject))
+		{
+			LevelObject->OnLevelUpgraded.AddUniqueDynamic(this, &UBattlerDataComponent::UpdateParametersByLevel);
+		}
+	}
 	CreateActions();
 	Super::BeginPlay();
 }
 
 void UBattlerDataComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	if (AllStates.Num() > 0)
+	for (UBattleState* State : AllStates)
 	{
-		for (UBattleState* State : AllStates)
-		{
-			State->ConsumeLifetime(EStateLifetime::Second);
-			State->OnOwnerTick(DeltaTime);
-		}
+		if (IsValid(State)) State->ConsumeLifetime(EStateLifetime::Second);
+	}
+	for (UBattleElement* Element : AllElements)
+	{
+		if (IsValid(Element)) Element->OnOwnerTick(DeltaTime);
 	}
 }
 
@@ -69,18 +76,18 @@ int32 UBattlerDataComponent::GetLevelNumber() const
 	{
 		return LevelObject->GetCurrentLevel();
 	}
-	return 0;
+	return -1;
 }
 
 void UBattlerDataComponent::SetLevelNumber(int32 NewLevel)
 {
 	if (IsValid(LevelObject))
 	{
-		LevelObject->OverrideCurrentLevel(NewLevel);
+		LevelObject->SetCurrentLevel(NewLevel);
 	}
 }
 
-void UBattlerDataComponent::UpdateParametersByLevel()
+void UBattlerDataComponent::UpdateParametersByLevel(int32 NewLevel)
 {
 	// do stuff here later
 }
@@ -132,14 +139,13 @@ void UBattlerDataComponent::SetIsAbleToAct(bool bNewAbility)
 	bIsAbleToAct = bNewAbility;
 }
 
-float UBattlerDataComponent::ReceiveDamage(float Damage, float ResistenceShred, bool bCanBeMitigated, AActor* DamageInstigator)
+float UBattlerDataComponent::ReceiveDamage(float Damage, float ResistenceShred, bool bCanBeMitigated, AActor* DamageInstigator, bool bIsAdditionalDamage)
 {
 	if (Damage < 0) return 0.f;
 	float FinalDamage = Damage;
-	TArray<UBattleState*> States = GetAllStates();
-	for (UBattleState* State : States)
+	for (UBattleElement* Element : AllElements)
 	{
-		FinalDamage = State->OnPreDamageReceived(FinalDamage, DamageInstigator);
+		if (IsValid(Element)) FinalDamage = Element->OnPreDamageReceived(FinalDamage, DamageInstigator);
 	}
 	if (bCanBeMitigated)
 	{
@@ -157,13 +163,13 @@ float UBattlerDataComponent::ReceiveDamage(float Damage, float ResistenceShred, 
 		GetBattlerOwner()->IndicateDamage(FinalDamage);
 	}
 	Health = FMath::Clamp(Health - FinalDamage, 0.f, MaxHealth);
-	for (UBattleState* State : States)
+	for (UBattleElement* Element : AllElements)
 	{
-		State->OnPostDamageReceived(FinalDamage, DamageInstigator);
+		if (IsValid(Element)) Element->OnPostDamageReceived(FinalDamage, DamageInstigator, bIsAdditionalDamage);
 	}
 	if (Health <= 0)
 	{
-		Kill();
+		Kill(DamageInstigator);
 	}
 	return FinalDamage;
 }
@@ -177,10 +183,9 @@ float UBattlerDataComponent::ReceiveHeal(float Heal)
 	{
 		GetBattlerOwner()->IndicateDamage(HealedAmount, true);
 	}
-	TArray<UBattleState*> States = GetAllStates();
-	for (UBattleState* State : States)
+	for (UBattleElement* Element : AllElements)
 	{
-		State->OnHealed(HealedAmount);
+		if (IsValid(Element)) Element->OnHealed(HealedAmount);
 	}
 	return HealedAmount;
 }
@@ -190,10 +195,9 @@ float UBattlerDataComponent::ReceiveManaConsume(float Consume)
 	if (Consume <= 0) return 0.f;
 	float ConsumedAmount = FMath::Min(Consume, Mana);
 	Mana = FMath::Clamp(Mana - Consume, 0.f, MaxMana);
-	TArray<UBattleState*> States = GetAllStates();
-	for (UBattleState* State : States)
+	for (UBattleElement* Element : AllElements)
 	{
-		State->OnManaConsumed(ConsumedAmount);
+		if (IsValid(Element)) Element->OnManaConsumed(ConsumedAmount);
 	}
 	return ConsumedAmount;
 }
@@ -203,10 +207,9 @@ float UBattlerDataComponent::ReceiveManaRestore(float Restore)
 	if (Restore <= 0) return 0.f;
 	float RestoredAmount = FMath::Min(Restore, (MaxMana - Mana));
 	Mana = FMath::Clamp(Mana + Restore, 0.f, MaxMana);
-	TArray<UBattleState*> States = GetAllStates();
-	for (UBattleState* State : States)
+	for (UBattleElement* Element : AllElements)
 	{
-		State->OnManaRestored(RestoredAmount);
+		if (IsValid(Element)) Element->OnManaRestored(RestoredAmount);
 	}
 	return RestoredAmount;
 }
@@ -218,7 +221,7 @@ float UBattlerDataComponent::OnMitigateDamage_Implementation(float Damage, float
 	return Damage - (Res * Shred);
 }
 
-void UBattlerDataComponent::Kill()
+void UBattlerDataComponent::Kill(AActor* KillInstigator)
 {
 	bIsDead = true;
 	CurrentLives = FMath::Clamp(--CurrentLives, 0, AdditionalLives);
@@ -231,6 +234,10 @@ void UBattlerDataComponent::Kill()
 				Revive();
 			}, 0.5f, false);
 		return;
+	}
+	for (UBattleElement* Element : AllElements)
+	{
+		if (IsValid(Element)) Element->OnKilled(KillInstigator, CurrentLives);
 	}
 	ResetActions();
 }
@@ -256,29 +263,46 @@ bool UBattlerDataComponent::IsInBattle() const
 	return bIsInBattle;
 }
 
-void UBattlerDataComponent::SetInBattle(bool bUpdatedIsInBattle)
+void UBattlerDataComponent::SetInBattle(ASweetDreamsBattleManager* BattleReference, bool bNewIsInBattle)
 {
-	bIsInBattle = bUpdatedIsInBattle;
+	bIsInBattle = bNewIsInBattle;
+	if (bIsInBattle)
+	{
+		for (UBattleElement* Element : AllElements)
+		{
+			if (IsValid(Element))
+			{
+				Element->SetCurrentBattle(BattleReference);
+			}
+		}
+	}
+}
+
+TArray<UBattleElement*> UBattlerDataComponent::GetAllElements() const
+{
+	return AllElements;
 }
 
 float UBattlerDataComponent::UpdateHealthValue(float Value, float Percentage, bool bUpdateCurrentHealth)
 {
+	float OldMaxHealth = MaxHealth;
 	float CurrentPercentage = GetHealthPercentage();
 	UpdateParameter(MaxHealth, Value, Percentage);
-	if (bUpdateCurrentHealth)
+	if (bUpdateCurrentHealth && OldMaxHealth != MaxHealth)
 	{
-		Health = FMath::Clamp(Health * CurrentPercentage, 1.f, MaxHealth);
+		Health = FMath::Clamp(MaxHealth * CurrentPercentage, 0.f, MaxHealth);
 	}
 	return MaxHealth;
 }
 
 float UBattlerDataComponent::UpdateManaValue(float Value, float Percentage, bool bUpdateCurrentMana)
 {
+	float OldMaxMana = MaxMana;
 	float CurrentPercentage = GetManaPercentage();
 	UpdateParameter(MaxMana, Value, Percentage);
-	if (bUpdateCurrentMana)
+	if (bUpdateCurrentMana && OldMaxMana != MaxMana)
 	{
-		Mana = FMath::Clamp(Mana * CurrentPercentage, 1.f, MaxMana);
+		Mana = FMath::Clamp(MaxMana * CurrentPercentage, 0.f, MaxMana);
 	}
 	return MaxMana;
 }
@@ -299,16 +323,17 @@ void UBattlerDataComponent::AddState(TSubclassOf<UBattleState> State, UObject* S
 	UBattleState* NewState = nullptr;
 	for (UBattleState* ForState : AllStates)
 	{
-		if (ForState->IsA(State))
+		if (IsValid(ForState) && ForState->IsA(State))
 		{
 			NewState = ForState;
 			break;
 		}
 	}
-	if (!NewState)
+	if (!IsValid(NewState))
 	{
 		NewState = NewObject<UBattleState>(GetOwner(), State);
 		NewState->SetOwner(GetOwner());
+		AllElements.Add(NewState);
 		AllStates.Add(NewState);
 	}
 	NewState->ApplyState(StateInstigator);
@@ -322,16 +347,17 @@ void UBattlerDataComponent::AddStates(TArray<TSubclassOf<UBattleState>> StatesTo
 		UBattleState* NewState = nullptr;
 		for (UBattleState* ForState : AllStates)
 		{
-			if (ForState->IsA(StateClass))
+			if (IsValid(ForState) && ForState->IsA(StateClass))
 			{
 				NewState = ForState;
 				break;
 			}
 		}
-		if (!NewState)
+		if (!IsValid(NewState))
 		{
 			NewState = NewObject<UBattleState>(GetOwner(), StateClass);
 			NewState->SetOwner(GetOwner());
+			AllElements.Add(NewState);
 			AllStates.Add(NewState);
 		}
 		NewState->ApplyState(StateInstigator);
@@ -343,10 +369,11 @@ void UBattlerDataComponent::RemoveState(TSubclassOf<UBattleState> State)
 	if (!IsValid(State) || AllStates.Num() == 0) return;
 	for (UBattleState* LocalState : AllStates)
 	{
-		if (LocalState->IsA(State))
+		if (IsValid(LocalState) && LocalState->IsA(State))
 		{
 			LocalState->OnRemoved();
 			LocalState->RemoveParams();
+			AllElements.Remove(LocalState);
 			AllStates.Remove(LocalState);
 			LocalState->ConditionalBeginDestroy();
 			return;
@@ -361,10 +388,11 @@ void UBattlerDataComponent::RemoveStates(TArray<TSubclassOf<UBattleState>> State
 	{
 		for (UBattleState* LocalState : AllStates)
 		{
-			if (LocalState->IsA(StateClass))
+			if (IsValid(LocalState) && LocalState->IsA(StateClass))
 			{
 				LocalState->OnRemoved();
 				LocalState->RemoveParams();
+				AllElements.Remove(LocalState);
 				AllStates.Remove(LocalState);
 				LocalState->ConditionalBeginDestroy();
 				break;
@@ -375,6 +403,7 @@ void UBattlerDataComponent::RemoveStates(TArray<TSubclassOf<UBattleState>> State
 
 int32 UBattlerDataComponent::RemoveAllStates(bool bIncludePositive, bool bIncludeNegative)
 {
+	if (AllStates.Num() == 0) return 0;
 	int32 StatesRemoved = 0;
 	for (int32 i = AllStates.Num() - 1; i >= 0; i--)
 	{
@@ -398,7 +427,7 @@ UBattleState* UBattlerDataComponent::GetStateOfClass(TSubclassOf<UBattleState> S
 	UBattleState* FoundState = nullptr;
 	for (UBattleState* State : AllStates)
 	{
-		if (State->IsA(StateClass))
+		if (IsValid(State) && State->IsA(StateClass))
 		{
 			FoundState = State;
 			break;
@@ -418,7 +447,8 @@ void UBattlerDataComponent::CreateActions()
 	{
 		for (FActionData ActionData : ActionClasses)
 		{
-			if (LevelObject->GetCurrentLevel() >= ActionData.Level) LearnAction(ActionData.Action);
+			if (IsValid(LevelObject) && LevelObject->GetCurrentLevel() >= ActionData.Level) LearnAction(ActionData.Action);
+			else if (!IsValid(LevelObject)) LearnAction(ActionData.Action);
 		}
 	}
 }
@@ -428,6 +458,7 @@ void UBattlerDataComponent::AddAction(UBattleAction* ActionToAdd)
 	if (IsValid(ActionToAdd))
 	{
 		Actions.AddUnique(ActionToAdd);
+		AllElements.Add(ActionToAdd);
 	}
 }
 
@@ -437,10 +468,7 @@ void UBattlerDataComponent::AddActions(TArray<UBattleAction*> ActionsToAdd)
 	{
 		for (UBattleAction* Action : ActionsToAdd)
 		{
-			if (IsValid(Action))
-			{
-				Actions.AddUnique(Action);
-			}
+			AddAction(Action);
 		}
 	}
 }
@@ -450,11 +478,15 @@ UBattleAction* UBattlerDataComponent::LearnAction(TSubclassOf<UBattleAction> Act
 	UBattleAction* NewAction = nullptr;
 	if (IsValid(ActionToLearn))
 	{
+		for (UBattleAction* Action : Actions)
+		{
+			if (Action->IsA(ActionToLearn)) return NewAction;
+		}
 		NewAction = NewObject<UBattleAction>(GetOwner(), ActionToLearn);
 		if (IsValid(NewAction))
 		{
 			NewAction->SetOwner(GetOwner());
-			Actions.AddUnique(NewAction);
+			AddAction(NewAction);
 		}
 	}
 	return NewAction;
@@ -469,11 +501,10 @@ TArray<UBattleAction*> UBattlerDataComponent::LearnActions(TArray<TSubclassOf<UB
 		{
 			if (IsValid(ActionClass))
 			{
-				UBattleAction* NewAction = NewObject<UBattleAction>(GetOwner(), ActionClass);
+				UBattleAction* NewAction = LearnAction(ActionClass);
 				if (IsValid(NewAction))
 				{
-					NewAction->SetOwner(GetOwner());
-					Actions.AddUnique(NewAction);
+					NewActions.Add(NewAction);
 				}
 			}
 		}
@@ -490,6 +521,7 @@ void UBattlerDataComponent::RemoveAction(TSubclassOf<UBattleAction> ActionToRemo
 			if (IsValid(Action) && Action->IsA(ActionToRemove))
 			{
 				Actions.Remove(Action);
+				AllElements.Remove(Action);
 				Action->ConditionalBeginDestroy();
 				return;
 			}
@@ -519,6 +551,7 @@ void UBattlerDataComponent::RemoveActions(TArray<TSubclassOf<UBattleAction>> Act
 		for (UBattleAction* ActionToRemove : ActionsToDelete)
 		{
 			Actions.Remove(ActionToRemove);
+			AllElements.Remove(ActionToRemove);
 			ActionToRemove->ConditionalBeginDestroy();
 		}
 	}
@@ -572,12 +605,12 @@ TArray<UBattleAction*> UBattlerDataComponent::GetAllActions() const
 	return Actions;
 }
 
-void UBattlerDataComponent::UpdateActionsCooldown()
+void UBattlerDataComponent::UpdateTurnActionsCooldown()
 {
 	if (Actions.Num() == 0) return;
 	for (UBattleAction* Action : Actions)
 	{
-		Action->UpdateCooldown();
+		Action->UpdateTurnCooldown();
 	}
 }
 
@@ -623,10 +656,10 @@ int32 UBattlerDataComponent::UpdateSpeedValue(float Value, float Percentage)
 
 float UBattlerDataComponent::UpdateParameter(float& Attribute, float Value, float Percentage)
 {
-	if (Value == 0 && Percentage == 0) return Attribute;
-	float AdjustedPercentage = (FMath::Abs(Percentage) / 100.0f) * Attribute;
-	Attribute += Value + (Percentage >= 0 ? AdjustedPercentage : -AdjustedPercentage);
-	Attribute = FMath::Max(Attribute, 1.f);
+	if (Value == 0.f && Percentage == 0.f) return Attribute;
+	float AdjustedPercentage = (Percentage / 100.f) * Attribute;
+	Attribute += Value + AdjustedPercentage;
+	Attribute = FMath::Max(Attribute, 0.f);
 	return Attribute;
 }
 

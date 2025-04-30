@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "SweetDreamsLevel.h"
+#include "Engine/DataTable.h"
 #include "BattlerDataComponent.generated.h"
 
 USTRUCT(BlueprintType)
-struct FActionData
+struct SWEETDREAMSBATTLE_API FActionData : public FTableRowBase
 {
 	GENERATED_BODY()
 
@@ -85,12 +86,13 @@ protected:
 	bool bIsInBattle = false;
 	UPROPERTY(BlueprintReadWrite, Category = "Params")
 	int32 ActionCount = 0;
-	// ACTIONS
+	// ELEMENTS
+	UPROPERTY(EditAnywhere, Category = "Battle")
+	TArray<UBattleElement*> AllElements;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle", meta = (DisplayName = "Actions"))
 	TArray<FActionData> ActionClasses;
 	UPROPERTY(BlueprintReadWrite, Category = "Battle")
 	TArray<UBattleAction*> Actions;
-	// STATES
 	UPROPERTY(BlueprintReadOnly, Category = "States")
 	TArray<class UBattleState*> AllStates;
 	// MULTIPLIERS
@@ -129,7 +131,7 @@ public:
 	void SetLevelNumber(int32 NewLevel = 1);
 	// PARAMS
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
-	void UpdateParametersByLevel();
+	void UpdateParametersByLevel(int32 NewLevel);
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG|Battler Data", meta = (ReturnDisplayName="Current Health"))
 	virtual float GetHealth(float& MaximumHealth, float Multiplier = 100.f);
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG|Battler Data", meta = (ReturnDisplayName = "Current Mana"))
@@ -172,7 +174,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
 	virtual float GetManaPercentage() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
-	virtual float ReceiveDamage(float Damage, float ResistenceShred, bool bCanBeMitigated, AActor* DamageInstigator);
+	virtual float ReceiveDamage(float Damage, float ResistenceShred, bool bCanBeMitigated, AActor* DamageInstigator, bool bIsAdditionalDamage);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
 	virtual float ReceiveHeal(float Heal);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
@@ -183,7 +185,7 @@ public:
 	float OnMitigateDamage(float Damage, float ResistenceShred = 0.f);
 	float OnMitigateDamage_Implementation(float Damage, float ResistenceShred = 0.f);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
-	void Kill();
+	void Kill(AActor* KillInstigator);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
 	void Revive(float HealthRestore = 100.f, float ManaRestore = 100.f); 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
@@ -191,7 +193,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
 	virtual bool IsInBattle() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
-	virtual void SetInBattle(bool bUpdatedIsInBattle);
+	virtual void SetInBattle(ASweetDreamsBattleManager* BattleReference, bool bNewIsInBattle = true);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
+	virtual TArray<UBattleElement*> GetAllElements() const;
 	// STATES
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
 	virtual void AddState(TSubclassOf<UBattleState> StateToAdd, UObject* StateInstigator);
@@ -229,7 +233,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
 	virtual TArray<UBattleAction*> GetAllActions() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
-	virtual void UpdateActionsCooldown();
+	virtual void UpdateTurnActionsCooldown();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
 	virtual void ResetActions();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
@@ -250,7 +254,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
 	virtual float GetHealMultiplier() const { return FMath::Max(HealMultiplier, 0.f); }
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
-	virtual float GetManaRestoreMultiplier() const { return FMath::Max(ManaRestoreMultiplier, 0.f); } // create function in battle element to restore mana
+	virtual float GetManaRestoreMultiplier() const { return FMath::Max(ManaRestoreMultiplier, 0.f); }
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")
 	virtual float UpdateForceMultiplier(float Value = 10.f);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battler Data")

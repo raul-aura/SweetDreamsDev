@@ -50,7 +50,7 @@ bool USweetDreamsBPLibrary::CreateSaveGame(const UObject* WorldContext, TSubclas
 	if (UGameInstance* GameInstance = World->GetGameInstance())
 	{
 		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (SweetDreamsCore)
+		if (IsValid(SweetDreamsCore))
 		{
 			return SweetDreamsCore->CreateSave(SaveClass, bIsPersistent);
 		}
@@ -68,7 +68,7 @@ bool USweetDreamsBPLibrary::SaveGame(const UObject* WorldContext, USweetDreamsSa
 	if (UGameInstance* GameInstance = World->GetGameInstance())
 	{
 		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (SweetDreamsCore)
+		if (IsValid(SweetDreamsCore))
 		{
 			return SweetDreamsCore->Save(SaveObject, bIsPersistent);
 		}
@@ -86,7 +86,7 @@ USweetDreamsSaveFile* USweetDreamsBPLibrary::LoadSaveGame(const UObject* WorldCo
 	if (UGameInstance* GameInstance = World->GetGameInstance())
 	{
 		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (SweetDreamsCore)
+		if (IsValid(SweetDreamsCore))
 		{
 			return SweetDreamsCore->LoadSave(bIsPersistent);
 		}
@@ -104,7 +104,7 @@ USweetDreamsSavePersistent* USweetDreamsBPLibrary::GetPersistentSave(const UObje
 	if (UGameInstance* GameInstance = World->GetGameInstance())
 	{
 		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (SweetDreamsCore)
+		if (IsValid(SweetDreamsCore))
 		{
 			return SweetDreamsCore->SavePersistentRef;
 		}
@@ -122,12 +122,30 @@ USweetDreamsSaveLocal* USweetDreamsBPLibrary::GetLocalSave(const UObject* WorldC
 	if (UGameInstance* GameInstance = World->GetGameInstance())
 	{
 		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (SweetDreamsCore)
+		if (IsValid(SweetDreamsCore))
 		{
 			return SweetDreamsCore->SaveLocalRef;
 		}
 	}
 	return nullptr;
+}
+
+bool USweetDreamsBPLibrary::DeleteSave(const UObject* WorldContext, bool bIsPersistent)
+{
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
+	if (!IsValid(WorldContext) && !IsValid(World))
+	{
+		return false;
+	}
+	if (UGameInstance* GameInstance = World->GetGameInstance())
+	{
+		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
+		if (IsValid(SweetDreamsCore))
+		{
+			return SweetDreamsCore->DeleteSave(bIsPersistent);
+		}
+	}
+	return false;
 }
 
 FDreamUserSettings USweetDreamsBPLibrary::GetUserSettings(const UObject* WorldContext)
@@ -140,7 +158,7 @@ FDreamUserSettings USweetDreamsBPLibrary::GetUserSettings(const UObject* WorldCo
 	if (UGameInstance* GameInstance = World->GetGameInstance())
 	{
 		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (SweetDreamsCore)
+		if (IsValid(SweetDreamsCore))
 		{
 			FDreamUserSettings Settings = SweetDreamsCore->GetUserSettings();
 			return Settings;
@@ -159,7 +177,7 @@ void USweetDreamsBPLibrary::SetUserSettings(const UObject* WorldContext, FDreamU
 	if (UGameInstance* GameInstance = World->GetGameInstance())
 	{
 		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (SweetDreamsCore)
+		if (IsValid(SweetDreamsCore))
 		{
 			Settings.ApplySettings();
 			SweetDreamsCore->SetUserSettings(Settings);
@@ -177,7 +195,7 @@ void USweetDreamsBPLibrary::SetSettingsQuality(const UObject* WorldContext, int3
 	if (UGameInstance* GameInstance = World->GetGameInstance())
 	{
 		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (SweetDreamsCore)
+		if (IsValid(SweetDreamsCore))
 		{
 			Quality = FMath::Clamp(Quality, 0, 2);
 			FDreamUserSettings NewSettings(Quality);
@@ -236,6 +254,20 @@ void USweetDreamsBPLibrary::ShouldNotHappen(const UObject* WorldContext)
 void USweetDreamsBPLibrary::DoSomething(const UObject* WorldContext)
 {
 	PrintDream(WorldContext, "Something has been done.", EPrintType::WARNING, 10.f);
+}
+
+bool USweetDreamsBPLibrary::IsRunningInEditor()
+{
+#if WITH_EDITOR
+	return GIsEditor;
+#else
+	return false;
+#endif
+}
+
+bool USweetDreamsBPLibrary::IsRunningInStandaloneGame()
+{
+	return !IsRunningInEditor();
 }
 
 float USweetDreamsBPLibrary::IncrementAlpha(const UObject* WorldContext, float& Alpha, float MaxValue, UCurveFloat* AlphaCurve, bool bStopCondition)
