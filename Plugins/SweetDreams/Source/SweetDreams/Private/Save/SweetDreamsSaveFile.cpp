@@ -6,5 +6,7 @@
 
 USweetDreamsSaveFile::USweetDreamsSaveFile() {}
 
-void USweetDreamsSaveFile::OnSaveLoaded(TArray<AActor*>& Actors) {}
-void USweetDreamsSaveFile::OnSaveSaved(TArray<AActor*>& Actors) {}
+void USweetDreamsSaveFile::UpdateCurrentVersion()
+{
+	CurrentVersion = SavedDeltaData.Num() - 1;
+}

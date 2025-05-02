@@ -2,13 +2,12 @@
 
 
 #include "Core/SweetDreamsSettings.h"
-#include "Save/SweetDreamsSaveLocal.h"
-#include "Save/SweetDreamsSavePersistent.h"
+#include "Save/SweetDreamsSaveFile.h"
 
 USweetDreamsSettings::USweetDreamsSettings()
 {
 	DebugFlags |= static_cast<uint8>(EDebugFlags::PrintEnabled);
 	DebugFlags |= static_cast<uint8>(EDebugFlags::PrintSaveOperations);
-	PersistentClass = USweetDreamsSavePersistent::StaticClass();
-	LocalClass = USweetDreamsSaveLocal::StaticClass();
+	PersistentClass = USweetDreamsSaveFile::StaticClass();
+	LocalClass = USweetDreamsSaveFile::StaticClass();
 }

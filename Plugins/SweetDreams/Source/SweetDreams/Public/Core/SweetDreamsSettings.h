@@ -6,8 +6,7 @@
 #include "Engine/DeveloperSettings.h"
 #include "SweetDreamsSettings.generated.h"
 
-class USweetDreamsSavePersistent;
-class USweetDreamsSaveLocal;
+class USweetDreamsSaveFile;
 
 UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class EDebugFlags : uint8
@@ -44,11 +43,11 @@ public:
 	FString PersistentSlot = "SweetDream_PERSISTENT";
 	//Class of the Persistent Save
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Save|Persistent", meta = (DisplayName = "Persistent Save Class"))
-	TSubclassOf<USweetDreamsSavePersistent> PersistentClass;
+	TSubclassOf<USweetDreamsSaveFile> PersistentClass;
 	//Name of the Local Save File
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Save|Local", meta = (DisplayName = "Local File Name"))
 	FString LocalSlot = "SweetDream_LOCAL";
 	//Class of the Local Save
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Save|Local", meta = (DisplayName = "Local Save Class"))
-	TSubclassOf<USweetDreamsSaveLocal> LocalClass;
+	TSubclassOf<USweetDreamsSaveFile> LocalClass;
 };

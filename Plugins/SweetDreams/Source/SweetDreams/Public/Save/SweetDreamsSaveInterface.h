@@ -18,15 +18,25 @@ class SWEETDREAMS_API ISweetDreamsSaveInterface
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save") //Calling this on BeginPlay or InitializeCore will always return an empty save file. Remember that Local Save is meant for on runtime data only and will always be destroyed on game end (deinitialize).
-	void OnLocalLoaded(USweetDreamsSaveLocal* SaveFile);
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save") //
-	void OnPersistentLoaded(USweetDreamsSavePersistent* SaveFile);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
-	void OnLocalSaved(USweetDreamsSaveLocal* SaveFile);
+	TMap<FName, FString> GetPersistentCustomData();
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
+	TMap<FName, FString> GetPersistentDeltaData();
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
+	void LoadPersistentCustomData(const TMap<FName, FString>& Data);
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
+	void LoadPersistentDeltaData(const TMap<FName, FString>& Data);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
-	void OnPersistentSaved(USweetDreamsSavePersistent* SaveFile);
+	TMap<FName, FString> GetLocalCustomData();
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
+	TMap<FName, FString> GetLocalDeltaData();
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
+	void LoadLocalCustomData(const TMap<FName, FString>& Data);
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
+	void LoadLocalDeltaData(const TMap<FName, FString>& Data);
+
+	UFUNCTION(BlueprintNativeEvent)
+	bool IsDeltaSaveEnabled();
 };

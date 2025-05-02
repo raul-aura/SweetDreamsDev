@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "SweetDreamsCore.h"
+#include "Core/SweetDreamsCore.h"
 #include "SweetDreamsBPLibrary.generated.h"
 
 class USweetDreamsCore;
@@ -32,9 +32,9 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static USweetDreamsSaveFile* LoadSaveGame(const UObject* WorldContext, bool bIsPersistent = true);
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
-	static USweetDreamsSavePersistent* GetPersistentSave(const UObject* WorldContext);
+	static USweetDreamsSaveFile* GetPersistentSave(const UObject* WorldContext);
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
-	static USweetDreamsSaveLocal* GetLocalSave(const UObject* WorldContext);
+	static USweetDreamsSaveFile* GetLocalSave(const UObject* WorldContext);
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static bool DeleteSave(const UObject* WorldContext, bool bIsPersistent = true);
 	// SETTINGS

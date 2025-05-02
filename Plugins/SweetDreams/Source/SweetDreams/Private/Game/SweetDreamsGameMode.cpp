@@ -23,8 +23,8 @@ void ASweetDreamsGameMode::BeginPlay()
 	{
 		if (Core->CoreSettings->bEnableAutoLoadData && Core->CoreSettings->bEnableAutoLoadSave)
 		{
-			Core->ManageSaveData(false);
-			Core->ManageSaveData(false, false);
+			Core->LoadData();
+			Core->LoadData(false);
 		}
 	}
 	LoadingWidget = CreateLoadingWidget(LoadingWidgetClass, bShowLoadingScreenOnBeginPlay);

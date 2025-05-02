@@ -2,6 +2,7 @@
 
 #include "Core/SweetDreamsBPLibrary.h"
 #include "Core/SweetDreams.h"
+#include "Core/SweetDreamsCore.h"
 #include "UMG/Public/Components/PanelWidget.h"
 #include "UMG/Public/Blueprint/UserWidget.h"
 #include "Game/SweetDreamsGameMode.h"
@@ -94,7 +95,7 @@ USweetDreamsSaveFile* USweetDreamsBPLibrary::LoadSaveGame(const UObject* WorldCo
 	return nullptr;
 }
 
-USweetDreamsSavePersistent* USweetDreamsBPLibrary::GetPersistentSave(const UObject* WorldContext)
+USweetDreamsSaveFile* USweetDreamsBPLibrary::GetPersistentSave(const UObject* WorldContext)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
 	if (!IsValid(WorldContext) && !IsValid(World))
@@ -112,7 +113,7 @@ USweetDreamsSavePersistent* USweetDreamsBPLibrary::GetPersistentSave(const UObje
 	return nullptr;
 }
 
-USweetDreamsSaveLocal* USweetDreamsBPLibrary::GetLocalSave(const UObject* WorldContext)
+USweetDreamsSaveFile* USweetDreamsBPLibrary::GetLocalSave(const UObject* WorldContext)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
 	if (!IsValid(WorldContext) && !IsValid(World))

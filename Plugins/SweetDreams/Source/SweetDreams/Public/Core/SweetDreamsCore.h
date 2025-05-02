@@ -5,9 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameUserSettings.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Save/SaveData.h"
 #include "SweetDreamsCore.generated.h"
 
-class USweetDreamsSave;
+class USweetDreamsSaveFile;
+class USweetDreamsSettings;
 
 UENUM(BlueprintType)
 enum class EPrintType : uint8
@@ -108,35 +110,31 @@ public:
 	void LoadSettings();
 
 	// DEBUG
-	UFUNCTION()
 	void PrintDream(const UObject* DreamOrigin, FString Dream, EPrintType Severity = EPrintType::INFO, float duration = 4.0f);
 
 	// SETTINGS
 	UPROPERTY(BlueprintReadOnly, Category = "Sweet Dreams|Core")
-	const class USweetDreamsSettings* CoreSettings;
-	UFUNCTION()
+	const USweetDreamsSettings* CoreSettings;
 	void SetUserSettings(FDreamUserSettings Settings);
-	UFUNCTION()
 	FDreamUserSettings GetUserSettings() const;
 
 	// SAVE
-	UFUNCTION()
 	bool CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, bool bIsPersistent = true);
-	UFUNCTION()
-	bool Save(USweetDreamsSaveFile* SaveObject, bool bIsPersistent = true);
-	UFUNCTION()
-	USweetDreamsSaveFile* LoadSave(bool bIsPersistent = true);
-	UFUNCTION()
-	void ManageSaveData(bool isSaving = true, bool bIsPersistent = true);
-	UFUNCTION()
+	bool Save(USweetDreamsSaveFile* SaveObject, bool bIsPersistent = true, bool bSaveAllData = true);
+	USweetDreamsSaveFile* LoadSave(bool bIsPersistent = true, int32 Version = 0);
+	void SaveData(bool bIsPersistent = true, bool bSaveAllData = true);
+	void LoadData(bool bIsPersistent = true, int32 Version = 0);
 	bool DeleteSave(bool bIsPersistent = true);
+	USweetDreamsSaveFile* GetSaveObject(bool bIsPersistent = true) const;
 	UPROPERTY()
-	class USweetDreamsSavePersistent* SavePersistentRef = nullptr;
+	class USweetDreamsSaveFile* SavePersistentRef = nullptr;
 	UPROPERTY()
-	class USweetDreamsSaveLocal* SaveLocalRef = nullptr;
+	class USweetDreamsSaveFile* SaveLocalRef = nullptr;
+
+	// WORLD
+	AActor* FindActorByName(FName Name);
 
 	// LOADING
-	UFUNCTION()
 	void LoadLevel(TSoftObjectPtr<UWorld> Level);
 	UPROPERTY()
 	TSoftObjectPtr<UWorld> CurrentLoadingLevel;
@@ -148,9 +146,9 @@ protected:
 
 	// SAVE
 	UPROPERTY()
-	TSubclassOf<USweetDreamsSavePersistent> SaveClassPersistent = nullptr;
+	TSubclassOf<USweetDreamsSaveFile> SaveClassPersistent = nullptr;
 	UPROPERTY()
-	TSubclassOf<USweetDreamsSaveLocal> SaveClassLocal = nullptr;
+	TSubclassOf<USweetDreamsSaveFile> SaveClassLocal = nullptr;
 	UPROPERTY()
 	FString SaveSlotPersistent = "SweetDream_PERSISTENT";
 	UPROPERTY()
