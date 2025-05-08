@@ -5,8 +5,3 @@
 #include "EngineUtils.h"
 
 USweetDreamsSaveFile::USweetDreamsSaveFile() {}
-
-void USweetDreamsSaveFile::UpdateCurrentVersion()
-{
-	CurrentVersion = SavedDeltaData.Num() - 1;
-}

@@ -15,13 +15,10 @@ class SWEETDREAMS_API USweetDreamsSaveFile : public USaveGame
 public:
 	USweetDreamsSaveFile();
 
-	void UpdateCurrentVersion();
-
-	UPROPERTY()
-	TArray<FSaveData> SavedFullData;
-	UPROPERTY()
-	TArray<FDeltaSaveData> SavedDeltaData;
-	UPROPERTY()
-	int32 CurrentVersion = 0;
-
+	UPROPERTY(BlueprintReadOnly, Category = "Sweet Dreams|Core|Save")
+	TArray<FSaveData> SavedData;
+	UPROPERTY(BlueprintReadOnly, Category = "Sweet Dreams|Core|Save")
+	FDateTime LastTimeSaved;
+	UPROPERTY(BlueprintReadOnly, Category = "Sweet Dreams|Core|Save")
+	int32 AmountOfSaves = 0;
 };

@@ -13,6 +13,9 @@ struct SWEETDREAMS_API FSaveData
 
 public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	FName LevelName;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	FName ActorName;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
@@ -20,20 +23,4 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	TMap<FName, FString> CustomData;
-
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-	TMap<FName, FString> CustomDeltaData;
-};
-
-USTRUCT()
-struct SWEETDREAMS_API FDeltaSaveData
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY()
-	TArray<FSaveData> DeltaData;
-
-	UPROPERTY()
-	FDateTime SaveTime;
 };

@@ -234,6 +234,11 @@ float USweetDreamsBPLibrary::GetLoadingPercentage(TSoftObjectPtr<UObject> Asset)
 	return (Percentage == -1) ? 100.f : Percentage;
 }
 
+float USweetDreamsBPLibrary::IncrementAlpha(const UObject* WorldContext, UPARAM(ref) float& Alpha, float MaxValue, UCurveFloat* AlphaCurve, bool bStopCondition)
+{
+	return 0.0f;
+}
+
 bool USweetDreamsBPLibrary::CalculateChance(float& RandomizedValue, float Chance)
 {
 	Chance = FMath::Clamp(Chance / 100.0f, 0.0f, 1.0f);
@@ -269,30 +274,6 @@ bool USweetDreamsBPLibrary::IsRunningInEditor()
 bool USweetDreamsBPLibrary::IsRunningInStandaloneGame()
 {
 	return !IsRunningInEditor();
-}
-
-float USweetDreamsBPLibrary::IncrementAlpha(const UObject* WorldContext, float& Alpha, float MaxValue, UCurveFloat* AlphaCurve, bool bStopCondition)
-{
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
-	{
-		return Alpha;
-	}
-	if (MaxValue <= 0.f)
-	{
-		bStopCondition = false;
-	}
-	if (!bStopCondition && Alpha <= MaxValue)
-	{
-		Alpha += World->GetDeltaSeconds();
-		if (AlphaCurve)
-		{
-			float CurveAlpha = AlphaCurve->GetFloatValue(Alpha);
-			return FMath::Clamp(CurveAlpha, 0.0f, MaxValue);
-		}
-		Alpha = FMath::Clamp(Alpha, 0.0f, MaxValue);
-	}
-	return Alpha;
 }
 
 void USweetDreamsBPLibrary::PrintDream(const UObject* DreamOrigin, FString Dream, EPrintType Severity, float Duration)

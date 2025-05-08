@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameUserSettings.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "Save/SaveData.h"
 #include "SweetDreamsCore.generated.h"
 
 class USweetDreamsSaveFile;
@@ -120,10 +119,10 @@ public:
 
 	// SAVE
 	bool CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, bool bIsPersistent = true);
-	bool Save(USweetDreamsSaveFile* SaveObject, bool bIsPersistent = true, bool bSaveAllData = true);
-	USweetDreamsSaveFile* LoadSave(bool bIsPersistent = true, int32 Version = 0);
-	void SaveData(bool bIsPersistent = true, bool bSaveAllData = true);
-	void LoadData(bool bIsPersistent = true, int32 Version = 0);
+	bool Save(USweetDreamsSaveFile* SaveObject, bool bIsPersistent = true);
+	USweetDreamsSaveFile* LoadSave(bool bIsPersistent = true);
+	void SaveData(bool bIsPersistent = true);
+	void LoadData(bool bIsPersistent = true);
 	bool DeleteSave(bool bIsPersistent = true);
 	USweetDreamsSaveFile* GetSaveObject(bool bIsPersistent = true) const;
 	UPROPERTY()

@@ -2,21 +2,18 @@
 
 #include "Core/SweetDreamsCore.h"
 #include "Save/SweetDreamsSaveInterface.h"
+#include "Save/SweetDreamsSaveFile.h"
 #include "Game/SweetDreamsGameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/StreamableManager.h"
 #include "Core/SweetDreamsSettings.h"
-#include "Save/SaveData.h"
 #include "Core/SweetDreamsBPLibrary.h"
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 #include "Engine/AssetManager.h"
 
 USweetDreamsCore::USweetDreamsCore()
 	:
-	UserSettings(FDreamUserSettings())
-{
-
-}
+	UserSettings(FDreamUserSettings()) {}
 
 void USweetDreamsCore::LoadSettings()
 {
@@ -29,11 +26,11 @@ void USweetDreamsCore::LoadSettings()
 	SaveClassLocal = CoreSettings->LocalClass;
 	if (SaveSlotPersistent == "")
 	{
-		SaveSlotPersistent = "SweetDream_PERSISTENT";
+		SaveSlotPersistent = "SweetDreams_PERSISTENT";
 	}
 	if (SaveSlotLocal == "")
 	{
-		SaveSlotLocal = "SweetDream_LOCAL";
+		SaveSlotLocal = "SweetDreams_LOCAL";
 	}
 
 	// GET OTHER SUBSYSTEMS
@@ -59,6 +56,7 @@ void USweetDreamsCore::Initialize(FSubsystemCollectionBase& Collection)
 void USweetDreamsCore::Deinitialize()
 {
 	DeleteSave(false);
+	PrintDream(nullptr, "Deinitializing Sweet Dreams Core subsystem.");
 	Super::Deinitialize();
 }
 
@@ -67,7 +65,7 @@ void USweetDreamsCore::PrintDream(const UObject* DreamOrigin, FString Dream, EPr
 {
 	if (!(CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintEnabled))) return;
 	FString Origin = "[SweetDreams]";
-	if (DreamOrigin)
+	if (IsValid(DreamOrigin))
 	{
 		Origin = FString::Printf(TEXT("[%s]"), *DreamOrigin->GetName());
 	}
@@ -119,7 +117,7 @@ bool USweetDreamsCore::CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, b
 		return false;
 	}
 	USaveGame* SaveObject = UGameplayStatics::CreateSaveGameObject(SaveClass);
-	if (SaveObject)
+	if (IsValid(SaveObject))
 	{
 		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
 		{
@@ -144,11 +142,11 @@ bool USweetDreamsCore::CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, b
 	return false;
 }
 
-bool USweetDreamsCore::Save(USweetDreamsSaveFile* SaveObject, bool bIsPersistent, bool bSaveAllData)
+bool USweetDreamsCore::Save(USweetDreamsSaveFile* SaveObject, bool bIsPersistent)
 {
 	FString SaveSlot = bIsPersistent ? SaveSlotPersistent : SaveSlotLocal;
 	FString SaveName = bIsPersistent ? "Persistent Save" : "Local Save";
-	SaveData(bIsPersistent, bSaveAllData);
+	SaveData(bIsPersistent);
 	if (UGameplayStatics::SaveGameToSlot(SaveObject, SaveSlot, 0))
 	{
 		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
@@ -164,7 +162,7 @@ bool USweetDreamsCore::Save(USweetDreamsSaveFile* SaveObject, bool bIsPersistent
 	return false;
 }
 
-USweetDreamsSaveFile* USweetDreamsCore::LoadSave(bool bIsPersistent, int32 Version)
+USweetDreamsSaveFile* USweetDreamsCore::LoadSave(bool bIsPersistent)
 {
 	FString SaveSlot = bIsPersistent ? SaveSlotPersistent : SaveSlotLocal;
 	FString SaveName = bIsPersistent ? "Persistent Save" : "Local Save";
@@ -177,13 +175,13 @@ USweetDreamsSaveFile* USweetDreamsCore::LoadSave(bool bIsPersistent, int32 Versi
 		if (bIsPersistent)
 		{
 			SavePersistentRef = Cast<USweetDreamsSaveFile>(SaveObject);
-			LoadData(true, Version);
+			LoadData(true);
 			return SavePersistentRef;
 		}
 		else
 		{
 			SaveLocalRef = Cast<USweetDreamsSaveFile>(SaveObject);
-			LoadData(false, Version);
+			LoadData(false);
 			return SaveLocalRef;
 		}
 	}
@@ -194,18 +192,14 @@ USweetDreamsSaveFile* USweetDreamsCore::LoadSave(bool bIsPersistent, int32 Versi
 	return nullptr;
 }
 
-void USweetDreamsCore::SaveData(bool bIsPersistent, bool bSaveAllData)
+void USweetDreamsCore::SaveData(bool bIsPersistent)
 {
 	USweetDreamsSaveFile* SaveObject = GetSaveObject(bIsPersistent);
 	if (!IsValid(SaveObject)) return;
-	SaveObject->SavedDeltaData.Empty();
-	FDeltaSaveData NewDelta;
-	NewDelta.SaveTime = FDateTime::Now();
-	if (bSaveAllData)
-	{
-		SaveObject->SavedFullData.Empty();
-		SaveObject->CurrentVersion = 0;
-	}
+	FName CurrentLevelName = FName(GetWorld()->GetMapName());
+	SaveObject->SavedData.RemoveAll([&CurrentLevelName](const FSaveData& Data) {
+		return Data.LevelName == CurrentLevelName;
+		});
 	TArray<AActor*> Actors;
 	UGameplayStatics::GetAllActorsWithInterface(GetWorld(), USweetDreamsSaveInterface::StaticClass(), Actors);
 	for (AActor* Actor : Actors)
@@ -213,38 +207,26 @@ void USweetDreamsCore::SaveData(bool bIsPersistent, bool bSaveAllData)
 		if (!IsValid(Actor)) continue;
 		FSaveData Data;
 		Data.ActorName = Actor->GetFName();
-		if (bSaveAllData)
-		{
-			Data.CustomData = bIsPersistent ? 
-				ISweetDreamsSaveInterface::Execute_GetPersistentCustomData(Actor) : 
-				ISweetDreamsSaveInterface::Execute_GetLocalCustomData(Actor);
-			FMemoryWriter MemoryWriter(Data.ByteData);
-			FObjectAndNameAsStringProxyArchive Archive(MemoryWriter, true);
-			Archive.ArIsSaveGame = true;
-			Actor->Serialize(Archive);
-			SaveObject->SavedFullData.Add(Data);
-		}
-		else
-		{
-			if (ISweetDreamsSaveInterface::Execute_IsDeltaSaveEnabled(Actor))
-			{
-				Data.CustomDeltaData = bIsPersistent ?
-					ISweetDreamsSaveInterface::Execute_GetPersistentDeltaData(Actor) :
-					ISweetDreamsSaveInterface::Execute_GetLocalDeltaData(Actor);
-				NewDelta.DeltaData.Add(Data);
-			}
-		}
+		Data.LevelName = CurrentLevelName;
+		Data.CustomData = bIsPersistent ?
+			ISweetDreamsSaveInterface::Execute_GetPersistentCustomData(Actor) :
+			ISweetDreamsSaveInterface::Execute_GetLocalCustomData(Actor);
+		FMemoryWriter MemoryWriter(Data.ByteData);
+		FObjectAndNameAsStringProxyArchive Archive(MemoryWriter, true);
+		Archive.ArIsSaveGame = true;
+		Actor->Serialize(Archive);
+		SaveObject->SavedData.Add(Data);
 	}
-	SaveObject->SavedDeltaData.Add(NewDelta);
-	SaveObject->UpdateCurrentVersion();
+	SaveObject->LastTimeSaved = FDateTime::Now();
+	SaveObject->AmountOfSaves++;
 }
 
-void USweetDreamsCore::LoadData(bool bIsPersistent, int32 Version)
+void USweetDreamsCore::LoadData(bool bIsPersistent)
 {
 	USweetDreamsSaveFile* SaveObject = GetSaveObject(bIsPersistent);
 	if (!IsValid(SaveObject)) return;
-	Version = FMath::Clamp(Version, 0, SaveObject->CurrentVersion);
-	for (const FSaveData& Data : SaveObject->SavedFullData)
+	FName CurrentLevelName = FName(GetWorld()->GetMapName());
+	for (const FSaveData& Data : SaveObject->SavedData)
 	{
 		AActor* Actor = FindActorByName(Data.ActorName);
 		if (!IsValid(Actor)) continue;
@@ -255,18 +237,6 @@ void USweetDreamsCore::LoadData(bool bIsPersistent, int32 Version)
 		bIsPersistent ?
 			ISweetDreamsSaveInterface::Execute_LoadPersistentCustomData(Actor, Data.CustomData) :
 			ISweetDreamsSaveInterface::Execute_LoadLocalCustomData(Actor, Data.CustomData);
-	}
-	if (Version < 0) return;
-	for (int32 i = 0; i <= Version; i++)
-	{
-		for (const FSaveData& DeltaData : SaveObject->SavedDeltaData[i].DeltaData)
-		{
-			AActor* Actor = FindActorByName(DeltaData.ActorName);
-			if (!IsValid(Actor)) continue;
-			bIsPersistent ?
-				ISweetDreamsSaveInterface::Execute_LoadPersistentDeltaData(Actor, DeltaData.CustomDeltaData) :
-				ISweetDreamsSaveInterface::Execute_LoadLocalDeltaData(Actor, DeltaData.CustomDeltaData);
-		}
 	}
 }
 

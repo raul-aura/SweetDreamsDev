@@ -15,7 +15,7 @@ class SWEETDREAMSBATTLE_API USweetDreamsBattleCore : public UGameInstanceSubsyst
 
 public:
 	USweetDreamsBattleCore();
-	~USweetDreamsBattleCore();
+	virtual ~USweetDreamsBattleCore();
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|RPG")

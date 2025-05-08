@@ -17,46 +17,46 @@ class SWEETDREAMS_API USweetDreamsBPLibrary : public UBlueprintFunctionLibrary
 public:
 	static USweetDreamsCore* SweetDreamsCore;
 	// DEBUG
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "DreamOrigin", Keywords = "Print SweetDreams core dream debug string text", CallableWithoutWorldContext, DevelopmentOnly), Category = "SweetDreams|Core|DEBUG")
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "DreamOrigin", CallableWithoutWorldContext, DevelopmentOnly), Category = "SweetDreams|Core|DEBUG")
 	static void PrintDream(const UObject* DreamOrigin, FString Dream = "Hello dream.", EPrintType Severity = EPrintType::INFO, float duration = 4.0f);
 	// GETTERS
-	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core")
 	static USweetDreamsCore* GetSweetDreamsCore(const UObject* WorldContext);
-	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core")
 	static ASweetDreamsGameMode* GetSweetDreamsGameMode(const UObject* WorldContext);
 	// SAVE
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static bool CreateSaveGame(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, bool bIsPersistent = true);
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static bool SaveGame(const UObject* WorldContext, USweetDreamsSaveFile* SaveObject, bool bIsPersistent = true);
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* LoadSaveGame(const UObject* WorldContext, bool bIsPersistent = true);
-	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* GetPersistentSave(const UObject* WorldContext);
-	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* GetLocalSave(const UObject* WorldContext);
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static bool DeleteSave(const UObject* WorldContext, bool bIsPersistent = true);
 	// SETTINGS
-	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Settings")
 	static FDreamUserSettings GetUserSettings(const UObject* WorldContext);
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Settings")
 	static void SetUserSettings(const UObject* WorldContext, FDreamUserSettings Settings);
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Settings")
 	static void SetSettingsQuality(const UObject* WorldContext, int32 Quality);
 	// LOADING
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Loading")
 	static void LoadLevel(const UObject* WorldContext, TSoftObjectPtr<UWorld> Level);
-	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Loading")
 	static TSoftObjectPtr<UWorld> GetCurrentLoadingLevel(const UObject* WorldContext);
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Loading")
 	static float GetLoadingPercentage(TSoftObjectPtr<UObject> Asset);
 	// MATH
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Math")
 	static float IncrementAlpha(const UObject* WorldContext, UPARAM(ref) float& Alpha, float MaxValue = 1.0f, class UCurveFloat* AlphaCurve = nullptr, bool bStopCondition = true);
-	UFUNCTION(BlueprintPure, meta = (ExpandBoolAsExecs = "ReturnValue"))
+	UFUNCTION(BlueprintPure, meta = (ExpandBoolAsExecs = "ReturnValue"), Category = "Sweet Dreams|Core|Math")
 	static bool CalculateChance(float& RandomizedValue, float Chance = 100.f);
-	UFUNCTION(BlueprintPure, meta = (ExpandBoolAsExecs = "ReturnValue"))
+	UFUNCTION(BlueprintPure, meta = (ExpandBoolAsExecs = "ReturnValue"), Category = "Sweet Dreams|Core|Math")
 	static bool CheckInterval(const float& Number, float Interval);
 	// HELPERS
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Helpers", meta = (DevelopmentOnly, CompactNodeTitle = "Do Nothing"))
