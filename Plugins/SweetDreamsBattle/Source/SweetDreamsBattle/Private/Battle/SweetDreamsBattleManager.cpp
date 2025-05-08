@@ -1,13 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "SweetDreamsBattleManager.h"
+#include "Battle/SweetDreamsBattleManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Game/SweetDreamsWidget.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Player/MulticameraComponent.h"
-#include "BattlerDataComponent.h"
-#include "BattleAction.h"
-#include "BattleCharacter.h"
+#include "Player/BattlerDataComponent.h"
+#include "Player/BattleCharacter.h"
+#include "Player/BattleNumberWidget.h"
 #include "Game/SweetDreamsGameMode.h"
 
 ASweetDreamsBattleManager::ASweetDreamsBattleManager()

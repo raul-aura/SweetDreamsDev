@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "TurnBasedBattleWidget.h"
-#include "SweetDreamsBattleManager.h"
+#include "Battle/SweetDreamsBattleManager.h"
 #include "TurnBasedBattle.generated.h"
 
 class UBattleInputAction;
+class UTurnBasedBattleWidget;
 
 USTRUCT(BlueprintType)
 struct FEnemyGroups
@@ -49,7 +49,7 @@ protected:
 
 	// UI
 	UPROPERTY(BlueprintReadWrite, Category = "UI")
-	UTurnBasedBattleWidget* TurnBattleWidget = nullptr;
+	UTurnBasedBattleWidget* TurnBattleWidget;
 
 	// BATTLERS
 	UPROPERTY(BlueprintReadOnly, Category = "Battlers")
@@ -67,8 +67,6 @@ protected:
 	TArray<TSoftClassPtr<AActor>> AllyClasses;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battlers")
 	TArray<FTransform> AllyTransforms;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battlers")
-	bool bGetAlliesFromPlayerController = true;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Enemy Groups")
 	TArray<FEnemyGroups> EnemyGroups;
 	UPROPERTY(BlueprintReadWrite, Category = "Enemy Groups")
@@ -172,10 +170,6 @@ public:
 	virtual bool TurnContainsActionOfClass(TSubclassOf<UBattleAction> Action, int32& Amount) const;
 	// ChangeActionOrder()
 	// GetAllActionsOfOwner()
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	void OnActionAdded(UBattleAction* Action);
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	void OnActionRemoved(UBattleAction* Action);
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	void OnTurnStarted(int32 Turn);
 };

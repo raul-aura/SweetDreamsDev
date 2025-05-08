@@ -1,8 +1,9 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "SweetDreamsBattleBPLibrary.h"
-#include "SweetDreamsBattleCore.h"
-#include "SweetDreamsBattle.h"
+#include "Battle/SweetDreamsBattleBPLibrary.h"
+#include "Battle/SweetDreamsBattleCore.h"
+#include "Player/BattlerDataComponent.h"
+#include "Battle/SweetDreamsBattle.h"
 
 USweetDreamsBattleCore* USweetDreamsBattleBPLibrary::SweetDreamsBattleCore = nullptr;
 
@@ -51,43 +52,46 @@ void USweetDreamsBattleBPLibrary::SetDifficulty(const UObject* WorldContext, int
 	SweetDreamsBattleCore->SetDifficulty(NewDifficulty);
 }
 
-int32 USweetDreamsBattleBPLibrary::UpdateLevelsByAverage(const UObject* WorldContext, const TArray<AActor*>& TargetActors, const TArray<AActor*> AvarageActors)
+int32 USweetDreamsBattleBPLibrary::UpdateLevelsByAverage(const UObject* WorldContext, const TArray<AActor*>& TargetActors, const TArray<AActor*>& AvarageActors)
 {
-	if (!IsValid(SweetDreamsBattleCore))
-	{
-		SweetDreamsBattleCore = GetSweetDreamsBattleCore(WorldContext);
-	}
-	if (!IsValid(SweetDreamsBattleCore))
-	{
-		return 0;
-	}
-	return SweetDreamsBattleCore->UpdateLevelsByAverage(TargetActors, AvarageActors);
+	int32 Avarage = GetAverageLevel(WorldContext, AvarageActors);
+	OverrideLevels(WorldContext, TargetActors, Avarage);
+	return Avarage;
 }
 
 int32 USweetDreamsBattleBPLibrary::GetAverageLevel(const UObject* WorldContext, const TArray<AActor*>& Actors)
 {
-	if (!IsValid(SweetDreamsBattleCore))
+	int32 Avarage = 0;
+	if (Actors.Num() == 0) return 0;
+	for (const AActor* Actor : Actors)
 	{
-		SweetDreamsBattleCore = GetSweetDreamsBattleCore(WorldContext);
+		if (IsValid(Actor))
+		{
+			UBattlerDataComponent* Data = UBattlerDataComponent::GetBattlerDataComponent(Actor);
+			if (IsValid(Data))
+			{
+				Avarage += Data->GetLevelNumber();
+			}
+		}
 	}
-	if (!IsValid(SweetDreamsBattleCore))
-	{
-		return 0;
-	}
-	return SweetDreamsBattleCore->GetAverageLevel(Actors);
+	Avarage /= Actors.Num();
+	return Avarage;
 }
 
 void USweetDreamsBattleBPLibrary::OverrideLevels(const UObject* WorldContext, const TArray<AActor*>& Actors, int32 NewLevel)
 {
-	if (!IsValid(SweetDreamsBattleCore))
+	if (Actors.Num() == 0) return;
+	for (const AActor* Actor : Actors)
 	{
-		SweetDreamsBattleCore = GetSweetDreamsBattleCore(WorldContext);
+		if (IsValid(Actor))
+		{
+			UBattlerDataComponent* Data = UBattlerDataComponent::GetBattlerDataComponent(Actor);
+			if (IsValid(Data))
+			{
+				Data->SetLevelNumber(NewLevel);
+			}
+		}
 	}
-	if (!IsValid(SweetDreamsBattleCore))
-	{
-		return;
-	}
-	SweetDreamsBattleCore->OverrideLevels(Actors, NewLevel);
 }
 
 float USweetDreamsBattleBPLibrary::IncreaseParameterLinear(UPARAM(ref) float& Parameter, float BaseParameter, float AdditionalParameter, float Multiplier)

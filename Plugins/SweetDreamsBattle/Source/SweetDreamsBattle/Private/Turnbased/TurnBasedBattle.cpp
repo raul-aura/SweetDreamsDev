@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "TurnBasedBattle.h"
-#include "BattleInputAction.h"
-#include "BattleState.h"
+#include "Turnbased/TurnBasedBattle.h"
+#include "Turnbased/BattleInputAction.h"
 #include "Algo/Count.h"
+#include "Turnbased/TurnBasedBattleWidget.h"
 #include "Kismet/GameplayStatics.h"
 
 ATurnBasedBattle::ATurnBasedBattle()

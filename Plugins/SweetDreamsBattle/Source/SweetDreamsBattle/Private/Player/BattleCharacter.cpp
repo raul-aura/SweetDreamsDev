@@ -1,17 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BattleCharacter.h"
+#include "Player/BattleCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Core/SweetDreamsBPLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "BattleNumberWidget.h"
-#include "BattleState.h"
-#include "BattlerParameterWidget.h"
-#include "SweetDreamsBattleManager.h"
+#include "Player/BattleNumberWidget.h"
+#include "Player/BattlerParameterWidget.h"
+#include "Battle/SweetDreamsBattleManager.h"
 
 ABattleCharacter::ABattleCharacter()
 {

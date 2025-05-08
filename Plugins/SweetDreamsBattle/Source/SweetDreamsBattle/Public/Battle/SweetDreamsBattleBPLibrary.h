@@ -22,7 +22,7 @@ public:
 	static void SetDifficulty(const UObject* WorldContext, int32 NewDifficulty = 1);
 	// LEVEL
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
-	static int32 UpdateLevelsByAverage(const UObject* WorldContext, const TArray<AActor*>& TargetActors, const TArray<AActor*> AvarageActors);
+	static int32 UpdateLevelsByAverage(const UObject* WorldContext, const TArray<AActor*>& TargetActors, const TArray<AActor*>& AvarageActors);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static int32 GetAverageLevel(const UObject* WorldContext, const TArray<AActor*>& Actors);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))

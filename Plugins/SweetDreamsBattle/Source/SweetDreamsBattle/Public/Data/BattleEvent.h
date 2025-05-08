@@ -14,5 +14,8 @@ class SWEETDREAMSBATTLE_API UBattleEvent : public UObject
 public: 
 	UPROPERTY(EditDefaultsOnly)
 	float DamageMultiplier = 1.0f;
+
+	// damage, heal, add state, remove state, restore mana, remove mana, kill, revive, set ability to act, start animation, start sequence, create particle
+	// play sound, trigger another event, start dialogue
 };
 

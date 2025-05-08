@@ -227,29 +227,27 @@ void ASweetDreamsDialogueManager::ProcessRichTextTags(int32& LetterIndex)
 
 void ASweetDreamsDialogueManager::UpdateAnimatedDialogue()
 {
-	FString DisplayBody;
-	int32 VisibleCharsProcessed = 0;
-	for (int32 i = 0; i < FullDialogueBody.Len(); )
+	FString DisplayText;
+	int32 VisibleChars = 0;
+	for (int32 i = 0; i < FullDialogueBody.Len(); i++)
 	{
 		if (FullDialogueBody[i] == '<')
 		{
-			const int32 TagEnd = FullDialogueBody.Find(TEXT(">"), ESearchCase::CaseSensitive, ESearchDir::FromStart, i);
+			int32 TagEnd = FullDialogueBody.Find(">", ESearchCase::IgnoreCase, ESearchDir::FromStart, i);
 			if (TagEnd != INDEX_NONE)
 			{
-				DisplayBody.Append(FullDialogueBody.Mid(i, TagEnd - i + 1));
-				i = TagEnd + 1;
+				DisplayText += FullDialogueBody.Mid(i, TagEnd - i + 1);
+				i = TagEnd;
 				continue;
 			}
 		}
-		if (VisibleCharsProcessed >= CurrentLetterIndex)
+		if (VisibleChars < CurrentLetterIndex)
 		{
-			break;
+			DisplayText += FullDialogueBody[i];
+			VisibleChars++;
 		}
-		DisplayBody.AppendChar(FullDialogueBody[i]);
-		VisibleCharsProcessed++;
-		i++;
 	}
-	AnimatedDialogueBody = FText::FromString(DisplayBody);
+	AnimatedDialogueBody = FText::FromString(DisplayText);
 }
 
 void ASweetDreamsDialogueManager::ApplyChoiceAndContinue(int32 ChoiceIndex)

@@ -7,14 +7,14 @@
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/Actor.h"
 #include "LevelSequencePlayer.h"
-#include "BattleNumberWidget.h"
 #include "SweetDreamsBattleManager.generated.h"
 
 class USceneComponent;
+class USweetDreamsWidget;
 class ASweetDreamsHUD;
 class UMulticameraComponent;
-class UBattleAction;
 class ABattleCharacter;
+class UBattleNumberWidget;
 
 UENUM(BlueprintType)
 enum class ECameraView : uint8
@@ -77,7 +77,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "UI")
 	TSubclassOf<UBattleNumberWidget> DamageIndicatorClass;
 	UPROPERTY(BlueprintReadWrite)
-	class USweetDreamsWidget* BattleWidget = nullptr;
+	USweetDreamsWidget* BattleWidget = nullptr;
 
 	// BATLE
 	UPROPERTY(BlueprintReadWrite, EditInstanceOnly, Category = "Battlers", meta = (DisplayName = "Enemies References"))

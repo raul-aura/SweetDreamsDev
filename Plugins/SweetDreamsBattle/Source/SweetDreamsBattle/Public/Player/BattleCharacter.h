@@ -4,9 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Player/SweetDreamsCharacter.h"
-#include "BattlerDataComponent.h"
-#include "BattleAction.h"
 #include "BattleCharacter.generated.h"
+
+class UBattlerDataComponent;
+class UBattleNumberWidget;
+class UBattlerParameterWidget;
+class UBoxComponent;
+class UWidgetComponent;
 
 UCLASS()
 class SWEETDREAMSBATTLE_API ABattleCharacter : public  ASweetDreamsCharacter
@@ -22,16 +26,16 @@ protected:
 
 	// COMPONENTS
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
-	class UBoxComponent* BattleWorldArea;
+	UBoxComponent* BattleWorldArea;
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
-	class UWidgetComponent* ParameterIndicator;
+	UWidgetComponent* ParameterIndicator;
 	// BATTLE
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "RPG", meta = (InlineEditConditionToggle))
 	bool bOverrideBattleIndicator = false;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "RPG", meta = (EditCondition = "bOverrideBattleIndicator"))
-	TSubclassOf<class UBattleNumberWidget> DamageIndicatorClass;
+	TSubclassOf<UBattleNumberWidget> DamageIndicatorClass;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "RPG")
-	TSubclassOf<class UBattlerParameterWidget> ParameterIndicatorClass;
+	TSubclassOf<UBattlerParameterWidget> ParameterIndicatorClass;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "RPG", meta = (DisplayName = "Indicator Forward Offset"))
 	float IndicatorOffset = 50.0f;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "RPG")

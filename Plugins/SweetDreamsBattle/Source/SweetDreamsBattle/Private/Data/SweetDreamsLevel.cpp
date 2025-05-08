@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "SweetDreamsLevel.h"
-#include "SweetDreamsBattleBPLibrary.h"
+#include "Data/SweetDreamsLevel.h"
+#include "Battle/SweetDreamsBattleBPLibrary.h"
 
 
 int32 USweetDreamsLevel::GetCurrentLevel() const
