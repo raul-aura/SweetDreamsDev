@@ -4,21 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "Game/SweetDreamsWidget.h"
-#include "SweetDreamsDialogueManager.h"
+#include "Dialogue/DialogueStructs.h"
 #include "DialogueWidget.generated.h"
+
+class ASweetDreamsDialogueManager;
 
 UCLASS()
 class SWEETDREAMS_API UDialogueWidget : public USweetDreamsWidget
 {
 	GENERATED_BODY()
 
-	friend ASweetDreamsDialogueManager;
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void SetCurrentDialogue(FSweetDreamsDialogue Dialogue);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
+	void SetDialogueManager(ASweetDreamsDialogueManager* NewManager);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void GoToNextDialogue();
+	void UpdateAnimatedDialogue(FText AnimatedText);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void OnDialogueStarted();
@@ -36,15 +40,15 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void HideChoices();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
-	void SelectChoice(int32 ChoiceSelected);
+	void SelectChoice(FChoice ChoiceSelected);
 
 protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
 	FSweetDreamsDialogue CurrentDialogue = FSweetDreamsDialogue();
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
-	TMap<int32, FText> CurrentChoices;
+	TArray<FChoice> CurrentChoices;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
-	FText AnimatedDialogueBody = FText();
+	FText AnimatedDialogueBody = FText(); 
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
-	ASweetDreamsDialogueManager* DialogueManager = nullptr;
+	ASweetDreamsDialogueManager* DialogueManager = nullptr; 
 };

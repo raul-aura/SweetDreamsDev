@@ -6,6 +6,8 @@
 #include "Engine/DataAsset.h"
 #include "SweetDreamsItem.generated.h"
 
+class UItemEvent;
+
 UCLASS(Blueprintable, BlueprintType)
 class SWEETDREAMS_API USweetDreamsItem : public UDataAsset
 {
@@ -24,5 +26,8 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
     TSoftObjectPtr<UTexture2D> Icon;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "Item")
+    TArray<UItemEvent*> ItemEvents;
 
+    void AssignItemToEvents();
 };

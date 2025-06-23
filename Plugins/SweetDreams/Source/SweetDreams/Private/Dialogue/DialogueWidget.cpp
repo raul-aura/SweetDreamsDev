@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Dialogue/DialogueWidget.h"
+#include "Dialogue/SweetDreamsDialogueManager.h"
 
 void UDialogueWidget::SetCurrentDialogue(FSweetDreamsDialogue Dialogue)
 {
@@ -13,6 +14,11 @@ void UDialogueWidget::SetCurrentDialogue(FSweetDreamsDialogue Dialogue)
 	OnUpdatedDialogue(CurrentDialogue, bChoices);
 }
 
+void UDialogueWidget::SetDialogueManager(ASweetDreamsDialogueManager* NewManager)
+{
+	DialogueManager = NewManager;
+}
+
 void UDialogueWidget::GoToNextDialogue()
 {
 	if (IsValid(DialogueManager))
@@ -21,7 +27,12 @@ void UDialogueWidget::GoToNextDialogue()
 	}
 }
 
-void UDialogueWidget::SelectChoice(int32 ChoiceSelected)
+void UDialogueWidget::UpdateAnimatedDialogue(FText AnimatedText)
+{
+	AnimatedDialogueBody = AnimatedText;
+}
+
+void UDialogueWidget::SelectChoice(FChoice ChoiceSelected)
 {
 	if (IsValid(DialogueManager))
 	{

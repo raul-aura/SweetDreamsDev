@@ -149,11 +149,7 @@ void ASweetDreamsBattleManager::LoadBattlers_Implementation()
 		if (IsValid(Data))
 		{
 			Data->SetInBattle(this, true);
-			TArray<UBattleElement*> AllElements = Data->GetAllElements();
-			for (UBattleElement* Element : AllElements)
-			{
-				if (IsValid(Element)) Element->OnBattleStart(this);
-			}
+			// call BATTLE STARTED on all allies and enemies of the battle
 		}
 	}
 }
@@ -177,11 +173,7 @@ void ASweetDreamsBattleManager::EndBattle(float BlendTime)
 		if (IsValid(Data))
 		{
 			Data->SetInBattle(this, false);
-			TArray<UBattleElement*> AllElements = Data->GetAllElements();
-			for (UBattleElement* Element : AllElements)
-			{
-				if (IsValid(Element)) Element->OnBattleEnd(this);
-			}
+			// call BATTLE ENDED on all allies and enemies of the battle
 		}
 	}
 	OnBattleEnd(bIsVictorious);
@@ -345,7 +337,7 @@ TArray<AActor*>& ASweetDreamsBattleManager::GetBattlerGroup(EBattlerType Battler
 	}
 }
 
-TArray<AActor*> ASweetDreamsBattleManager::GetAllPossibleTargets(UBattleAction* Action, bool bUpdateCameraView)
+TArray<AActor*> ASweetDreamsBattleManager::GetAllPossibleTargets(UBattleElement* Action, bool bUpdateCameraView)
 {
 	auto FilterTargets = [](TArray<AActor*>& Actors, bool (*FilterFn)(AActor*)) {
 		TArray<AActor*> FilteredTargets;
@@ -360,45 +352,45 @@ TArray<AActor*> ASweetDreamsBattleManager::GetAllPossibleTargets(UBattleAction* 
 	};
 	TArray<AActor*> Targets;
 	ECameraView NewView = ECameraView::AllBattlers;
-	const bool bIsEnemy = IsActorEnemy(Action->GetOwner());
-	switch (Action->GetTargetType())
-	{
-	case ETargetType::Ally:
-	case ETargetType::AllAlly:
-		Targets = bIsEnemy ? Enemies : Allies;
-		NewView = bIsEnemy ? ECameraView::AllBattlers : ECameraView::Allies;
-		break;
-	case ETargetType::DeadAlly:
-		Targets = bIsEnemy ? Enemies : Allies;
-		NewView = ECameraView::Allies;
-		FilterTargets(Targets, [](AActor* Actor) {
-			if (UBattlerDataComponent* Data = Actor->FindComponentByClass<UBattlerDataComponent>())
-			{
-				return Data->IsDead();
-			}
-			return false;
-			});
-		break;
-	case ETargetType::Enemy:
-	case ETargetType::AllEnemy:
-		Targets = bIsEnemy ? Allies : Enemies;
-		NewView = ECameraView::Enemies;
-		break;
-	case ETargetType::Self:
-		Targets = Action->GetOwnerAsArray();
-		NewView = ECameraView::Self;
-		break;
-	default:
-		return {}; 
-	}
-	if (!Action->GetIfIncludeSelf())
-	{
-		Targets.Remove(Action->GetOwner());
-	}
-	if (bUpdateCameraView && bAutoMoveCamera)
-	{
-		ChangeCameraView(NewView, Action->GetOwner(), BattlerBlendTime);
-	}
+	const bool bIsEnemy = false;
+	//switch (Action->GetTargetType())
+	//{
+	//case ETargetType::Ally:
+	//case ETargetType::AllAlly:
+	//	Targets = bIsEnemy ? Enemies : Allies;
+	//	NewView = bIsEnemy ? ECameraView::AllBattlers : ECameraView::Allies;
+	//	break;
+	//case ETargetType::DeadAlly:
+	//	Targets = bIsEnemy ? Enemies : Allies;
+	//	NewView = ECameraView::Allies;
+	//	FilterTargets(Targets, [](AActor* Actor) {
+	//		if (UBattlerDataComponent* Data = Actor->FindComponentByClass<UBattlerDataComponent>())
+	//		{
+	//			return Data->IsDead();
+	//		}
+	//		return false;
+	//		});
+	//	break;
+	//case ETargetType::Enemy:
+	//case ETargetType::AllEnemy:
+	//	Targets = bIsEnemy ? Allies : Enemies;
+	//	NewView = ECameraView::Enemies;
+	//	break;
+	//case ETargetType::Self:
+	//	Targets = Action->GetOwnerAsArray();
+	//	NewView = ECameraView::Self;
+	//	break;
+	//default:
+	//	return {}; 
+	//}
+	//if (!Action->GetIfIncludeSelf())
+	//{
+	//	Targets.Remove(Action->GetOwner());
+	//}
+	//if (bUpdateCameraView && bAutoMoveCamera)
+	//{
+	//	ChangeCameraView(NewView, Action->GetOwner(), BattlerBlendTime);
+	//}
 	return Targets;
 }
 

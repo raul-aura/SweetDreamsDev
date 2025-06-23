@@ -15,6 +15,7 @@ class ASweetDreamsHUD;
 class UMulticameraComponent;
 class ABattleCharacter;
 class UBattleNumberWidget;
+class UBattleElement;
 
 UENUM(BlueprintType)
 enum class ECameraView : uint8
@@ -138,7 +139,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG|Battle Manager")
 	TArray<AActor*>& GetBattlerGroup(EBattlerType BattlerType);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual TArray<AActor*> GetAllPossibleTargets(UBattleAction* Action, bool bUpdateCameraView = false);
+	virtual TArray<AActor*> GetAllPossibleTargets(UBattleElement* Action, bool bUpdateCameraView = false);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	bool IsActorAlly(const AActor* Actor) const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")

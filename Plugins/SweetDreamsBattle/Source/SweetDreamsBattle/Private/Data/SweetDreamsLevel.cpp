@@ -3,7 +3,6 @@
 #include "Data/SweetDreamsLevel.h"
 #include "Battle/SweetDreamsBattleBPLibrary.h"
 
-
 int32 USweetDreamsLevel::GetCurrentLevel() const
 {
 	return CurrentLevel;

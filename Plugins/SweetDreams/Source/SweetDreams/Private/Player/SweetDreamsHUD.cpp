@@ -135,7 +135,8 @@ bool ASweetDreamsHUD::IsAnyWidgetVisible()
 	if (AllWidgets.Num() == 0) return false;
 	for (USweetDreamsWidget* Widget : AllWidgets)
 	{
-		if (Widget->IsVisible() && !Widget->bIgnoreThisForVisibility)
+		if (Widget->bIgnoreThisForVisibility) continue;
+		if (Widget->IsVisible())
 		{
 			return true;
 		}

@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Inventory/InventoryComponent.h"
+#include "Inventory/ItemEvent.h"
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -17,41 +18,111 @@ UInventoryComponent* UInventoryComponent::GetInventoryFromActor(const AActor* Ac
 	return Component;
 }
 
-USweetDreamsItem* UInventoryComponent::GetItemData(const FInventoryItem& Item)
+USweetDreamsItem* UInventoryComponent::GetItemData(const FInventoryItem& Item, bool& ValidData)
 {
-    return Item.GetItemData();
+    ValidData = Item.IsItemValid();
+    return Item.ItemData;
+}
+
+bool UInventoryComponent::IsItemValid(const FInventoryItem& Item)
+{
+    return Item.IsItemValid();
 }
 
 void UInventoryComponent::AddItem(const TSoftObjectPtr<USweetDreamsItem>& ItemData, int32 Count, bool bAddAsUnique)
 {
     if (ItemData.IsValid())
     {
+        USweetDreamsItem* ItemObject = ItemData.Get();
         if (!bAddAsUnique)
         {
             for (FInventoryItem& ItemF : Items)
             {
-                if (ItemF.ItemDataPtr == ItemData)
+                if (ItemF.ItemData == ItemObject)
                 {
                     ItemF.Count += Count;
+                    for (auto Event : ItemF.ItemData->ItemEvents)
+                    {
+                        Event->OnAdded(GetOwner(), Count);
+                    }
+                    OnItemAdded.Broadcast(ItemF);
                     return;
                 }
             }
         }
-        Items.Add(FInventoryItem(ItemData));
+        FInventoryItem NewItem = FInventoryItem(ItemObject);
+        NewItem.ItemData->AssignItemToEvents();
+        for (auto Event : NewItem.ItemData->ItemEvents)
+        {
+            Event->OnAdded(GetOwner(), 1);
+        }
+        Items.Add(FInventoryItem(ItemObject));
+        OnItemAdded.Broadcast(NewItem);
     }
 }
 
 void UInventoryComponent::UseItem(const FInventoryItem& Item)
 {
-    if (Item.IsValid())
+    if (Item.IsItemValid())
     {
-        Item.GetItemData();
+        for (auto* Event : Item.ItemData->ItemEvents)
+        {
+            Event->OnUsed(GetOwner());
+        }
+        OnItemUsed.Broadcast(Item);
     }
 }
 
 void UInventoryComponent::InspectItem(const FInventoryItem& Item)
 {
+    if (Item.IsItemValid())
+    {
+        for (auto* Event : Item.ItemData->ItemEvents)
+        {
+            Event->OnInspected(GetOwner());
+        }
+        OnItemInspected.Broadcast(Item);
+    }
+}
 
+void UInventoryComponent::EquipItem(UPARAM(ref) FInventoryItem& Item)
+{
+    if (Item.IsItemValid())
+    {
+        Item.bIsEquipping = true;
+        for (auto* Event : Item.ItemData->ItemEvents)
+        {
+            Event->OnEquiped(GetOwner());
+        }
+        OnItemEquipped.Broadcast(Item);
+    }
+}
+
+void UInventoryComponent::UnequipItem(UPARAM(ref) FInventoryItem& Item)
+{
+    if (Item.IsItemValid())
+    {
+        Item.bIsEquipping = false;
+        for (auto* Event : Item.ItemData->ItemEvents)
+        {
+            Event->OnUnequiped(GetOwner());
+        }
+        OnItemUnequiped.Broadcast(Item);
+    }
+}
+
+void UInventoryComponent::RemoveItem(UPARAM(ref) FInventoryItem& Item)
+{
+    if (Item.IsItemValid())
+    {
+        Item.Count = FMath::Max(Item.Count--, 0);
+        for (auto* Event : Item.ItemData->ItemEvents)
+        {
+            Event->OnRemoved(GetOwner());
+        }
+        OnItemRemoved.Broadcast(Item);
+        CleanInvalidItems();
+    }
 }
 
 bool UInventoryComponent::HasItem(const TSoftObjectPtr<USweetDreamsItem>& ItemData, FInventoryItem& FoundItem) const
@@ -60,7 +131,7 @@ bool UInventoryComponent::HasItem(const TSoftObjectPtr<USweetDreamsItem>& ItemDa
     {
         for (const FInventoryItem& ItemF : Items)
         {
-            if (ItemF.ItemDataPtr == ItemData)
+            if (ItemF.ItemData == ItemData)
             {
                 FoundItem = ItemF;
                 return true;
@@ -79,5 +150,16 @@ FInventoryItem UInventoryComponent::GetItemByIndex(int32 Index, bool& bFound) co
         return Items[Index];
     }
     return FInventoryItem();
+}
+
+void UInventoryComponent::CleanInvalidItems()
+{
+    for (int32 i = Items.Num() - 1; i >= 0; --i)
+    {
+        if (Items.IsValidIndex(i) && Items[i].Count <= 0)
+        {
+            Items.RemoveAt(i);
+        }
+    }
 }
 

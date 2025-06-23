@@ -32,7 +32,6 @@ void USweetDreamsCore::LoadSettings()
 	{
 		SaveSlotLocal = "SweetDreams_LOCAL";
 	}
-
 	// GET OTHER SUBSYSTEMS
 }
 

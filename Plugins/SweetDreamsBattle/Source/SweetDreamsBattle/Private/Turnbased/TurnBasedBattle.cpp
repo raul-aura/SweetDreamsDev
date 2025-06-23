@@ -5,6 +5,8 @@
 #include "Turnbased/BattleInputAction.h"
 #include "Algo/Count.h"
 #include "Turnbased/TurnBasedBattleWidget.h"
+#include "Player/BattlerDataComponent.h"
+#include "Data/BattleElement.h"
 #include "Kismet/GameplayStatics.h"
 
 ATurnBasedBattle::ATurnBasedBattle()
@@ -320,29 +322,9 @@ void ATurnBasedBattle::StartTurn()
 			Data = Battler->FindComponentByClass<UBattlerDataComponent>();
 			if (IsValid(Data))
 			{
-				Data->UpdateTurnActionsCooldown();
-				Data->ResetActionCount();
-				TArray<UBattleElement*> AllElements = Data->GetAllElements();
-				for (UBattleElement* Element : AllElements)
-				{
-					Element->OnTurnStart(CurrentTurn);
-				}
-				TArray<UBattleState*> States = Data->GetAllStates();
-				if (States.Num() > 0)
-				{
-					for (UBattleState* State : States)
-					{
-						State->ConsumeLifetime(EStateLifetime::Turn);
-					}
-				}
+				// call TURN STARTED on interface of all battlers
+				// consume TURN LIFESTATE on State elements
 			}
-		}
-	}
-	for (UBattleAction* Action : Actions)
-	{
-		if (IsValid(Action))
-		{
-			Action->ResetSkipAction();
 		}
 	}
 	CurrentAction = 0;
@@ -361,82 +343,82 @@ void ATurnBasedBattle::LoadTurnActions(TArray<AActor*> Battlers, bool bIsAlly)
 		{
 			UBattlerDataComponent* Data;
 			Data = Battler->FindComponentByClass<UBattlerDataComponent>();
-			if (IsValid(Data) && Data->GetIsAbleToAct() && !Data->IsDead())
-			{
-				int32 ActionsToAdd = Data->GetActionsPerTurn();
-				for (int32 Index = 0; Index < ActionsToAdd; Index++)
-				{
-					if (bIsAlly)
-					{
-						UBattleInputAction* InputAction = NewObject<UBattleInputAction>(Battler, InputActionClass);
-						InputAction->SetOwner(Battler);
-						AddTurnAction(InputAction, false);
-					}
-					else
-					{
-						UBattleAction* EnemyAction = Data->GetRandomAction();
-						if (IsValid(EnemyAction))
-						{
-							EnemyAction->SetCurrentBattle(this);
-							EnemyAction->LoadRandomTurnTargets();
-							AddTurnAction(EnemyAction);
-							EnemyAction->EvaluateCooldown();
-						}
-					}
-				}
-			}
+			//if (IsValid(Data) && Data->GetIsAbleToAct() && !Data->IsDead())
+			//{
+			//	int32 ActionsToAdd = Data->GetActionsPerTurn();
+			//	for (int32 Index = 0; Index < ActionsToAdd; Index++)
+			//	{
+			//		if (bIsAlly)
+			//		{
+			//			//UBattleInputAction* InputAction = NewObject<UBattleInputAction>(Battler, InputActionClass);
+			//			//InputAction->SetOwner(Battler);
+			//			//AddTurnAction(InputAction, false);
+			//		}
+			//		else
+			//		{
+			//			//UBattleAction* EnemyAction = Data->GetRandomAction();
+			//			//if (IsValid(EnemyAction))
+			//			//{
+			//			//	EnemyAction->SetCurrentBattle(this);
+			//			//	EnemyAction->LoadRandomTurnTargets();
+			//			//	AddTurnAction(EnemyAction);
+			//			//	EnemyAction->EvaluateCooldown();
+			//			//}
+			//		}
+			//	}
+			//}
 		}
 	}
 }
 
-void ATurnBasedBattle::AddTurnAction(UBattleAction* Action, bool bIgnoreSpeed, int32 IndexToAdd)
+void ATurnBasedBattle::AddTurnAction(UBattleElement* Action, bool bIgnoreSpeed, int32 IndexToAdd)
 {
-	if (!IsValid(Action) || !IsValid(Action->GetOwner())) return;
-	Action->SetCurrentBattle(this);
-	if (Actions.Num() == 0)
-	{
-		Actions.Add(Action);
-		OnActionAdded(Action);
-		return;
-	}
-	if (!bIgnoreSpeed)
-	{
-		int32 InsertIndex = CurrentAction;
-		for (int32 i = CurrentAction; i < Actions.Num(); ++i)
-		{
-			if (Action->GetActionSpeed() > Actions[i]->GetActionSpeed())
-			{
-				InsertIndex = i;
-				break;
-			}
-		}
-		if (InsertIndex == CurrentAction && Action->GetActionSpeed() <= Actions.Last()->GetActionSpeed())
-		{
-			InsertIndex = Actions.Num();
-		}
-		Actions.Insert(Action, InsertIndex);
-	}
-	else
-	{
-		if (IndexToAdd != -1 && Actions.IsValidIndex(IndexToAdd))
-		{
-			Actions.Insert(Action, IndexToAdd);
-		}
-		Actions.Add(Action);
-	}
-	OnActionAdded(Action);
+	//if (!IsValid(Action) || !IsValid(Action->GetOwner())) return;
+	//Action->SetCurrentBattle(this);
+	//if (Actions.Num() == 0)
+	//{
+	//	Actions.Add(Action);
+	//	OnActionAdded(Action);
+	//	return;
+	//}
+	//if (!bIgnoreSpeed)
+	//{
+	//	int32 InsertIndex = CurrentAction;
+	//	for (int32 i = CurrentAction; i < Actions.Num(); ++i)
+	//	{
+	//		if (Action->GetActionSpeed() > Actions[i]->GetActionSpeed())
+	//		{
+	//			InsertIndex = i;
+	//			break;
+	//		}
+	//	}
+	//	if (InsertIndex == CurrentAction && Action->GetActionSpeed() <= Actions.Last()->GetActionSpeed())
+	//	{
+	//		InsertIndex = Actions.Num();
+	//	}
+	//	Actions.Insert(Action, InsertIndex);
+	//}
+	//else
+	//{
+	//	if (IndexToAdd != -1 && Actions.IsValidIndex(IndexToAdd))
+	//	{
+	//		Actions.Insert(Action, IndexToAdd);
+	//	}
+	//	Actions.Add(Action);
+	//}
+	//OnActionAdded(Action);
 }
 
-bool ATurnBasedBattle::RemoveTurnAction(UBattleAction* Action, int32& ActionCount)
+bool ATurnBasedBattle::RemoveTurnAction(UBattleElement* Action, int32& ActionCount)
 {
-	ActionCount = 0;
-	if (!IsValid(Action)) return false;
-	if (Actions.Find(Action) != INDEX_NONE)
-	{
-		OnActionRemoved(Action);
-		ActionCount = Algo::Count(Actions, Action);
-		return true;
-	}
+	//ActionCount = 0;
+	//if (!IsValid(Action)) return false;
+	//if (Actions.Find(Action) != INDEX_NONE)
+	//{
+	//	OnActionRemoved(Action);
+	//	ActionCount = Algo::Count(Actions, Action);
+	//	return true;
+	//}
 	return false;
 }
 
@@ -445,34 +427,34 @@ void ATurnBasedBattle::StartTurnAction()
 	if (Actions.Num() <= 0 || bBattlePaused || EvaluateEndBattle()) return;
 	while (CurrentAction < Actions.Num())
 	{
-		UBattleAction* CurrentActionRef = Actions[CurrentAction++];
-		CurrentActionBattler = CurrentActionRef->GetOwner();
-		if (IsValid(CurrentActionBattler))
-		{
-			UBattlerDataComponent* BattlerData = CurrentActionBattler->FindComponentByClass<UBattlerDataComponent>();
-			if (IsValid(BattlerData) && !BattlerData->IsDead())
-			{
-				if (bAutoMoveCamera) ChangeCameraFocus(CurrentActionBattler, BattlerBlendTime);
-				FTimerHandle LocalHandle;
-				FTimerDelegate TimerDel;
-				TimerDel.BindUFunction(CurrentActionRef, FName("StartAction"), true);
-				GetWorldTimerManager().SetTimer(LocalHandle, TimerDel, BattlerBlendTime + ActionDelay, false);
-				return;
-			}
-		}
+		//UBattleAction* CurrentActionRef = Actions[CurrentAction++];
+		//CurrentActionBattler = CurrentActionRef->GetOwner();
+		//if (IsValid(CurrentActionBattler))
+		//{
+		//	UBattlerDataComponent* BattlerData = CurrentActionBattler->FindComponentByClass<UBattlerDataComponent>();
+		//	if (IsValid(BattlerData) && !BattlerData->IsDead())
+		//	{
+		//		if (bAutoMoveCamera) ChangeCameraFocus(CurrentActionBattler, BattlerBlendTime);
+		//		FTimerHandle LocalHandle;
+		//		FTimerDelegate TimerDel;
+		//		TimerDel.BindUFunction(CurrentActionRef, FName("StartAction"), true);
+		//		GetWorldTimerManager().SetTimer(LocalHandle, TimerDel, BattlerBlendTime + ActionDelay, false);
+		//		return;
+		//	}
+		//}
 	}
 	StartTurn();
 }
 
-bool ATurnBasedBattle::TurnContainsAction(UBattleAction* Action, int32& Amount) const
+bool ATurnBasedBattle::TurnContainsAction(UBattleElement* Action, int32& Amount) const
 {
 	Amount = Algo::Count(Actions, Action);
 	return Actions.Contains(Action);
 }
 
-bool ATurnBasedBattle::TurnContainsActionOfClass(TSubclassOf<UBattleAction> Action, int32& Amount) const
+bool ATurnBasedBattle::TurnContainsActionOfClass(TSubclassOf<UBattleElement> Action, int32& Amount) const
 {
-	Amount = Algo::CountIf(Actions, [Action](const UBattleAction* Act)
+	Amount = Algo::CountIf(Actions, [Action](const UBattleElement* Act)
 	{
 		return Act && Act->IsA(Action);
 	});
@@ -482,15 +464,6 @@ bool ATurnBasedBattle::TurnContainsActionOfClass(TSubclassOf<UBattleAction> Acti
 void ATurnBasedBattle::EndBattle(float BlendTime)
 {
 	if (TurnBattleWidget) TurnBattleWidget->OnBattleEnded(bIsVictorious);
-	for (AActor* Battler : AllBattlers)
-	{
-		UBattlerDataComponent* Data;
-		Data = Battler->FindComponentByClass<UBattlerDataComponent>();
-		if (IsValid(Data))
-		{
-			Data->ResetActions();
-		}
-	}
 	ChangeBattleSpeed(1.f);
 	Super::EndBattle(BlendTime);
 }

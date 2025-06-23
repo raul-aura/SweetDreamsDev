@@ -3,23 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BattleAction.h"
 #include "BattleInputAction.generated.h"
 
 class UTurnBasedBattleWidget;
 
 UCLASS()
-class SWEETDREAMSBATTLE_API UBattleInputAction : public UBattleAction
+class SWEETDREAMSBATTLE_API UBattleInputAction : public UBattleElement
 {
 	GENERATED_BODY()
 	
 public:
 	UBattleInputAction();
-
-	virtual void StartAction(bool bUseCooldown) override;
-	UFUNCTION(BlueprintCallable)
-	virtual bool LoadWidget();
-	virtual bool UpdateValidTargets() override;
 
 protected:
 	UPROPERTY(BlueprintReadWrite)

@@ -7,7 +7,7 @@
 #include "Save/SaveData.h"
 #include "SweetDreamsSaveFile.generated.h"
 
-UCLASS(Abstract, NotBlueprintable)
+UCLASS()
 class SWEETDREAMS_API USweetDreamsSaveFile : public USaveGame
 {
 	GENERATED_BODY()

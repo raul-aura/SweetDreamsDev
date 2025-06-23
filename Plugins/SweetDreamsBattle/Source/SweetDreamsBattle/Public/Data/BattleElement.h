@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "BattleElementData.generated.h"
+#include "BattleElement.generated.h"
 
 class UBattleEvent;
 

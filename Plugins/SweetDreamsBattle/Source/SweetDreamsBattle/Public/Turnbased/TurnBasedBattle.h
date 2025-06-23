@@ -85,7 +85,7 @@ protected:
 	bool bVictoryWhenMaxTurns = true;
 	// ACTION
 	UPROPERTY(BlueprintReadOnly, Category = "Action")
-	TArray<UBattleAction*> Actions;
+	TArray<UBattleElement*> Actions;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Action")
 	TSubclassOf<UBattleInputAction> InputActionClass;
 	UPROPERTY(BlueprintReadWrite, Category = "Action")
@@ -158,16 +158,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual void LoadTurnActions(TArray<AActor*> Characters, bool bIsAlly);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual void AddTurnAction(UBattleAction* Action, bool bIgnoreSpeed = false, int32 IndexToAdd = -1);
+	virtual void AddTurnAction(UBattleElement* Action, bool bIgnoreSpeed = false, int32 IndexToAdd = -1);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager", meta = (ReturnDisplayName = "Found and Removed"))
-	virtual bool RemoveTurnAction(UBattleAction* Action, int32& ActionCount);
+	virtual bool RemoveTurnAction(UBattleElement* Action, int32& ActionCount);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual void StartTurnAction();
 	// ACTION
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual bool TurnContainsAction(UBattleAction* Action, int32& Amount) const;
+	virtual bool TurnContainsAction(UBattleElement* Action, int32& Amount) const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual bool TurnContainsActionOfClass(TSubclassOf<UBattleAction> Action, int32& Amount) const;
+	virtual bool TurnContainsActionOfClass(TSubclassOf<UBattleElement> Action, int32& Amount) const;
 	// ChangeActionOrder()
 	// GetAllActionsOfOwner()
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")

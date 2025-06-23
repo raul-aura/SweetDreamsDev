@@ -18,6 +18,10 @@ class SWEETDREAMS_API ISweetDreamsSaveInterface
 
 public:
 
+	//
+	// OnGameSaved, Loaded and etc native events
+	//
+
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
 	TMap<FName, FString> GetPersistentCustomData();
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")

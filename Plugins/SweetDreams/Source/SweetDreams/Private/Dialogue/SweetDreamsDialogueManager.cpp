@@ -2,13 +2,15 @@
 
 #include "Dialogue/SweetDreamsDialogueManager.h"
 #include "Kismet/GameplayStatics.h"
-#include "Camera/CameraComponent.h"
+#include "CineCameraComponent.h"
 #include "Player/MulticameraComponent.h"
 #include "Player/SweetDreamsHUD.h"
 #include "Components/AudioComponent.h"
 #include "Dialogue/DialogueWidget.h"
+#include "LevelSequence.h"
 #include "LevelSequencePlayer.h"
 #include "LevelSequenceActor.h"
+#include "Dialogue/DialogueData.h"
 #include "GameFramework/Character.h"
 
 ASweetDreamsDialogueManager::ASweetDreamsDialogueManager()
@@ -17,23 +19,24 @@ ASweetDreamsDialogueManager::ASweetDreamsDialogueManager()
 	USceneComponent* DialogueManager = CreateDefaultSubobject<USceneComponent>(TEXT("Dialogue Manager"));
 	DialogueManager->SetupAttachment(RootComponent);
 
-	USceneComponent* CameraGroup = CreateDefaultSubobject<USceneComponent>(TEXT("Camera Root"));
+	CameraGroup = CreateDefaultSubobject<USceneComponent>(TEXT("Camera Root"));
 	CameraGroup->SetupAttachment(DialogueManager);
 
-	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Primary Camera"));
-	CameraComponent->SetupAttachment(CameraGroup);
+	CineCameraComponent = CreateDefaultSubobject<UCineCameraComponent>(TEXT("Camera"));
+	CineCameraComponent->SetupAttachment(CameraGroup);
 
 	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("Audio Component"));
 	AudioComponent->SetupAttachment(RootComponent);
 
 	MulticameraComponent = CreateDefaultSubobject<UMulticameraComponent>(TEXT("Multicamera Component"));
 	AddOwnedComponent(MulticameraComponent);
+
+	DialogueData = nullptr;
 }
 
 void ASweetDreamsDialogueManager::BeginPlay()
 {
-	if (bGetDataTableDialogues) GetDialoguesFromDataTable(DialogueTable);
-	if (bGetDataTableChoiceDialogues) GetChoiceDialoguesFromDataTable(ChoiceDialogueTable);
+	GetDialoguesFromData(DialogueData);
 	Super::BeginPlay();
 }
 
@@ -63,17 +66,6 @@ void ASweetDreamsDialogueManager::StartDialogue(float TransitionDuration)
 {
 	if (TransitionDuration <= 0.f) TransitionDuration = GetWorld()->GetDeltaSeconds();
 	if (!bIsDialogueEnabled || bIsDialogueActive) return;
-	if (bMultipleDialogues && !DialogueName.IsNone())
-	{
-		if (DialogueGroups.Contains(DialogueName))
-		{
-			Dialogues = DialogueGroups[DialogueName].Dialogues;
-		}
-		if (ChoiceGroups.Contains(DialogueName))
-		{
-			AllChoiceDialogues = ChoiceGroups[DialogueName];
-		}
-	}
 	if (Dialogues.Num() == 0) return;
 	if (bHideCharacter)
 	{
@@ -97,7 +89,7 @@ void ASweetDreamsDialogueManager::StartDialogue(float TransitionDuration)
 			DialogueWidget = Cast<UDialogueWidget>(ASweetDreamsHUD::FindWidgetByClass(DialogueWidgetClass));
 			if (IsValid(DialogueWidget))
 			{
-				DialogueWidget->DialogueManager = this;
+				DialogueWidget->SetDialogueManager(this);
 				SweetDreamsHUD->ShowWidget(DialogueWidget);
 				DialogueWidget->OnDialogueStarted();
 			}
@@ -187,6 +179,7 @@ void ASweetDreamsDialogueManager::ProcessDialogue(FSweetDreamsDialogue Dialogue)
 		if (CurrentDialogue.Mode == EDialogueMode::DIALOGUE)
 		{
 			DialogueWidget->SetCurrentDialogue(CurrentDialogue);
+			DialogueWidget->OnUpdatedDialogue(CurrentDialogue, bIsSelectingChoices);
 		}
 		if (bIsSelectingChoices)
 		{
@@ -248,18 +241,19 @@ void ASweetDreamsDialogueManager::UpdateAnimatedDialogue()
 		}
 	}
 	AnimatedDialogueBody = FText::FromString(DisplayText);
+	if (IsValid(DialogueWidget))
+	{
+		DialogueWidget->UpdateAnimatedDialogue(AnimatedDialogueBody);
+	}
 }
 
-void ASweetDreamsDialogueManager::ApplyChoiceAndContinue(int32 ChoiceIndex)
+void ASweetDreamsDialogueManager::ApplyChoiceAndContinue(FChoice Choice)
 {
-	if (!AllChoiceDialogues.ChoiceDialogues.Contains(ChoiceIndex)) return;
-	DialogueLog[CurrentDialogueID].UpdateChoice(CurrentDialogue.Choices[ChoiceIndex]);
+	DialogueLog[CurrentDialogueID].UpdateChoice(Choice.ChoiceBody);
 	bIsSelectingChoices = false;
-	FDialogueGroup SelectedChoiceDialogues = AllChoiceDialogues.ChoiceDialogues[ChoiceIndex];
-	int32 InsertIndex = FMath::Min(CurrentDialogueID + 1, Dialogues.Num());
-	for (int32 i = 0; i < SelectedChoiceDialogues.Dialogues.Num(); ++i)
+	if (DialogueData->ChoiceResults.Contains(Choice.ChoiceResult))
 	{
-		Dialogues.Insert(SelectedChoiceDialogues.Dialogues[i], InsertIndex + i);
+		Dialogues.Append(DialogueData->ChoiceResults[Choice.ChoiceResult].Dialogues);
 	}
 	UpdateDialogue();
 }
@@ -293,7 +287,8 @@ void ASweetDreamsDialogueManager::EndDialogue()
 	if (IsValid(DialogueWidget))
 	{
 		DialogueWidget->OnDialogueEnded();
-		DialogueWidget->DialogueManager = nullptr;
+		DialogueWidget->HideSelf();
+		DialogueWidget->SetDialogueManager(nullptr);
 	}
 	OnDialogueEnded.Broadcast();
 }
@@ -317,7 +312,7 @@ ASweetDreamsDialogueManager* ASweetDreamsDialogueManager::GetActiveDialogue(cons
 	return nullptr;
 }
 
-ASweetDreamsDialogueManager* ASweetDreamsDialogueManager::FindDialogueByName(const UObject* WorldContext, FName Name, bool bUpdateNameOnMultiple)
+ASweetDreamsDialogueManager* ASweetDreamsDialogueManager::FindDialogueByName(const UObject* WorldContext, FName Name)
 {
 	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")) || Name.IsNone())
 	{
@@ -329,15 +324,7 @@ ASweetDreamsDialogueManager* ASweetDreamsDialogueManager::FindDialogueByName(con
 	{
 		if (auto* Dialogue = Cast<ASweetDreamsDialogueManager>(Actor))
 		{
-			if (Dialogue->bMultipleDialogues && Dialogue->DialogueGroups.Contains(Name))
-			{
-				if (bUpdateNameOnMultiple)
-				{
-					Dialogue->DialogueName = Name;
-				}
-				return Dialogue;
-			}
-			else if (Dialogue->DialogueName.IsEqual(Name))
+			if (Dialogue->DialogueName.IsEqual(Name))
 			{
 				return Dialogue;
 			}
@@ -352,7 +339,7 @@ ASweetDreamsDialogueManager* ASweetDreamsDialogueManager::StartDialogueByName(co
 	{
 		return nullptr;
 	}
-	ASweetDreamsDialogueManager* Dialogue = FindDialogueByName(WorldContext, Name, true);
+	ASweetDreamsDialogueManager* Dialogue = FindDialogueByName(WorldContext, Name);
 	if (IsValid(Dialogue))
 	{
 		Dialogue->StartDialogue(StartTransition);
@@ -394,49 +381,15 @@ void ASweetDreamsDialogueManager::AddDialogueToLog(int32 DialogueID)
 	DialogueLog.Add(NewLog);
 }
 
-void ASweetDreamsDialogueManager::GetDialoguesFromDataTable(UDataTable* Data)
+void ASweetDreamsDialogueManager::GetDialoguesFromData(UDialogueData* Data)
 {
 	if (!IsValid(Data)) return;
-	if (bMultipleDialogues)
+	UpdateDialogueName(Data->Name);
+	Dialogues.Empty();
+	TArray<FSweetDreamsDialogue> DialoguesData = Data->Dialogues;
+	for (FSweetDreamsDialogue SingleData : DialoguesData)
 	{
-		TArray<FDialogueGroup*> DialogueRows;
-		Data->GetAllRows(TEXT("DialogueData"), DialogueRows);
-		for (FDialogueGroup* Row : DialogueRows)
-		{
-			DialogueGroups.Add(Row->GroupName, *Row);
-		}
-	}
-	else
-	{
-		TArray<FSweetDreamsDialogue*> DialogueRows;
-		Data->GetAllRows(TEXT("DialogueData"), DialogueRows);
-		for (FSweetDreamsDialogue* Row : DialogueRows)
-		{
-			Dialogues.Add(*Row);
-		}
-	}
-}
-
-void ASweetDreamsDialogueManager::GetChoiceDialoguesFromDataTable(UDataTable* Data)
-{
-	if (!IsValid(Data)) return;
-	if (bMultipleDialogues)
-	{
-		TArray<FChoiceDialogues*> ChoiceRows;
-		Data->GetAllRows(TEXT("ChoiceData"), ChoiceRows);
-		for (FChoiceDialogues* Row : ChoiceRows)
-		{
-			ChoiceGroups.Add(Row->GroupName, *Row);
-		}
-	}
-	else
-	{
-		TArray<FChoiceDialogues*> ChoiceRows;
-		Data->GetAllRows(TEXT("ChoiceData"), ChoiceRows);
-		for (FChoiceDialogues* Row : ChoiceRows)
-		{
-			AllChoiceDialogues = *Row;
-		}
+		Dialogues.Add(SingleData);
 	}
 }
 
