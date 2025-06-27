@@ -18,16 +18,12 @@ ASweetDreamsGameMode::ASweetDreamsGameMode()
 
 void ASweetDreamsGameMode::BeginPlay()
 {
-	Core = GetGameInstance()->GetSubsystem<USweetDreamsCore>();
-	if (IsValid(Core) && Core->CoreSettings)
+	SweetDreamsCore = USweetDreamsBPLibrary::GetSweetDreamsCore(this);
+	if (IsValid(SweetDreamsCore))
 	{
-		if (Core->CoreSettings->bEnableAutoLoadData && Core->CoreSettings->bEnableAutoLoadSave)
-		{
-			Core->LoadData();
-			Core->LoadData(false);
-		}
+		SweetDreamsCore->LoadCoreSaves();
 	}
-	LoadingWidget = CreateLoadingWidget(LoadingWidgetClass, bShowLoadingScreenOnBeginPlay);
+	LoadingWidget = CreateLoadingWidget(LoadingWidgetClass, bShowOnBeginPlay);
 	Super::BeginPlay();
 }
 
@@ -38,13 +34,13 @@ ULoadingWidget* ASweetDreamsGameMode::CreateLoadingWidget(TSubclassOf<ULoadingWi
 	if (IsValid(NewWidget))
 	{
 		if (bAddToViewport) NewWidget->AddToViewport(99);
-		if (LoadingDelay < 0.f) LoadingDelay = 0.1f;
+		if (WidgetGracePeriod < 0.f) WidgetGracePeriod = 0.01f;
 		FTimerHandle WidgetRemoveTimer;
 		GetWorld()->GetTimerManager().SetTimer(WidgetRemoveTimer, [this, NewWidget]()
 			{
-				NewWidget->OnLoadingDelayFinished(LoadingDelay);
-				if (bHideLoadingScreenOnFinish) NewWidget->SetVisibility(ESlateVisibility::Collapsed);
-			}, LoadingDelay, false);
+				NewWidget->OnGracePeriodEnded(WidgetGracePeriod);
+				if (bHideAfterGracePeriod) NewWidget->SetVisibility(ESlateVisibility::Collapsed);
+			}, WidgetGracePeriod, false);
 	}
 	return NewWidget;
 }
@@ -62,7 +58,6 @@ void ASweetDreamsGameMode::LevelLoadFinished(TSoftObjectPtr<UWorld> LoadingLevel
 	if (IsValid(LoadingWidget))
 	{
 		LoadingWidget->OnLoadingFinish();
-		if (bHideLoadingScreenOnFinish) LoadingWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 

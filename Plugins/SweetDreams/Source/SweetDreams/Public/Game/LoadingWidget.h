@@ -17,6 +17,6 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Loading")
 	void OnLoadingFinish();
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Loading")
-	void OnLoadingDelayFinished(float Delay);
+	void OnGracePeriodEnded(float Duration);
 };
 

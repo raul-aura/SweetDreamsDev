@@ -20,27 +20,24 @@ class SWEETDREAMS_API ASweetDreamsGameMode : public AGameModeBase
 public:
 	virtual void BeginPlay() override;
 
-	// LEVEL LOAD
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
 	ULoadingWidget* CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class, bool bAddToViewport);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
 	void LevelLoadStarted(TSoftObjectPtr<UWorld> LoadingLevel);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
 	void LevelLoadFinished(TSoftObjectPtr<UWorld> LoadingLevel);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Core")
-	USweetDreamsCore* Core = nullptr;
+	USweetDreamsCore* SweetDreamsCore = nullptr;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen")
 	TSubclassOf<ULoadingWidget> LoadingWidgetClass;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
-	bool bShowLoadingScreenOnBeginPlay = true;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
-	bool bHideLoadingScreenOnFinish = true;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core", meta = (ClampMin = "0"))
-	float LoadingDelay = 3.f;
-	UPROPERTY(BlueprintReadOnly, Category = "Core")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen")
+	bool bShowOnBeginPlay = true;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen", meta = (ClampMin = "0"))
+	float WidgetGracePeriod = 3.f; // grace period for loading widget, called on begin play 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen")
+	bool bHideAfterGracePeriod = true; // when grace period ends, should auto hide the widget?
+	UPROPERTY(BlueprintReadOnly, Category = "Loading Screen")
 	ULoadingWidget* LoadingWidget = nullptr;
 
 };

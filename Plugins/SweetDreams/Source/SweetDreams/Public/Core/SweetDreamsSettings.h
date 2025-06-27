@@ -30,13 +30,10 @@ public:
 	int32 DebugFlags;
 
 	// SAVE
-
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Game|Settings", meta = (Tooltip = "On Core initialize, the Persistent Save and Local Save will always be created and saved.\n\nSince these functions run on Game Instance Initialize, it cannot call Actor interfaces such as load/save data."))
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Game|Settings", meta = (Tooltip = "On Core initialize, the Persistent Save and Local Save will always be created and saved."))
 	bool bEnableAutoCreateSave = true;
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Game|Settings", meta = (Tooltip = "On Core initialize, the Persistent Save file will always be loaded, if any.\n\nSince these functions run on Game Instance Initialize, it cannot call Actor interfaces such as load/save data."))
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Game|Settings", meta = (Tooltip = "On Game Mode initialize, the Persistent and Local save files will always be loaded, if any."))
 	bool bEnableAutoLoadSave = true;
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Game|Settings", meta = (Tooltip = "On Game Mode Begin Play, the Persistent Save file will always load data to actors with Sweet Dreams Save Interface, if any.\n\nYour Game Mode needs to be an instance of SweetDreamsGameMode for this to work."))
-	bool bEnableAutoLoadData = true;
 	
 	//Name of the Persistent Save File
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Save|Persistent", meta = (DisplayName = "Persistent File Name"))

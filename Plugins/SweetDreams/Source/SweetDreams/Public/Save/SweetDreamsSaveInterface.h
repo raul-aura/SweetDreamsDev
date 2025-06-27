@@ -23,12 +23,7 @@ public:
 	//
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
-	TMap<FName, FString> GetPersistentCustomData();
+	TMap<FName, FString> GetCustomData();
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
-	void LoadPersistentCustomData(const TMap<FName, FString>& Data);
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
-	TMap<FName, FString> GetLocalCustomData();
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
-	void LoadLocalCustomData(const TMap<FName, FString>& Data);
+	void LoadCustomData(const TMap<FName, FString>& Data);
 };

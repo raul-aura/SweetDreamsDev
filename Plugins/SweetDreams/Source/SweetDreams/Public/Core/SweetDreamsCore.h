@@ -107,49 +107,48 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	void LoadSettings();
+	const USweetDreamsSettings* CoreSettings;
 
 	// DEBUG
 	void PrintDream(const UObject* DreamOrigin, FString Dream, EPrintType Severity = EPrintType::INFO, float duration = 4.0f);
 
 	// SETTINGS
-	UPROPERTY(BlueprintReadOnly, Category = "Sweet Dreams|Core")
-	const USweetDreamsSettings* CoreSettings;
 	void SetUserSettings(FDreamUserSettings Settings);
 	FDreamUserSettings GetUserSettings() const;
 
 	// SAVE
-	bool CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, bool bIsPersistent = true);
-	bool Save(USweetDreamsSaveFile* SaveObject, bool bIsPersistent = true);
-	USweetDreamsSaveFile* LoadSave(bool bIsPersistent = true);
-	void SaveData(bool bIsPersistent = true);
-	void LoadData(bool bIsPersistent = true);
-	bool DeleteSave(bool bIsPersistent = true);
-	USweetDreamsSaveFile* GetSaveObject(bool bIsPersistent = true) const;
-	UPROPERTY()
-	class USweetDreamsSaveFile* SavePersistentRef = nullptr;
-	UPROPERTY()
-	class USweetDreamsSaveFile* SaveLocalRef = nullptr;
+	USweetDreamsSaveFile* CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, const FString& Slot, bool& bSuccess);
+	bool Save(const FString& Slot);
+	USweetDreamsSaveFile* LoadSave(const FString& Slot);
+	bool DeleteSave(const FString& Slot);
+	//
+	void SaveData(USweetDreamsSaveFile* Save);
+	void LoadCoreSaves();
+	void LoadData(USweetDreamsSaveFile* Save);
+	//
+	void UpdateSaveReference(USweetDreamsSaveFile* Save, FString Slot);
+	FString GetCoreSaveSlot(bool bIsPersistent = true) const;
+	USweetDreamsSaveFile* GetSaveObject(const FString& Slot) const;
 
 	// WORLD
 	AActor* FindActorByName(FName Name);
 
 	// LOADING
 	void LoadLevel(TSoftObjectPtr<UWorld> Level);
-	UPROPERTY()
 	TSoftObjectPtr<UWorld> CurrentLoadingLevel;
 
 protected:
 	// SETTINGS
-	UPROPERTY()
 	FDreamUserSettings UserSettings;
 
 	// SAVE
-	UPROPERTY()
+	TMap<FString, USweetDreamsSaveFile*> CustomSaveFiles;
+	USweetDreamsSaveFile* SavePersistentRef = nullptr;
+	USweetDreamsSaveFile* SaveLocalRef = nullptr;
+	//
 	TSubclassOf<USweetDreamsSaveFile> SaveClassPersistent = nullptr;
-	UPROPERTY()
 	TSubclassOf<USweetDreamsSaveFile> SaveClassLocal = nullptr;
-	UPROPERTY()
+	//
 	FString SaveSlotPersistent = "SweetDream_PERSISTENT";
-	UPROPERTY()
 	FString SaveSlotLocal = "SweetDream_LOCAL";
 };

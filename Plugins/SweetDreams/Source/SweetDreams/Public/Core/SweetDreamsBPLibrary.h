@@ -24,19 +24,39 @@ public:
 	static USweetDreamsCore* GetSweetDreamsCore(const UObject* WorldContext);
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core")
 	static ASweetDreamsGameMode* GetSweetDreamsGameMode(const UObject* WorldContext);
+
 	// SAVE
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
-	static bool CreateSaveGame(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, bool bIsPersistent = true);
+	static USweetDreamsSaveFile* CreateCustomSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, FString CustomSlot, bool& bSuccessful);
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
-	static bool SaveGame(const UObject* WorldContext, USweetDreamsSaveFile* SaveObject, bool bIsPersistent = true);
+	static USweetDreamsSaveFile* CreatePersistentSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, bool& bSuccessful); //overriding auto save 
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
-	static USweetDreamsSaveFile* LoadSaveGame(const UObject* WorldContext, bool bIsPersistent = true);
+	static USweetDreamsSaveFile* CreateLocalSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, bool& bSuccessful); //overriding auto save
+	//
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
+	static bool SaveCustomGame(const UObject* WorldContext, FString CustomSlot);
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
+	static bool SavePersistentGame(const UObject* WorldContext);
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
+	static bool SaveLocalGame(const UObject* WorldContext);
+	//
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
+	static USweetDreamsSaveFile* LoadCustomGame(const UObject* WorldContext, FString CustomSlot);
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
+	static USweetDreamsSaveFile* LoadPersistentGame(const UObject* WorldContext);
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
+	static USweetDreamsSaveFile* LoadLocalGame(const UObject* WorldContext);
+	//
+	static bool DeleteCustomGame(const UObject* WorldContext, FString CustomSlot);
+	static bool DeletePersistentGame(const UObject* WorldContext);
+	static bool DeleteLocalGame(const UObject* WorldContext);
+	//
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
+	static USweetDreamsSaveFile* GetCustomSave(const UObject* WorldContext, FString Slot);
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* GetPersistentSave(const UObject* WorldContext);
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* GetLocalSave(const UObject* WorldContext);
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
-	static bool DeleteSave(const UObject* WorldContext, bool bIsPersistent = true);
 	// SETTINGS
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Settings")
 	static FDreamUserSettings GetUserSettings(const UObject* WorldContext);
@@ -69,4 +89,10 @@ public:
 	static bool IsRunningInEditor();
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Helpers")
 	static bool IsRunningInStandaloneGame();
+	//
+	static inline UWorld* GetValidWorld(const UObject* WorldContext)
+	{
+		if (!IsValid(WorldContext)) return nullptr;
+		return GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
+	}
 };

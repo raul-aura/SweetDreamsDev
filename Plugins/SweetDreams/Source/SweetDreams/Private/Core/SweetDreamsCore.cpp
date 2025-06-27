@@ -41,20 +41,16 @@ void USweetDreamsCore::Initialize(FSubsystemCollectionBase& Collection)
 	PrintDream(nullptr, "Initializing Sweet Dreams Core subsystem.");
 	if (CoreSettings->bEnableAutoCreateSave)
 	{
-		CreateSave(SaveClassPersistent);
-		CreateSave(SaveClassLocal, false);
-	}
-	if (CoreSettings->bEnableAutoLoadSave)
-	{
-		LoadSave();
-		LoadSave(false);
+		bool bSuccess = false;
+		CreateSave(SaveClassPersistent, SaveSlotPersistent, bSuccess);
+		CreateSave(SaveClassLocal, SaveSlotLocal, bSuccess);
 	}
 	Super::Initialize(Collection);
 }
 
 void USweetDreamsCore::Deinitialize()
 {
-	DeleteSave(false);
+	DeleteSave(SaveSlotLocal);
 	PrintDream(nullptr, "Deinitializing Sweet Dreams Core subsystem.");
 	Super::Deinitialize();
 }
@@ -103,100 +99,137 @@ FDreamUserSettings USweetDreamsCore::GetUserSettings() const
 
 // SAVE
 
-bool USweetDreamsCore::CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, bool bIsPersistent)
+USweetDreamsSaveFile* USweetDreamsCore::CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, const FString& Slot, bool& bSuccess)
 {
-	FString SaveSlot = bIsPersistent ? SaveSlotPersistent : SaveSlotLocal;
-	FString SaveName = bIsPersistent ? "Persistent Save" : "Local Save";
-	if (UGameplayStatics::DoesSaveGameExist(SaveSlot, 0))
+	bSuccess = false;
+	if (UGameplayStatics::DoesSaveGameExist(Slot, 0))
 	{
 		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
 		{
-			PrintDream(nullptr, FString::Printf(TEXT("%s ALREADY EXISTS and WILL NOT be created again."), *SaveName));
+			PrintDream(nullptr, FString::Printf(TEXT("%s EXISTS and WILL NOT be created. Returning NULL"), *Slot), EPrintType::WARNING);
 		}
-		return false;
+		return nullptr;
 	}
-	USaveGame* SaveObject = UGameplayStatics::CreateSaveGameObject(SaveClass);
-	if (IsValid(SaveObject))
+	USaveGame* SaveObj = UGameplayStatics::CreateSaveGameObject(SaveClass);
+	if (IsValid(SaveObj))
 	{
 		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
 		{
-			PrintDream(nullptr, FString::Printf(TEXT("%s CREATED with SUCCESS."), *SaveName));
+			PrintDream(nullptr, FString::Printf(TEXT("%s CREATED with SUCCESS."), *Slot));
 		}
-		if (bIsPersistent)
-		{
-			SavePersistentRef = Cast<USweetDreamsSaveFile>(SaveObject);
-			Save(SavePersistentRef);
-		}
-		else
-		{
-			SaveLocalRef = Cast<USweetDreamsSaveFile>(SaveObject);
-			Save(SaveLocalRef, false);
-		}
-		return true;
+		bSuccess = true;
+		USweetDreamsSaveFile* SweetSave = Cast<USweetDreamsSaveFile>(SaveObj);
+		UpdateSaveReference(SweetSave, Slot);
+		Save(Slot);
+		return SweetSave;
 	}
 	if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
 	{
-		PrintDream(nullptr, FString::Printf(TEXT("%s NOT CREATED. %s reference will be NULL."), *SaveName));
-	}
-	return false;
-}
-
-bool USweetDreamsCore::Save(USweetDreamsSaveFile* SaveObject, bool bIsPersistent)
-{
-	FString SaveSlot = bIsPersistent ? SaveSlotPersistent : SaveSlotLocal;
-	FString SaveName = bIsPersistent ? "Persistent Save" : "Local Save";
-	SaveData(bIsPersistent);
-	if (UGameplayStatics::SaveGameToSlot(SaveObject, SaveSlot, 0))
-	{
-		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
-		{
-			PrintDream(nullptr, FString::Printf(TEXT("%s SAVED with SUCCESS."), *SaveName));
-		}
-		return true;
-	}
-	if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
-	{
-		PrintDream(nullptr, FString::Printf(TEXT("%s FAILED to SAVE."), *SaveName));
-	}
-	return false;
-}
-
-USweetDreamsSaveFile* USweetDreamsCore::LoadSave(bool bIsPersistent)
-{
-	FString SaveSlot = bIsPersistent ? SaveSlotPersistent : SaveSlotLocal;
-	FString SaveName = bIsPersistent ? "Persistent Save" : "Local Save";
-	if (USaveGame* SaveObject = UGameplayStatics::LoadGameFromSlot(SaveSlot, 0))
-	{
-		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
-		{
-			PrintDream(nullptr, FString::Printf(TEXT("%s LOADED and returned with SUCCESS."), *SaveName));
-		}
-		if (bIsPersistent)
-		{
-			SavePersistentRef = Cast<USweetDreamsSaveFile>(SaveObject);
-			LoadData(true);
-			return SavePersistentRef;
-		}
-		else
-		{
-			SaveLocalRef = Cast<USweetDreamsSaveFile>(SaveObject);
-			LoadData(false);
-			return SaveLocalRef;
-		}
-	}
-	if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
-	{
-		PrintDream(nullptr, FString::Printf(TEXT("%s FAILED to LOAD."), *SaveName));
+		PrintDream(nullptr, FString::Printf(TEXT("%s NOT CREATED. Returning NULL."), *Slot), EPrintType::ERROR);
 	}
 	return nullptr;
 }
 
-void USweetDreamsCore::SaveData(bool bIsPersistent)
+bool USweetDreamsCore::Save(const FString& Slot)
 {
-	USweetDreamsSaveFile* SaveObject = GetSaveObject(bIsPersistent);
-	if (!IsValid(SaveObject)) return;
+	USweetDreamsSaveFile* Save = GetSaveObject(Slot);
+	if (!IsValid(Save)) return false;
+	SaveData(Save);
+	if (UGameplayStatics::SaveGameToSlot(Save, Slot, 0))
+	{
+		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+		{
+			PrintDream(nullptr, FString::Printf(TEXT("%s SAVED with SUCCESS."), *Slot));
+		}
+		return true;
+	}
+	if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+	{
+		PrintDream(nullptr, FString::Printf(TEXT("%s FAILED to SAVE."), *Slot), EPrintType::ERROR);
+	}
+	return false;
+}
+
+USweetDreamsSaveFile* USweetDreamsCore::LoadSave(const FString& Slot)
+{
+	if (USaveGame* SaveObject = UGameplayStatics::LoadGameFromSlot(Slot, 0))
+	{
+		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+		{
+			PrintDream(nullptr, FString::Printf(TEXT("%s LOADED and returned with SUCCESS."), *Slot));
+		}
+		USweetDreamsSaveFile* SweetSave = Cast<USweetDreamsSaveFile>(SaveObject);
+		UpdateSaveReference(SweetSave, Slot);
+		LoadData(SweetSave);
+		return SweetSave;
+	}
+	if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+	{
+		PrintDream(nullptr, FString::Printf(TEXT("%s FAILED to LOAD."), *Slot), EPrintType::ERROR);
+	}
+	return nullptr;
+}
+
+bool USweetDreamsCore::DeleteSave(const FString& Slot)
+{
+	if (UGameplayStatics::DeleteGameInSlot(Slot, 0))
+	{
+		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+		{
+			PrintDream(nullptr, FString::Printf(TEXT("%s DELETED."), *Slot));
+		}
+		UpdateSaveReference(nullptr, Slot);
+		return true;
+	}
+	if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+	{
+		PrintDream(nullptr, FString::Printf(TEXT("%s FAILED to be DELETED."), *Slot), EPrintType::ERROR);
+	}
+	return false;
+}
+
+void USweetDreamsCore::UpdateSaveReference(USweetDreamsSaveFile* Save, FString Slot)
+{
+	if (Slot == SaveSlotPersistent)
+	{
+		SavePersistentRef = Save;
+	}
+	else if (Slot == SaveSlotLocal)
+	{
+		SaveLocalRef = Save;
+	}
+	else
+	{
+		CustomSaveFiles.FindOrAdd(Slot) = Save;
+	}
+}
+
+FString USweetDreamsCore::GetCoreSaveSlot(bool bIsPersistent) const
+{
+	return bIsPersistent ? SaveSlotPersistent : SaveSlotLocal;
+}
+
+USweetDreamsSaveFile* USweetDreamsCore::GetSaveObject(const FString& Slot) const
+{
+	if (Slot == SaveSlotPersistent)
+	{
+		return SavePersistentRef;
+	}
+	else if (Slot == SaveSlotLocal)
+	{
+		return SaveLocalRef;
+	}
+	else
+	{
+		return *CustomSaveFiles.Find(Slot);
+	}
+}
+
+void USweetDreamsCore::SaveData(USweetDreamsSaveFile* Save)
+{
+	if (!IsValid(Save)) return;
 	FName CurrentLevelName = FName(GetWorld()->GetMapName());
-	SaveObject->SavedData.RemoveAll([&CurrentLevelName](const FSaveData& Data) {
+	Save->SavedData.RemoveAll([&CurrentLevelName](const FSaveData& Data) {
 		return Data.LevelName == CurrentLevelName;
 		});
 	TArray<AActor*> Actors;
@@ -207,25 +240,31 @@ void USweetDreamsCore::SaveData(bool bIsPersistent)
 		FSaveData Data;
 		Data.ActorName = Actor->GetFName();
 		Data.LevelName = CurrentLevelName;
-		Data.CustomData = bIsPersistent ?
-			ISweetDreamsSaveInterface::Execute_GetPersistentCustomData(Actor) :
-			ISweetDreamsSaveInterface::Execute_GetLocalCustomData(Actor);
+		Data.CustomData = ISweetDreamsSaveInterface::Execute_GetCustomData(Actor);
 		FMemoryWriter MemoryWriter(Data.ByteData);
 		FObjectAndNameAsStringProxyArchive Archive(MemoryWriter, true);
 		Archive.ArIsSaveGame = true;
 		Actor->Serialize(Archive);
-		SaveObject->SavedData.Add(Data);
+		Save->SavedData.Add(Data);
 	}
-	SaveObject->LastTimeSaved = FDateTime::Now();
-	SaveObject->AmountOfSaves++;
+	Save->LastTimeSaved = FDateTime::Now();
+	Save->AmountOfSaves++;
 }
 
-void USweetDreamsCore::LoadData(bool bIsPersistent)
+void USweetDreamsCore::LoadCoreSaves()
 {
-	USweetDreamsSaveFile* SaveObject = GetSaveObject(bIsPersistent);
-	if (!IsValid(SaveObject)) return;
+	if (CoreSettings->bEnableAutoLoadSave)
+	{
+		LoadSave(SaveSlotPersistent);
+		LoadSave(SaveSlotLocal);
+	}
+}
+
+void USweetDreamsCore::LoadData(USweetDreamsSaveFile* Save)
+{
+	if (!IsValid(Save)) return;
 	FName CurrentLevelName = FName(GetWorld()->GetMapName());
-	for (const FSaveData& Data : SaveObject->SavedData)
+	for (const FSaveData& Data : Save->SavedData)
 	{
 		AActor* Actor = FindActorByName(Data.ActorName);
 		if (!IsValid(Actor)) continue;
@@ -233,30 +272,8 @@ void USweetDreamsCore::LoadData(bool bIsPersistent)
 		FObjectAndNameAsStringProxyArchive Archive(MemoryReader, true);
 		Archive.ArIsSaveGame = true;
 		Actor->Serialize(Archive);
-		bIsPersistent ?
-			ISweetDreamsSaveInterface::Execute_LoadPersistentCustomData(Actor, Data.CustomData) :
-			ISweetDreamsSaveInterface::Execute_LoadLocalCustomData(Actor, Data.CustomData);
+		ISweetDreamsSaveInterface::Execute_LoadCustomData(Actor, Data.CustomData);
 	}
-}
-
-bool USweetDreamsCore::DeleteSave(bool bIsPersistent)
-{
-	FString SaveSlot = bIsPersistent ? SaveSlotPersistent : SaveSlotLocal;
-	return UGameplayStatics::DeleteGameInSlot(SaveSlot, 0);
-}
-
-USweetDreamsSaveFile* USweetDreamsCore::GetSaveObject(bool bIsPersistent) const
-{
-	USweetDreamsSaveFile* SaveObject;
-	if (bIsPersistent)
-	{
-		SaveObject = SavePersistentRef;
-	}
-	else
-	{
-		SaveObject = SaveLocalRef;
-	}
-	return SaveObject;
 }
 
 AActor* USweetDreamsCore::FindActorByName(FName Name)

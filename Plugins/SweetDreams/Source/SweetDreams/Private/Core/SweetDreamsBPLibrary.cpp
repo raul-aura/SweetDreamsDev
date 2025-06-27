@@ -19,132 +19,166 @@ USweetDreamsBPLibrary::USweetDreamsBPLibrary(const FObjectInitializer& ObjectIni
 
 USweetDreamsCore* USweetDreamsBPLibrary::GetSweetDreamsCore(const UObject* WorldContext)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
+	if (UWorld* World = GetValidWorld(WorldContext))
 	{
-		return nullptr;
+		if (UGameInstance* GameInstance = World->GetGameInstance())
+		{
+			return GameInstance->GetSubsystem<USweetDreamsCore>();
+		}
 	}
-	if (UGameInstance* GameInstance = World->GetGameInstance())
-	{
-		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-	}
-	return SweetDreamsCore;
+	return nullptr;
 }
 
 ASweetDreamsGameMode* USweetDreamsBPLibrary::GetSweetDreamsGameMode(const UObject* WorldContext)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
+	if (UWorld* World = GetValidWorld(WorldContext))
 	{
-		return nullptr;
+		return Cast<ASweetDreamsGameMode>(UGameplayStatics::GetGameMode(World));
 	}
-	return Cast<ASweetDreamsGameMode>(UGameplayStatics::GetGameMode(World));
+	return nullptr;
 }
 
-bool USweetDreamsBPLibrary::CreateSaveGame(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, bool bIsPersistent)
+USweetDreamsSaveFile* USweetDreamsBPLibrary::CreateCustomSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, FString CustomSlot, bool& bSuccessful)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		return false;
+		return Core->CreateSave(SaveClass, CustomSlot, bSuccessful);
 	}
-	if (UGameInstance* GameInstance = World->GetGameInstance())
+	return nullptr;
+}
+
+USweetDreamsSaveFile* USweetDreamsBPLibrary::CreatePersistentSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, bool& bSuccessful)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (IsValid(SweetDreamsCore))
-		{
-			return SweetDreamsCore->CreateSave(SaveClass, bIsPersistent);
-		}
+		FString Slot = Core->GetCoreSaveSlot(true);
+		return Core->CreateSave(SaveClass, Slot, bSuccessful);
+	}
+	return nullptr;
+}
+
+USweetDreamsSaveFile* USweetDreamsBPLibrary::CreateLocalSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, bool& bSuccessful)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+	{
+		FString Slot = Core->GetCoreSaveSlot(false);
+		return Core->CreateSave(SaveClass, Slot, bSuccessful);
+	}
+	return nullptr;
+}
+
+bool USweetDreamsBPLibrary::SaveCustomGame(const UObject* WorldContext, FString CustomSlot)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+	{
+		return Core->Save(CustomSlot);
 	}
 	return false;
 }
 
-bool USweetDreamsBPLibrary::SaveGame(const UObject* WorldContext, USweetDreamsSaveFile* SaveObject, bool bIsPersistent)
+bool USweetDreamsBPLibrary::SavePersistentGame(const UObject* WorldContext)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		return false;
-	}
-	if (UGameInstance* GameInstance = World->GetGameInstance())
-	{
-		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (IsValid(SweetDreamsCore))
-		{
-			return SweetDreamsCore->Save(SaveObject, bIsPersistent);
-		}
+		FString Slot = Core->GetCoreSaveSlot(true);
+		return Core->Save(Slot);
 	}
 	return false;
 }
 
-USweetDreamsSaveFile* USweetDreamsBPLibrary::LoadSaveGame(const UObject* WorldContext, bool bIsPersistent)
+bool USweetDreamsBPLibrary::SaveLocalGame(const UObject* WorldContext)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		return nullptr;
+		FString Slot = Core->GetCoreSaveSlot(false);
+		return Core->Save(Slot);
 	}
-	if (UGameInstance* GameInstance = World->GetGameInstance())
+	return false;
+}
+
+USweetDreamsSaveFile* USweetDreamsBPLibrary::LoadCustomGame(const UObject* WorldContext, FString CustomSlot)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (IsValid(SweetDreamsCore))
-		{
-			return SweetDreamsCore->LoadSave(bIsPersistent);
-		}
+		return Core->LoadSave(CustomSlot);
+	}
+	return nullptr;
+}
+
+USweetDreamsSaveFile* USweetDreamsBPLibrary::LoadPersistentGame(const UObject* WorldContext)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+	{
+		FString Slot = Core->GetCoreSaveSlot(true);
+		return Core->LoadSave(Slot);
+	}
+	return nullptr;
+}
+
+USweetDreamsSaveFile* USweetDreamsBPLibrary::LoadLocalGame(const UObject* WorldContext)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+	{
+		FString Slot = Core->GetCoreSaveSlot(false);
+		return Core->LoadSave(Slot);
+	}
+	return nullptr;
+}
+
+bool USweetDreamsBPLibrary::DeleteCustomGame(const UObject* WorldContext, FString CustomSlot)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+	{
+		return Core->DeleteSave(CustomSlot);
+	}
+	return false;
+}
+
+bool USweetDreamsBPLibrary::DeletePersistentGame(const UObject* WorldContext)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+	{
+		FString Slot = Core->GetCoreSaveSlot(true);
+		return Core->DeleteSave(Slot);
+	}
+	return false;
+}
+
+bool USweetDreamsBPLibrary::DeleteLocalGame(const UObject* WorldContext)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+	{
+		FString Slot = Core->GetCoreSaveSlot(false);
+		return Core->DeleteSave(Slot);
+	}
+	return false;
+}
+
+USweetDreamsSaveFile* USweetDreamsBPLibrary::GetCustomSave(const UObject* WorldContext, FString Slot)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+	{
+		return Core->GetSaveObject(Slot);
 	}
 	return nullptr;
 }
 
 USweetDreamsSaveFile* USweetDreamsBPLibrary::GetPersistentSave(const UObject* WorldContext)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		return nullptr;
+		FString Slot = Core->GetCoreSaveSlot(true);
+		return Core->GetSaveObject(Slot);
 	}
-	if (UGameInstance* GameInstance = World->GetGameInstance())
-	{
-		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (IsValid(SweetDreamsCore))
-		{
-			return SweetDreamsCore->SavePersistentRef;
-		}
-	}
-	return nullptr;
+	return false;
 }
 
 USweetDreamsSaveFile* USweetDreamsBPLibrary::GetLocalSave(const UObject* WorldContext)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		return nullptr;
-	}
-	if (UGameInstance* GameInstance = World->GetGameInstance())
-	{
-		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (IsValid(SweetDreamsCore))
-		{
-			return SweetDreamsCore->SaveLocalRef;
-		}
-	}
-	return nullptr;
-}
-
-bool USweetDreamsBPLibrary::DeleteSave(const UObject* WorldContext, bool bIsPersistent)
-{
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
-	{
-		return false;
-	}
-	if (UGameInstance* GameInstance = World->GetGameInstance())
-	{
-		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (IsValid(SweetDreamsCore))
-		{
-			return SweetDreamsCore->DeleteSave(bIsPersistent);
-		}
+		FString Slot = Core->GetCoreSaveSlot(false);
+		return Core->GetSaveObject(Slot);
 	}
 	return false;
 }
@@ -278,10 +312,8 @@ bool USweetDreamsBPLibrary::IsRunningInStandaloneGame()
 
 void USweetDreamsBPLibrary::PrintDream(const UObject* DreamOrigin, FString Dream, EPrintType Severity, float Duration)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(DreamOrigin, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(DreamOrigin) && !IsValid(World))
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(DreamOrigin))
 	{
-		return;
+		Core->PrintDream(DreamOrigin, Dream, Severity, Duration);
 	}
-	GetSweetDreamsCore(DreamOrigin)->PrintDream(DreamOrigin, Dream, Severity, Duration);
 }
