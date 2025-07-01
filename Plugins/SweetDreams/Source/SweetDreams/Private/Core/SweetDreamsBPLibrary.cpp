@@ -10,8 +10,6 @@
 #include "Curves/CurveFloat.h"
 #include "Engine/Engine.h"
 
-USweetDreamsCore* USweetDreamsBPLibrary::SweetDreamsCore = nullptr;
-
 USweetDreamsBPLibrary::USweetDreamsBPLibrary(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
 {
@@ -185,92 +183,55 @@ USweetDreamsSaveFile* USweetDreamsBPLibrary::GetLocalSave(const UObject* WorldCo
 
 FDreamUserSettings USweetDreamsBPLibrary::GetUserSettings(const UObject* WorldContext)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		return FDreamUserSettings();
-	}
-	if (UGameInstance* GameInstance = World->GetGameInstance())
-	{
-		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (IsValid(SweetDreamsCore))
-		{
-			FDreamUserSettings Settings = SweetDreamsCore->GetUserSettings();
-			return Settings;
-		}
+		return Core->GetUserSettings();
 	}
 	return FDreamUserSettings();
 }
 
 void USweetDreamsBPLibrary::SetUserSettings(const UObject* WorldContext, FDreamUserSettings Settings)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		return;
-	}
-	if (UGameInstance* GameInstance = World->GetGameInstance())
-	{
-		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (IsValid(SweetDreamsCore))
-		{
-			Settings.ApplySettings();
-			SweetDreamsCore->SetUserSettings(Settings);
-		}
+		Settings.ApplySettings();
+		Core->SetUserSettings(Settings);
 	}
 }
 
 void USweetDreamsBPLibrary::SetSettingsQuality(const UObject* WorldContext, int32 Quality)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		return;
-	}
-	if (UGameInstance* GameInstance = World->GetGameInstance())
-	{
-		SweetDreamsCore = GameInstance->GetSubsystem<USweetDreamsCore>();
-		if (IsValid(SweetDreamsCore))
-		{
-			Quality = FMath::Clamp(Quality, 0, 2);
-			FDreamUserSettings NewSettings(Quality);
-			NewSettings.ApplySettings();
-			SweetDreamsCore->SetUserSettings(NewSettings);
-		}
+		Quality = FMath::Clamp(Quality, 0, 2);
+		FDreamUserSettings NewSettings(Quality);
+		NewSettings.ApplySettings();
+		Core->SetUserSettings(NewSettings);
 	}
 }
 
 void USweetDreamsBPLibrary::LoadLevel(const UObject* WorldContext, TSoftObjectPtr<UWorld> Level)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		return;
+		Core->LoadLevel(Level);
 	}
-	GetSweetDreamsCore(WorldContext)->LoadLevel(Level);
 }
 
 TSoftObjectPtr<UWorld> USweetDreamsBPLibrary::GetCurrentLoadingLevel(const UObject* WorldContext)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		return nullptr;
+		return Core->CurrentLoadingLevel;
 	}
-	return GetSweetDreamsCore(WorldContext)->CurrentLoadingLevel;
 }
 
-float USweetDreamsBPLibrary::GetLoadingPercentage(TSoftObjectPtr<UObject> Asset)
+float USweetDreamsBPLibrary::GetAssetLoadingPercentage(TSoftObjectPtr<UObject> Asset)
 {
 	if (Asset.IsNull()) return 100.f;
 	const FName AssetName = FName(Asset.GetLongPackageName());
 	float Percentage = GetAsyncLoadPercentage(AssetName);
 	return (Percentage == -1) ? 100.f : Percentage;
-}
-
-float USweetDreamsBPLibrary::IncrementAlpha(const UObject* WorldContext, UPARAM(ref) float& Alpha, float MaxValue, UCurveFloat* AlphaCurve, bool bStopCondition)
-{
-	return 0.0f;
 }
 
 bool USweetDreamsBPLibrary::CalculateChance(float& RandomizedValue, float Chance)
@@ -280,10 +241,10 @@ bool USweetDreamsBPLibrary::CalculateChance(float& RandomizedValue, float Chance
 	return RandomizedValue <= Chance;
 }
 
-bool USweetDreamsBPLibrary::CheckInterval(const float& Number, float Interval)
+bool USweetDreamsBPLibrary::IsMultipleOf(const float& Number, float Interval, float Tolerance = 0.01f)
 {
 	float Reminder = FMath::Fmod(Number, Interval);
-	return FMath::IsNearlyZero(Reminder, 0.01f);
+	return FMath::IsNearlyZero(Reminder, Tolerance);
 }
 
 void USweetDreamsBPLibrary::ShouldNotHappen(const UObject* WorldContext)

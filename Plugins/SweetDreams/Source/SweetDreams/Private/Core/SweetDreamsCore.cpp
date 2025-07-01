@@ -58,8 +58,11 @@ void USweetDreamsCore::Deinitialize()
 // Debug
 void USweetDreamsCore::PrintDream(const UObject* DreamOrigin, FString Dream, EPrintType Severity, float Duration)
 {
-	if (!(CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintEnabled))) return;
-	FString Origin = "[SweetDreams]";
+	if (!CoreSettings || !(CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintEnabled)))
+	{
+		return;
+	}
+	FString Origin = TEXT("[SweetDreams]");
 	if (IsValid(DreamOrigin))
 	{
 		Origin = FString::Printf(TEXT("[%s]"), *DreamOrigin->GetName());
@@ -69,16 +72,22 @@ void USweetDreamsCore::PrintDream(const UObject* DreamOrigin, FString Dream, EPr
 	switch (Severity)
 	{
 	case EPrintType::INFO:
-		DreamColor = FColor(195, 150, 255);
+		DreamColor = CoreSettings->InfoColor;
+		UE_LOG(LogCore, Display, TEXT("%s"), *Dream);
 		break;
 	case EPrintType::WARNING:
-		DreamColor = FColor(255, 191, 64);
+		DreamColor = CoreSettings->WarningColor;
+		UE_LOG(LogCore, Warning, TEXT("%s"), *Dream);
 		break;
 	case EPrintType::ERROR:
-		DreamColor = FColor(216, 29, 29);
+		DreamColor = CoreSettings->ErrorColor;
+		UE_LOG(LogCore, Error, TEXT("%s"), *Dream);
+		break;
+	default:
+		DreamColor = FColor::White;
+		UE_LOG(LogCore, Display, TEXT("%s"), *Dream);
 		break;
 	}
-	UE_LOG(LogCore, Display, TEXT("%s"), *Dream);
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(INDEX_NONE, Duration, DreamColor, Dream);

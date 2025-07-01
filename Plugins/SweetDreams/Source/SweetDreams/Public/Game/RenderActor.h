@@ -88,6 +88,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Render")
 	USkyLightComponent* GetSkyLight() const { return SkyLight; } 
 
+	UFUNCTION(BlueprintCallable, Category = "Render", CallInEditor)
+	void UpdateCurrentRender();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Render")
 	void QuickChangeRender(int32 Index);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Render")

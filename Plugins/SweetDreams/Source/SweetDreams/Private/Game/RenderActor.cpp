@@ -22,6 +22,11 @@ ARenderActor::ARenderActor()
 	Fog->SetupAttachment(RootComponent);
 }
 
+void ARenderActor::UpdateCurrentRender()
+{
+	QuickChangeRender(CurrentQuickRender);
+}
+
 void ARenderActor::QuickChangeRender(int32 Index)
 {
 	ChangePostProcessSettings(Index);

@@ -21,12 +21,21 @@ void UMulticameraComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
+void UMulticameraComponent::UpdateCameraView()
+{
+	if (!CameraViews.IsValidIndex(CurrentView)) return;
+	FVector NewLocation = CameraViews[CurrentView].Location;
+	FRotator NewRotation = CameraViews[CurrentView].Rotation;
+	ActiveCamera->SetRelativeLocationAndRotation(NewLocation, NewRotation);
+}
+
 void UMulticameraComponent::SetNewCameraView(int32 CameraToMatch, float BlendTime)
 {
-	if (CameraViews.Num() == 0 || !CameraViews.IsValidIndex(CameraToMatch))
+	if (CameraViews.Num() == 0 || !CameraViews.IsValidIndex(CameraToMatch) || !IsValid(ActiveCamera))
 	{
 		return;
 	}
+	CurrentView = CameraToMatch;
 	if (BlendTime <= 0.0f)
 	{
 		BlendTime = GetWorld()->GetDeltaSeconds();
@@ -38,11 +47,10 @@ void UMulticameraComponent::SetNewCameraView(int32 CameraToMatch, float BlendTim
 	EndRotation = CameraViews[CameraToMatch].Rotation;
 	BlendElapsedTime = 0.0f;
 	BlendTotalTime = BlendTime;
-	AlphaMultiplier = 1.0f;
 	GetOwner()->GetWorldTimerManager().SetTimer(BlendHandle, this, &UMulticameraComponent::CameraBlend, GetWorld()->GetDeltaSeconds(), true);
 }
 
-void UMulticameraComponent::SetActiveCamera(UCameraComponent* NewCamera)
+void UMulticameraComponent::SetActiveCamera(UPARAM(ref) UCameraComponent*& NewCamera)
 {
 	ActiveCamera = NewCamera;
 }
@@ -65,15 +73,12 @@ void UMulticameraComponent::CameraBlend()
 	}
 	BlendElapsedTime += GetWorld()->GetDeltaSeconds();
 	float BlendAlpha = FMath::Clamp(BlendElapsedTime / BlendTotalTime, 0.0f, 1.0f);
-	if (AlphaCurve)
+	if (IsValid(AlphaCurve) && AlphaCurve->FloatCurve.GetNumKeys() > 0)
 	{
-		if (AlphaCurve->FloatCurve.GetNumKeys() > 0)
-		{
-			float CurveMin, CurveMax;
-			AlphaCurve->GetTimeRange(CurveMin, CurveMax);
-			float CurveAlpha = FMath::Lerp(CurveMin, CurveMax, BlendAlpha);
-			BlendAlpha = AlphaCurve->GetFloatValue(CurveAlpha);
-		}
+		float CurveMin, CurveMax;
+		AlphaCurve->GetTimeRange(CurveMin, CurveMax);
+		float CurveAlpha = FMath::Lerp(CurveMin, CurveMax, BlendAlpha);
+		BlendAlpha = AlphaCurve->GetFloatValue(CurveAlpha);
 	}
 	FVector NewLocation = FMath::Lerp(StartLocation, EndLocation, BlendAlpha);
 	FRotator NewRotation = FMath::Lerp(StartRotation, EndRotation, BlendAlpha);

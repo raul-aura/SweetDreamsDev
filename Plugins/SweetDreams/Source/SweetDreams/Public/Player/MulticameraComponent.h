@@ -32,13 +32,24 @@ class SWEETDREAMS_API UMulticameraComponent : public UActorComponent
 
 public:	
 	UMulticameraComponent();
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Multicamera", CallInEditor)
+	void UpdateCameraView();
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Multicamera")
+	int32 CurrentView = 0;
+
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Multicamera", meta = (ToolTip = "Transfer the properties of the camera to match to the primary camera."))
+	void SetNewCameraView(int32 CameraToMatch = 0, float BlendTime = 1.0f);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Multicamera", meta = (ToolTip = "Defines a new camera to be the current one. Ideal when you have more than one camera."))
+	void SetActiveCamera(UPARAM(ref) UCameraComponent*& NewCamera);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Multicamera")
+	TArray<FCameraViews> GetAllPossibleViews() const;
+
 
 protected:
 	virtual void BeginPlay() override;
-	
-	UFUNCTION(Category = "Sweet Dreams|Core|Multicamera")
 	void FindCamera();
-	UFUNCTION(Category = "Sweet Dreams|Core|Multicamera")
 	void CameraBlend();
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams Multicamera")
@@ -46,13 +57,12 @@ protected:
 
 	// COMPONENTS
 	UPROPERTY(BlueprintReadWrite, Category = "Sweet Dreams Multicamera")
-	UCameraComponent* ActiveCamera;
+	UCameraComponent* ActiveCamera = nullptr;
 
 	// BLEND
 	FTimerHandle BlendHandle;
-	float BlendElapsedTime;
-	float BlendTotalTime;
-	float AlphaMultiplier;
+	float BlendElapsedTime = 0.f;
+	float BlendTotalTime = 0.f;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams Multicamera")
 	UCurveFloat* AlphaCurve;
 
@@ -61,16 +71,4 @@ protected:
 	FVector EndLocation;
 	FRotator StartRotation;
 	FRotator EndRotation;
-
-public:	
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	// @param CameraToMatch Camera Component to get settings and transfer to primary camera. Function won't happen if this input is null.
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Multicamera", meta = (ToolTip = "Transfer the properties of the camera to match to the primary camera."))
-	virtual void SetNewCameraView(int32 CameraToMatch = 0, float BlendTime = 1.0f);
-
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Multicamera", meta = (ToolTip = "Defines a new camera to be the current one. Ideal when you have multiple cameras."))
-	virtual void SetActiveCamera(UCameraComponent* NewCamera);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Multicamera")
-	virtual TArray<FCameraViews> GetAllPossibleViews() const;
 };

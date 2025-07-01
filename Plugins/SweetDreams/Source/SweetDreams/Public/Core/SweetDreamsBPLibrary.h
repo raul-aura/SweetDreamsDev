@@ -15,7 +15,6 @@ class SWEETDREAMS_API USweetDreamsBPLibrary : public UBlueprintFunctionLibrary
 	GENERATED_UCLASS_BODY()
 
 public:
-	static USweetDreamsCore* SweetDreamsCore;
 	// DEBUG
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "DreamOrigin", CallableWithoutWorldContext, DevelopmentOnly), Category = "SweetDreams|Core|DEBUG")
 	static void PrintDream(const UObject* DreamOrigin, FString Dream = "Hello dream.", EPrintType Severity = EPrintType::INFO, float duration = 4.0f);
@@ -70,14 +69,12 @@ public:
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Loading")
 	static TSoftObjectPtr<UWorld> GetCurrentLoadingLevel(const UObject* WorldContext);
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Loading")
-	static float GetLoadingPercentage(TSoftObjectPtr<UObject> Asset);
+	static float GetAssetLoadingPercentage(TSoftObjectPtr<UObject> Asset);
 	// MATH
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Math")
-	static float IncrementAlpha(const UObject* WorldContext, UPARAM(ref) float& Alpha, float MaxValue = 1.0f, class UCurveFloat* AlphaCurve = nullptr, bool bStopCondition = true);
 	UFUNCTION(BlueprintPure, meta = (ExpandBoolAsExecs = "ReturnValue"), Category = "Sweet Dreams|Core|Math")
 	static bool CalculateChance(float& RandomizedValue, float Chance = 100.f);
 	UFUNCTION(BlueprintPure, meta = (ExpandBoolAsExecs = "ReturnValue"), Category = "Sweet Dreams|Core|Math")
-	static bool CheckInterval(const float& Number, float Interval);
+	static bool IsMultipleOf(const float& Number, float Interval, float Tolerance = 0.01f);
 	// HELPERS
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Helpers", meta = (DevelopmentOnly, CompactNodeTitle = "Do Nothing"))
 	static void DoNothing() {}
