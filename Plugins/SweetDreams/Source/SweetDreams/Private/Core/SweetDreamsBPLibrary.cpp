@@ -3,6 +3,7 @@
 #include "Core/SweetDreamsBPLibrary.h"
 #include "Core/SweetDreams.h"
 #include "Core/SweetDreamsCore.h"
+#include "Core/SweetDreamsSettings.h"
 #include "UMG/Public/Components/PanelWidget.h"
 #include "UMG/Public/Blueprint/UserWidget.h"
 #include "Game/SweetDreamsGameMode.h"
@@ -34,6 +35,15 @@ ASweetDreamsGameMode* USweetDreamsBPLibrary::GetSweetDreamsGameMode(const UObjec
 		return Cast<ASweetDreamsGameMode>(UGameplayStatics::GetGameMode(World));
 	}
 	return nullptr;
+}
+
+FString USweetDreamsBPLibrary::GetGameVersion(const UObject* WorldContext)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+	{
+		return Core->CoreSettings->GameVersion;
+	}
+	return TEXT("No Sweet Dreams Core found.");
 }
 
 USweetDreamsSaveFile* USweetDreamsBPLibrary::CreateCustomSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, FString CustomSlot, bool& bSuccessful)
@@ -224,6 +234,7 @@ TSoftObjectPtr<UWorld> USweetDreamsBPLibrary::GetCurrentLoadingLevel(const UObje
 	{
 		return Core->CurrentLoadingLevel;
 	}
+	return nullptr;
 }
 
 float USweetDreamsBPLibrary::GetAssetLoadingPercentage(TSoftObjectPtr<UObject> Asset)
@@ -241,7 +252,7 @@ bool USweetDreamsBPLibrary::CalculateChance(float& RandomizedValue, float Chance
 	return RandomizedValue <= Chance;
 }
 
-bool USweetDreamsBPLibrary::IsMultipleOf(const float& Number, float Interval, float Tolerance = 0.01f)
+bool USweetDreamsBPLibrary::IsMultipleOf(const float& Number, float Interval, float Tolerance)
 {
 	float Reminder = FMath::Fmod(Number, Interval);
 	return FMath::IsNearlyZero(Reminder, Tolerance);

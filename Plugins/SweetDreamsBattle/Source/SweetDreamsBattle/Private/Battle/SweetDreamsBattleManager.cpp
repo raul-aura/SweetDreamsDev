@@ -29,7 +29,7 @@ void ASweetDreamsBattleManager::BeginPlay()
 {
 	Super::BeginPlay();
 	Player = UGameplayStatics::GetPlayerController(this, 0);
-	BattleWidget = ASweetDreamsHUD::FindWidgetByName(BattleWidgetName);
+	//BattleWidget = ASweetDreamsHUD::FindWidgetByName(BattleWidgetName);
 }
 
 void ASweetDreamsBattleManager::Tick(float DeltaTime)
@@ -105,7 +105,7 @@ void ASweetDreamsBattleManager::StartBattle(float BlendTime)
 	}
 	if (IsValid(BattleWidget))
 	{
-		ASweetDreamsHUD::ShowWidget(BattleWidget);
+		//ASweetDreamsHUD::ShowWidget(BattleWidget);
 	}
 	OnBattleStart();
 }
@@ -163,7 +163,7 @@ void ASweetDreamsBattleManager::EndBattle(float BlendTime)
 	}
 	if (IsValid(BattleWidget))
 	{
-		ASweetDreamsHUD::HideWidget(BattleWidget);
+		//ASweetDreamsHUD::HideWidget(BattleWidget);
 	}
 	TArray<AActor*> AllBattlers = Allies;
 	AllBattlers.Append(Enemies);

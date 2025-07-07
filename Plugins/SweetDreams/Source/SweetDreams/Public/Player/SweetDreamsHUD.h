@@ -6,6 +6,9 @@
 #include "GameFramework/HUD.h"
 #include "SweetDreamsHUD.generated.h"
 
+class ULoadingWidget;
+class USweetDreamsWidget;
+
 UENUM(BlueprintType)
 enum class EInputMode : uint8
 {
@@ -20,33 +23,50 @@ class SWEETDREAMS_API ASweetDreamsHUD : public AHUD
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable)
-	void CreateWidgets();
-	UFUNCTION(BlueprintCallable)
-	void CreateAndStoreWidget(TSubclassOf<USweetDreamsWidget> WidgetClass);
-	UFUNCTION(BlueprintCallable)
-	static void ShowWidget(USweetDreamsWidget* Widget);
-	UFUNCTION(BlueprintCallable)
-	static void HideWidget(USweetDreamsWidget* Widget);
-	UFUNCTION(BlueprintPure)
-	static USweetDreamsWidget* FindWidgetByClass(TSubclassOf<USweetDreamsWidget> WidgetClass);
-	UFUNCTION(BlueprintPure)
-	static USweetDreamsWidget* FindWidgetByName(FName WidgetName);
-	UFUNCTION(BlueprintCallable)
-	static void UpdatePlayerInputMode(USweetDreamsWidget* WidgetToFocus);
-	UFUNCTION(BlueprintPure)
-	static bool IsAnyWidgetVisible();
-	UFUNCTION(BlueprintPure)
-	static TArray<USweetDreamsWidget*> GetAllWidgets() { return AllWidgets; }
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void CreateStartingWidgets();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	USweetDreamsWidget* CreateAndStoreWidget(TSubclassOf<USweetDreamsWidget> WidgetClass);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void ShowWidget(USweetDreamsWidget* Widget);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void HideWidget(USweetDreamsWidget* Widget);
 
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void OverridePlayerInputMode(USweetDreamsWidget* WidgetToFocus);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void UpdatePlayerInputMode();
+	//
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	ULoadingWidget* CreateLoadingWidget(TSubclassOf<USweetDreamsWidget> WidgetClass);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void ShowLoadingWidget();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void HideLoadingWidget();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	ULoadingWidget* GetLoadingWidget() const;
+	//
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	bool IsAnyWidgetVisible() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	USweetDreamsWidget* GetHighestPriorityWidget() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	USweetDreamsWidget* FindWidgetByClass(TSubclassOf<USweetDreamsWidget> WidgetClass) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	USweetDreamsWidget* FindWidgetByName(FName WidgetName) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	TArray<USweetDreamsWidget*> GetAllWidgets() const { return AllWidgets; }
 
 protected:
 	virtual void PostInitializeComponents() override;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	TArray<TSubclassOf<USweetDreamsWidget>> DefaultWidgets;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams HUD")
+	TArray<TSubclassOf<USweetDreamsWidget>> StartingWidgets;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Loading Screen")
+	ULoadingWidget* LoadingWidget = nullptr;
 
 private:
-	static TArray<USweetDreamsWidget*> AllWidgets;
+	TArray<USweetDreamsWidget*> AllWidgets;
 };
 

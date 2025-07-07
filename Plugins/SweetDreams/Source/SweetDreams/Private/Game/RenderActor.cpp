@@ -30,9 +30,9 @@ void ARenderActor::UpdateCurrentRender()
 void ARenderActor::QuickChangeRender(int32 Index)
 {
 	ChangePostProcessSettings(Index);
-	QuickChangeSky(Index);
 	QuickChangeSun(Index);
 	QuickChangeFog(Index);
+	QuickChangeSky(Index);
 }
 
 void ARenderActor::ChangePostProcessSettings(int32 Index)

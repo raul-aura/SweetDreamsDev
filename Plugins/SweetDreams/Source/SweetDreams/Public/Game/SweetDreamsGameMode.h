@@ -8,6 +8,7 @@
 
 class USweetDreamsCore;
 class ULoadingWidget;
+class ASweetDreamsPlayerController;
 struct FDreamUserSettings;
 
 UCLASS()
@@ -18,10 +19,13 @@ class SWEETDREAMS_API ASweetDreamsGameMode : public AGameModeBase
 	ASweetDreamsGameMode();
 
 public:
+	virtual void StartPlay() override;
 	virtual void BeginPlay() override;
+	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
-	ULoadingWidget* CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class, bool bAddToViewport);
+	void CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class, ASweetDreamsPlayerController* Player);
+	void ShowLoadingWidget(ASweetDreamsPlayerController* Player);
 	void LevelLoadStarted(TSoftObjectPtr<UWorld> LoadingLevel);
 	void LevelLoadFinished(TSoftObjectPtr<UWorld> LoadingLevel);
 
@@ -33,11 +37,11 @@ protected:
 	TSubclassOf<ULoadingWidget> LoadingWidgetClass;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen")
 	bool bShowOnBeginPlay = true;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen")
+	bool bShowOnStartLoading = true;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen", meta = (ClampMin = "0"))
 	float WidgetGracePeriod = 3.f; // grace period for loading widget, called on begin play 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen")
 	bool bHideAfterGracePeriod = true; // when grace period ends, should auto hide the widget?
-	UPROPERTY(BlueprintReadOnly, Category = "Loading Screen")
-	ULoadingWidget* LoadingWidget = nullptr;
 
 };

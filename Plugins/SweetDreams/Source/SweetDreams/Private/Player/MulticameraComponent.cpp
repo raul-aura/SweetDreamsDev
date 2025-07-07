@@ -3,6 +3,7 @@
 
 #include "Player/MulticameraComponent.h"
 #include "Engine/World.h"
+#include "Editor.h"
 #include "TimerManager.h"
 
 UMulticameraComponent::UMulticameraComponent()
@@ -23,7 +24,19 @@ void UMulticameraComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 
 void UMulticameraComponent::UpdateCameraView()
 {
-	if (!CameraViews.IsValidIndex(CurrentView)) return;
+#if WITH_EDITOR
+	if (GIsEditor)
+	{
+		AActor* Owner = GetOwner();
+		if (IsValid(Owner))
+		{
+			ActiveCamera = Cast<UCameraComponent>(
+				Owner->GetComponentByClass(UCameraComponent::StaticClass())
+			);
+		}
+	}
+#endif
+	if (!IsValid(ActiveCamera) || !CameraViews.IsValidIndex(CurrentView)) return;
 	FVector NewLocation = CameraViews[CurrentView].Location;
 	FRotator NewRotation = CameraViews[CurrentView].Rotation;
 	ActiveCamera->SetRelativeLocationAndRotation(NewLocation, NewRotation);

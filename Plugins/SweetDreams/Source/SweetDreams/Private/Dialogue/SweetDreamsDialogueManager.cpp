@@ -86,7 +86,7 @@ void ASweetDreamsDialogueManager::StartDialogue(float TransitionDuration)
 	{
 		if (ASweetDreamsHUD* SweetDreamsHUD = Cast<ASweetDreamsHUD>(GetWorld()->GetFirstPlayerController()->GetHUD()))
 		{
-			DialogueWidget = Cast<UDialogueWidget>(ASweetDreamsHUD::FindWidgetByClass(DialogueWidgetClass));
+			DialogueWidget = Cast<UDialogueWidget>(SweetDreamsHUD->FindWidgetByClass(DialogueWidgetClass));
 			if (IsValid(DialogueWidget))
 			{
 				DialogueWidget->SetDialogueManager(this);

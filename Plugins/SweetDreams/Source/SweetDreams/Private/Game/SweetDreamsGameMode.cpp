@@ -6,6 +6,8 @@
 #include "Player/SweetDreamsCharacter.h"
 #include "Core/SweetDreamsSettings.h"
 #include "Player/SweetDreamsHUD.h"
+#include "GameFramework/GameState.h"
+#include "GameFramework/PlayerState.h"
 #include "Game/LoadingWidget.h"
 #include "Player/SweetDreamsPlayerController.h"
 
@@ -14,50 +16,76 @@ ASweetDreamsGameMode::ASweetDreamsGameMode()
 	DefaultPawnClass = ASweetDreamsCharacter::StaticClass();
 	PlayerControllerClass = ASweetDreamsPlayerController::StaticClass();
 	HUDClass = ASweetDreamsHUD::StaticClass();
+	LoadingWidgetClass = ULoadingWidget::StaticClass();
 }
 
-void ASweetDreamsGameMode::BeginPlay()
+void ASweetDreamsGameMode::StartPlay()
 {
 	SweetDreamsCore = USweetDreamsBPLibrary::GetSweetDreamsCore(this);
 	if (IsValid(SweetDreamsCore))
 	{
 		SweetDreamsCore->LoadCoreSaves();
 	}
-	LoadingWidget = CreateLoadingWidget(LoadingWidgetClass, bShowOnBeginPlay);
+	Super::StartPlay();
+}
+
+void ASweetDreamsGameMode::BeginPlay()
+{
 	Super::BeginPlay();
 }
 
-ULoadingWidget* ASweetDreamsGameMode::CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class, bool bAddToViewport)
+void ASweetDreamsGameMode::PostLogin(APlayerController* NewPlayer)
 {
-	if (!IsValid(Class)) return nullptr;
-	ULoadingWidget* NewWidget = CreateWidget<ULoadingWidget>(GetWorld(), Class);
-	if (IsValid(NewWidget))
+	Super::PostLogin(NewPlayer);
+	if (ASweetDreamsPlayerController* DreamController = Cast<ASweetDreamsPlayerController>(NewPlayer))
 	{
-		if (bAddToViewport) NewWidget->AddToViewport(99);
-		if (WidgetGracePeriod < 0.f) WidgetGracePeriod = 0.01f;
-		FTimerHandle WidgetRemoveTimer;
-		GetWorld()->GetTimerManager().SetTimer(WidgetRemoveTimer, [this, NewWidget]()
-			{
-				NewWidget->OnGracePeriodEnded(WidgetGracePeriod);
-				if (bHideAfterGracePeriod) NewWidget->SetVisibility(ESlateVisibility::Collapsed);
-			}, WidgetGracePeriod, false);
+		CreateLoadingWidget(LoadingWidgetClass, DreamController);
+		if (bShowOnBeginPlay) ShowLoadingWidget(DreamController);
 	}
-	return NewWidget;
+}
+
+void ASweetDreamsGameMode::CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class, ASweetDreamsPlayerController* Player)
+{
+	if (!IsValid(Class) || !IsValid(Player)) return;
+	WidgetGracePeriod = FMath::Max(WidgetGracePeriod, 0.01f);
+	Player->Client_CreateLoadingWidget(Class);
+	FTimerHandle WidgetRemoveTimer;
+	GetWorld()->GetTimerManager().SetTimer(WidgetRemoveTimer, [this, Player]()
+	{
+		Player->Client_LoadingGracePeriodEnd(WidgetGracePeriod);
+		if (bHideAfterGracePeriod)
+		{
+			Player->Client_HideLoadingWidget();
+		}
+	}, WidgetGracePeriod, false);
+}
+
+void ASweetDreamsGameMode::ShowLoadingWidget(ASweetDreamsPlayerController* Player)
+{
+	if (!IsValid(Player)) return;
+	Player->Client_ShowLoadingWidget();
 }
 
 void ASweetDreamsGameMode::LevelLoadStarted(TSoftObjectPtr<UWorld> LoadingLevel)
 {
-	if (IsValid(LoadingWidget))
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
-		LoadingWidget->OnLoadingStart();
+		if (ASweetDreamsPlayerController* DreamController = Cast<ASweetDreamsPlayerController>(*It))
+		{
+			DreamController->Client_LoadingStart();
+			if (bShowOnStartLoading) DreamController->Client_ShowLoadingWidget();
+		}
 	}
 }
 
 void ASweetDreamsGameMode::LevelLoadFinished(TSoftObjectPtr<UWorld> LoadingLevel)
 {
-	if (IsValid(LoadingWidget))
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
-		LoadingWidget->OnLoadingFinish();
+		if (ASweetDreamsPlayerController* DreamController = Cast<ASweetDreamsPlayerController>(*It))
+		{
+			DreamController->Client_LoadingEnd();
+		}
 	}
 }
 

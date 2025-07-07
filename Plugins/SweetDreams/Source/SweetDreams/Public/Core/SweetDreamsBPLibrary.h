@@ -23,7 +23,8 @@ public:
 	static USweetDreamsCore* GetSweetDreamsCore(const UObject* WorldContext);
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core")
 	static ASweetDreamsGameMode* GetSweetDreamsGameMode(const UObject* WorldContext);
-
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core")
+	static FString GetGameVersion(const UObject* WorldContext);
 	// SAVE
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* CreateCustomSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, FString CustomSlot, bool& bSuccessful);

@@ -2,36 +2,35 @@
 
 #include "Player/SweetDreamsHUD.h"
 #include "Kismet/GameplayStatics.h"
+#include "Game/LoadingWidget.h"
 #include "Core/SweetDreamsBPLibrary.h"
 #include "Game/SweetDreamsWidget.h"
-
-TArray<USweetDreamsWidget*> ASweetDreamsHUD::AllWidgets;
 
 void ASweetDreamsHUD::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	CreateWidgets();
+	CreateStartingWidgets();
 }
 
-void ASweetDreamsHUD::CreateWidgets()
+void ASweetDreamsHUD::CreateStartingWidgets()
 {
 	AllWidgets.Empty();
-	if (DefaultWidgets.Num() == 0) return;
-	for (TSubclassOf<USweetDreamsWidget> Widget : DefaultWidgets)
+	if (StartingWidgets.Num() == 0) return;
+	for (TSubclassOf<USweetDreamsWidget> Widget : StartingWidgets)
 	{
 		USweetDreamsWidget* NewWidget = CreateWidget<USweetDreamsWidget>(GetOwningPlayerController(), Widget);
 		if (IsValid(NewWidget))
 		{
 			NewWidget->SetVisibility(ESlateVisibility::Collapsed);
-			NewWidget->AddToViewport();
+			NewWidget->AddToViewport(NewWidget->GetInitialZOrder());
 			AllWidgets.Add(NewWidget);
 		}
 	}
 }
 
-void ASweetDreamsHUD::CreateAndStoreWidget(TSubclassOf<USweetDreamsWidget> WidgetClass)
+USweetDreamsWidget* ASweetDreamsHUD::CreateAndStoreWidget(TSubclassOf<USweetDreamsWidget> WidgetClass)
 {
-	if (!IsValid(WidgetClass)) return;
+	if (!IsValid(WidgetClass)) return nullptr;
 	USweetDreamsWidget* NewWidget = CreateWidget<USweetDreamsWidget>(GetOwningPlayerController(), WidgetClass);
 	if (IsValid(NewWidget))
 	{
@@ -39,13 +38,14 @@ void ASweetDreamsHUD::CreateAndStoreWidget(TSubclassOf<USweetDreamsWidget> Widge
 		NewWidget->AddToViewport(NewWidget->GetInitialZOrder());
 		AllWidgets.Add(NewWidget);
 	}
+	return NewWidget;
 }
 
 void ASweetDreamsHUD::ShowWidget(USweetDreamsWidget* Widget)
 {
 	if (!IsValid(Widget)) return;
 	Widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	UpdatePlayerInputMode(Widget);
+	UpdatePlayerInputMode();
 	Widget->HUDShow();
 }
 
@@ -53,14 +53,104 @@ void ASweetDreamsHUD::HideWidget(USweetDreamsWidget* Widget)
 {
 	if (!IsValid(Widget)) return;
 	Widget->SetVisibility(ESlateVisibility::Collapsed);
-	if (!IsAnyWidgetVisible())
-	{
-		UpdatePlayerInputMode(Widget);
-	}
+	UpdatePlayerInputMode();
 	Widget->OnHide();
 }
 
-USweetDreamsWidget* ASweetDreamsHUD::FindWidgetByClass(TSubclassOf<USweetDreamsWidget> WidgetClass)
+void ASweetDreamsHUD::OverridePlayerInputMode(USweetDreamsWidget* WidgetToFocus)
+{
+	EInputMode NewInputMode = EInputMode::GAME;
+	if (IsValid(WidgetToFocus))
+	{
+		NewInputMode = WidgetToFocus->InputMode;
+	}
+	if (APlayerController* Player = GetOwningPlayerController())
+	{
+		switch (NewInputMode)
+		{
+		case EInputMode::GAMEANDUI:
+		{
+			FInputModeGameAndUI Mode;
+			if (WidgetToFocus) Mode.SetWidgetToFocus(WidgetToFocus->TakeWidget());
+			Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+			Player->SetInputMode(Mode);
+			Player->SetShowMouseCursor(true);
+			break;
+		}
+		case EInputMode::UI:
+		{
+			FInputModeUIOnly Mode;
+			if (WidgetToFocus) Mode.SetWidgetToFocus(WidgetToFocus->TakeWidget());
+			Player->SetInputMode(Mode);
+			Player->SetShowMouseCursor(true);
+			break;
+		}
+		case EInputMode::GAME:
+		default:
+		{
+			Player->SetInputMode(FInputModeGameOnly());
+			Player->SetShowMouseCursor(false);
+			break;
+		}
+		}
+	}
+}
+
+void ASweetDreamsHUD::UpdatePlayerInputMode()
+{
+	USweetDreamsWidget* TopWidget = GetHighestPriorityWidget();
+	OverridePlayerInputMode(TopWidget);
+}
+
+ULoadingWidget* ASweetDreamsHUD::CreateLoadingWidget(TSubclassOf<USweetDreamsWidget> WidgetClass)
+{
+	LoadingWidget = Cast<ULoadingWidget>(CreateAndStoreWidget(WidgetClass));
+	return LoadingWidget;
+}
+
+void ASweetDreamsHUD::ShowLoadingWidget()
+{
+	ShowWidget(LoadingWidget);
+}
+
+void ASweetDreamsHUD::HideLoadingWidget()
+{
+	HideWidget(LoadingWidget);
+}
+
+ULoadingWidget* ASweetDreamsHUD::GetLoadingWidget() const
+{
+	return LoadingWidget;
+}
+
+bool ASweetDreamsHUD::IsAnyWidgetVisible() const
+{
+	return AllWidgets.ContainsByPredicate([](const USweetDreamsWidget* Widget)
+	{
+		return !Widget->bIgnoreThisForVisibility && Widget->IsVisible();
+	});
+}
+
+USweetDreamsWidget* ASweetDreamsHUD::GetHighestPriorityWidget() const
+{
+	USweetDreamsWidget* TopWidget = nullptr;
+	int32 HighestZOrder = TNumericLimits<int32>::Min();
+	for (USweetDreamsWidget* Widget : AllWidgets)
+	{
+		if (!IsValid(Widget) || Widget->bIgnoreThisForVisibility || !Widget->IsVisible())
+		{
+			continue;
+		}
+		if (Widget->GetInitialZOrder() > HighestZOrder)
+		{
+			HighestZOrder = Widget->GetInitialZOrder();
+			TopWidget = Widget;
+		}
+	}
+	return TopWidget;
+}
+
+USweetDreamsWidget* ASweetDreamsHUD::FindWidgetByClass(TSubclassOf<USweetDreamsWidget> WidgetClass) const
 {
 	if (!WidgetClass || AllWidgets.Num() == 0) return nullptr;
 	for (USweetDreamsWidget* Widget : AllWidgets)
@@ -70,7 +160,7 @@ USweetDreamsWidget* ASweetDreamsHUD::FindWidgetByClass(TSubclassOf<USweetDreamsW
 	return nullptr;
 }
 
-USweetDreamsWidget* ASweetDreamsHUD::FindWidgetByName(FName WidgetName)
+USweetDreamsWidget* ASweetDreamsHUD::FindWidgetByName(FName WidgetName) const
 {
 	if (WidgetName.IsNone() || AllWidgets.Num() == 0) return nullptr;
 	for (USweetDreamsWidget* Widget : AllWidgets)
@@ -78,70 +168,6 @@ USweetDreamsWidget* ASweetDreamsHUD::FindWidgetByName(FName WidgetName)
 		if (IsValid(Widget) && Widget->WidgetName.IsEqual(WidgetName)) return Widget;
 	}
 	return nullptr;
-}
-
-void ASweetDreamsHUD::UpdatePlayerInputMode(USweetDreamsWidget* WidgetToFocus)
-{
-	UWorld* World = GEngine->GetWorldFromContextObject(WidgetToFocus, EGetWorldErrorMode::ReturnNull);
-	if (!ensureAlwaysMsgf(IsValid(WidgetToFocus), TEXT("World Context was not valid.")))
-	{
-		return;
-	}
-	if (APlayerController* Player = World->GetFirstPlayerController())
-	{
-		if (IsAnyWidgetVisible())
-		{
-			EInputMode NewInputMode = WidgetToFocus->InputMode;
-			switch (NewInputMode)
-			{
-			case EInputMode::GAMEANDUI:
-			{
-				FInputModeGameAndUI ModeGameUI;
-				ModeGameUI.SetWidgetToFocus(WidgetToFocus->TakeWidget());
-				ModeGameUI.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-				Player->SetInputMode(ModeGameUI);
-				Player->SetShowMouseCursor(true);
-				return;
-			}
-			case EInputMode::GAME:
-			{
-				FInputModeGameOnly ModeGame;
-				Player->SetInputMode(ModeGame);
-				Player->SetShowMouseCursor(false);
-				return;
-			}
-			case EInputMode::UI:
-			{
-				FInputModeUIOnly ModeUI;
-				ModeUI.SetWidgetToFocus(WidgetToFocus->TakeWidget());
-				Player->SetInputMode(ModeUI);
-				Player->SetShowMouseCursor(true);
-				return;
-			}
-			default:
-				break;
-			}
-		}
-		else
-		{
-			Player->SetInputMode(FInputModeGameOnly());
-			Player->SetShowMouseCursor(false);
-		}
-	}
-}
-
-bool ASweetDreamsHUD::IsAnyWidgetVisible()
-{
-	if (AllWidgets.Num() == 0) return false;
-	for (USweetDreamsWidget* Widget : AllWidgets)
-	{
-		if (Widget->bIgnoreThisForVisibility) continue;
-		if (Widget->IsVisible())
-		{
-			return true;
-		}
-	}
-	return false;
 }
 
 

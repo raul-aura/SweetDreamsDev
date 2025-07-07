@@ -6,6 +6,9 @@
 #include "GameFramework/PlayerController.h"
 #include "SweetDreamsPlayerController.generated.h"
 
+class ASweetDreamsCharacter;
+class ASweetDreamsHUD;
+class ULoadingWidget;
 
 UCLASS()
 class SWEETDREAMS_API ASweetDreamsPlayerController : public APlayerController
@@ -13,9 +16,28 @@ class SWEETDREAMS_API ASweetDreamsPlayerController : public APlayerController
 	GENERATED_BODY()
 	
 public:
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams")
-	class ASweetDreamsCharacter* GetDreamCharacter() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	ASweetDreamsCharacter* GetDreamCharacter() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	ASweetDreamsHUD* GetDreamHUD() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams")
-	void DisableInputTimer(float Duration = 1.f);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void ToggleInputTimer(float Duration = 1.f);
+
+	UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
+	void Client_CreateLoadingWidget(TSubclassOf<ULoadingWidget> WidgetClass);
+	UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
+	void Client_ShowLoadingWidget();
+	UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
+	void Client_LoadingGracePeriodEnd(float GracePeriod);
+	UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
+	void Client_HideLoadingWidget();
+	UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
+	void Client_LoadingStart();
+	UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
+	void Client_LoadingEnd();
+
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "Loading Screen")
+	ULoadingWidget* LoadingWidget = nullptr;
 };

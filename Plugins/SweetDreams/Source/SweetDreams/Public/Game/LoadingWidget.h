@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "Game/SweetDreamsWidget.h"
 #include "LoadingWidget.generated.h"
 
 UCLASS()
-class SWEETDREAMS_API ULoadingWidget : public UUserWidget
+class SWEETDREAMS_API ULoadingWidget : public USweetDreamsWidget
 {
 	GENERATED_BODY()
 

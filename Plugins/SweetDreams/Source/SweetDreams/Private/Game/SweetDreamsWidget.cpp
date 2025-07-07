@@ -11,7 +11,10 @@ USweetDreamsWidget::USweetDreamsWidget(const FObjectInitializer& ObjectInitializ
 
 void USweetDreamsWidget::HideSelf()
 {
-	ASweetDreamsHUD::HideWidget(this);
+	if (ASweetDreamsHUD* SweetDreamsHUD = Cast<ASweetDreamsHUD>(GetOwningPlayer()->GetHUD()))
+	{
+		SweetDreamsHUD->HideWidget(this);
+	}
 }
 
 void USweetDreamsWidget::HUDShow()
