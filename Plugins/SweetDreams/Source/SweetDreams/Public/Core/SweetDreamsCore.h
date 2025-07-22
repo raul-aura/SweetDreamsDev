@@ -18,85 +18,6 @@ enum class EPrintType : uint8
 	ERROR
 };
 
-USTRUCT(BlueprintType)
-struct FDreamUserSettings
-{
-	GENERATED_BODY()
-
-public:
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
-	FIntPoint CurrentResolution;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, meta = (ClampMin = 0, ClampMax = 2))
-	int32 GQuality = 2;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, meta = (ClampMin = 0, ClampMax = 2))
-	int32 GViewDistance = 2;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, meta = (ClampMin = 0, ClampMax = 2))
-	int32 GAntiAliasing = 2;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, meta = (ClampMin = 0, ClampMax = 2))
-	int32 GPostProcessing = 2;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, meta = (ClampMin = 0, ClampMax = 2))
-	int32 GShadows = 2;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, meta = (ClampMin = 0, ClampMax = 2))
-	int32 GTextures = 2;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, meta = (ClampMin = 0, ClampMax = 2))
-	int32 GEffects = 2;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
-	bool bShowFps = true;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
-	bool bEnableVsync = true;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
-	bool bEnableGodMode = true;
-
-	FDreamUserSettings() {}
-	FDreamUserSettings(int32 GeneralQuality)
-		: GQuality(GeneralQuality),
-		GViewDistance(GeneralQuality),
-		GAntiAliasing(GeneralQuality),
-		GPostProcessing(GeneralQuality),
-		GShadows(GeneralQuality),
-		GTextures(GeneralQuality),
-		GEffects(GeneralQuality)
-	{}
-
-	void ApplySettings()
-	{
-		UGameUserSettings* UserSettings = GEngine->GetGameUserSettings();
-		if (UserSettings)
-		{
-			UserSettings->SetScreenResolution(CurrentResolution);
-
-			UserSettings->SetOverallScalabilityLevel(GQuality);
-			UserSettings->SetViewDistanceQuality(GViewDistance);
-			UserSettings->SetAntiAliasingQuality(GAntiAliasing);
-			UserSettings->SetPostProcessingQuality(GPostProcessing);
-			UserSettings->SetShadowQuality(GShadows);
-			UserSettings->SetTextureQuality(GTextures);
-			UserSettings->SetVisualEffectQuality(GEffects);
-			UserSettings->SetVSyncEnabled(bEnableVsync);
-			if (bShowFps)
-			{
-				// Implement logic to show FPS, if applicable
-			}
-			if (bEnableGodMode)
-			{
-				// Implement logic to enable god mode
-			}
-			UserSettings->ApplySettings(false);
-		}
-	}
-};
-
 UCLASS(Category = "SweetDreams|Core")
 class SWEETDREAMS_API USweetDreamsCore : public UGameInstanceSubsystem
 {
@@ -112,15 +33,11 @@ public:
 	// DEBUG
 	void PrintDream(const UObject* DreamOrigin, FString Dream, EPrintType Severity = EPrintType::INFO, float duration = 4.0f);
 
-	// SETTINGS
-	void SetUserSettings(FDreamUserSettings Settings);
-	FDreamUserSettings GetUserSettings() const;
-
 	// SAVE
-	USweetDreamsSaveFile* CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, const FString& Slot, bool& bSuccess);
-	bool Save(const FString& Slot);
-	USweetDreamsSaveFile* LoadSave(const FString& Slot);
-	bool DeleteSave(const FString& Slot);
+	USweetDreamsSaveFile* CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, const FString& Slot, bool& bSuccess, int32 UserIndex = 0);
+	bool Save(const FString& Slot, int32 UserIndex = 0);
+	USweetDreamsSaveFile* LoadSave(const FString& Slot, int32 UserIndex = 0);
+	bool DeleteSave(const FString& Slot, int32 UserIndex = 0);
 	//
 	void SaveData(USweetDreamsSaveFile* Save);
 	void LoadCoreSaves();
@@ -138,8 +55,7 @@ public:
 	TSoftObjectPtr<UWorld> CurrentLoadingLevel;
 
 protected:
-	// SETTINGS
-	FDreamUserSettings UserSettings;
+
 
 	// SAVE
 	TMap<FString, USweetDreamsSaveFile*> CustomSaveFiles;

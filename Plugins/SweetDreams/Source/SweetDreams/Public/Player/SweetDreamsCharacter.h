@@ -38,29 +38,29 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Core")
 	bool bIsRunning = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Core")
-	bool bCanRun = false;
-	UPROPERTY(BlueprintReadOnly, Category = "Core")
 	float CurrentRunTime = 0.f;
 	UPROPERTY(BlueprintReadOnly, Category = "Core")
 	FTimerHandle RunTimer;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
 	bool bCanMove = true;
+	UPROPERTY(BlueprintReadWrite, Category = "Core")
+	bool bCanRun = true;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
 	bool bCanMoveCamera = true;
 
 public:
 	//
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	void MoveForward(float Value);
+	virtual void MoveForward(float Value);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	void MoveRight(float Value);
+	virtual void MoveRight(float Value);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	void Run();
+	virtual void Run();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	void StopRunning();
+	virtual void StopRunning();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	void CameraVertical(float Value, float Sensitivity = 1.0f);
+	virtual void CameraVertical(float Value, float Sensitivity = 1.0f);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	void CameraHorizontal(float Value, float Sensitivity = 1.0f);
+	virtual void CameraHorizontal(float Value, float Sensitivity = 1.0f);
 };

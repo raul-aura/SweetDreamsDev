@@ -19,13 +19,14 @@ class SWEETDREAMS_API ASweetDreamsDialogueManager : public AActor
 	
 public:	
 	ASweetDreamsDialogueManager();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogueStarted);
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDialogueChanged, FSweetDreamsDialogue, Dialogue, int32, DialogueID);
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogueEnded);
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
-	void StartDialogue(float TransitionDuration = 2.0f);
+	void StartDialogue(float ViewBlend = 2.0f);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void UpdateDialogue();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
@@ -34,6 +35,10 @@ public:
 	void ApplyChoiceAndContinue(FChoice Choice);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void EndDialogue();
+	//
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
+	void UpdateDialogueName(FName NewName);
+	//
 	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Core|Dialogue")
 	FOnDialogueStarted OnDialogueStarted;
 	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Core|Dialogue")
@@ -47,9 +52,6 @@ public:
 	static ASweetDreamsDialogueManager* FindDialogueByName(const UObject* WorldContext, FName Name);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static ASweetDreamsDialogueManager* StartDialogueByName(const UObject* WorldContext, FName Name, float StartTransition = 2.0f);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
-	void UpdateDialogueName(FName NewName);
-	//
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	int32 GetCurrentDialogueID() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
@@ -65,6 +67,18 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastStartDialogue(const float& ViewBlend);
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastUpdateDialogue();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastEndDialogue();
+
+	void CreateShowWidget();
+	void ToggleCharacterVisibility(bool bVisible = true);
+	void SetViewTarget(AActor* ViewTarget, const float& ViewTime);
+	void HideWidget();
+
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UCineCameraComponent* CineCameraComponent;
 	UPROPERTY(VisibleAnywhere, Category = "Components")
@@ -74,8 +88,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	USceneComponent* CameraGroup;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogues")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_DialogueData, EditAnywhere, Category = "Dialogues")
 	UDialogueData* DialogueData;
+	UFUNCTION(Category = "Dialogue")
+	void OnRep_DialogueData();
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FName DialogueName = NAME_None;
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
@@ -87,14 +103,14 @@ protected:
 	bool bIsDialogueActive = false;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
 	bool bIsSelectingChoices = false;
-	UPROPERTY(BlueprintReadWrite, Category = "Dialogue Log")
+	UPROPERTY(BlueprintReadOnly, Category = "Dialogue Log")
 	TArray<FSweetDreamsDialogueLog> DialogueLog;
-	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
+	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FSweetDreamsDialogue CurrentDialogue;
-	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
+	UPROPERTY(BlueprintReadWrite, ReplicatedUsing=OnRep_CurrentDialogue, Category = "Dialogue")
 	int32 CurrentDialogueID = -1;
-	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
-	APawn* OriginalPawn = nullptr;
+	UFUNCTION(Category = "Dialogue")
+	void OnRep_CurrentDialogue();
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue Sequence")
 	class ALevelSequenceActor* CurrentSequenceActor = nullptr;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue Sequence")
@@ -126,7 +142,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue Settings")
 	bool bIsDialogueEnabled = true;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue Settings")
-	float EndTransitionDuration = 2.0f;
+	float EndViewBlend = 2.0f;
 	//
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue UI")
 	TSubclassOf<UDialogueWidget> DialogueWidgetClass;

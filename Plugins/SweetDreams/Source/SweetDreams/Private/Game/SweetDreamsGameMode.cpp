@@ -9,10 +9,12 @@
 #include "GameFramework/GameState.h"
 #include "GameFramework/PlayerState.h"
 #include "Game/LoadingWidget.h"
+#include "Game/SweetDreamsGameSession.h"
 #include "Player/SweetDreamsPlayerController.h"
 
 ASweetDreamsGameMode::ASweetDreamsGameMode()
 {
+	GameSessionClass = ASweetDreamsGameSession::StaticClass();
 	DefaultPawnClass = ASweetDreamsCharacter::StaticClass();
 	PlayerControllerClass = ASweetDreamsPlayerController::StaticClass();
 	HUDClass = ASweetDreamsHUD::StaticClass();
@@ -22,7 +24,7 @@ ASweetDreamsGameMode::ASweetDreamsGameMode()
 void ASweetDreamsGameMode::StartPlay()
 {
 	SweetDreamsCore = USweetDreamsBPLibrary::GetSweetDreamsCore(this);
-	if (IsValid(SweetDreamsCore))
+	if (IsValid(SweetDreamsCore) && SweetDreamsCore->CoreSettings->bEnableAutoLoadSave)
 	{
 		SweetDreamsCore->LoadCoreSaves();
 	}
@@ -42,6 +44,11 @@ void ASweetDreamsGameMode::PostLogin(APlayerController* NewPlayer)
 		CreateLoadingWidget(LoadingWidgetClass, DreamController);
 		if (bShowOnBeginPlay) ShowLoadingWidget(DreamController);
 	}
+}
+
+ASweetDreamsGameSession* ASweetDreamsGameMode::GetSweetDreamsGameSession() const
+{
+	return Cast<ASweetDreamsGameSession>(GameSession);
 }
 
 void ASweetDreamsGameMode::CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class, ASweetDreamsPlayerController* Player)

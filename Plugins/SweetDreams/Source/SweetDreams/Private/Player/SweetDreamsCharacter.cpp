@@ -67,16 +67,12 @@ void ASweetDreamsCharacter::MoveRight(float Value)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		AddMovementInput(Direction, Value);
 	}
-
 }
 
 void ASweetDreamsCharacter::Run()
 {
-	if (!bCanMove) return;
-	if (MaxRunTime > 0.f)
-	{
-		if (CurrentRunTime >= MaxRunTime) return;
-	}
+	if (!bCanMove || !bCanRun) return;
+	if (MaxRunTime > 0.f && (CurrentRunTime >= MaxRunTime)) return;
 	bIsRunning = true;
 	GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
 	if (MaxRunTime <= 0.f) return;

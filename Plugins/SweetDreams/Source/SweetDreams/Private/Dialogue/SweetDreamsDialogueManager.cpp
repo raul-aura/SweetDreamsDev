@@ -11,11 +11,13 @@
 #include "LevelSequencePlayer.h"
 #include "LevelSequenceActor.h"
 #include "Dialogue/DialogueData.h"
+#include "Net/UnrealNetwork.h"
 #include "GameFramework/Character.h"
 
 ASweetDreamsDialogueManager::ASweetDreamsDialogueManager()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 	USceneComponent* DialogueManager = CreateDefaultSubobject<USceneComponent>(TEXT("Dialogue Manager"));
 	DialogueManager->SetupAttachment(RootComponent);
 
@@ -34,9 +36,20 @@ ASweetDreamsDialogueManager::ASweetDreamsDialogueManager()
 	DialogueData = nullptr;
 }
 
+void ASweetDreamsDialogueManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ASweetDreamsDialogueManager, CurrentDialogueID);
+	DOREPLIFETIME(ASweetDreamsDialogueManager, DialogueData);
+}
+
 void ASweetDreamsDialogueManager::BeginPlay()
 {
-	GetDialoguesFromData(DialogueData);
+	if (HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Updating dialogue data."));
+		GetDialoguesFromData(DialogueData);
+	}
 	Super::BeginPlay();
 }
 
@@ -62,62 +75,68 @@ void ASweetDreamsDialogueManager::Tick(float DeltaTime)
 	}
 }
 
-void ASweetDreamsDialogueManager::StartDialogue(float TransitionDuration)
+void ASweetDreamsDialogueManager::StartDialogue(float ViewBlend)
 {
-	if (TransitionDuration <= 0.f) TransitionDuration = GetWorld()->GetDeltaSeconds();
-	if (!bIsDialogueEnabled || bIsDialogueActive) return;
-	if (Dialogues.Num() == 0) return;
+	if (!bIsDialogueEnabled || bIsDialogueActive || Dialogues.Num() == 0) return;
+	if (ViewBlend <= 0.f) ViewBlend = GetWorld()->GetDeltaSeconds();
+	MulticastStartDialogue(ViewBlend);
+}
+
+void ASweetDreamsDialogueManager::MulticastStartDialogue_Implementation(const float& ViewBlend)
+{
 	if (bHideCharacter)
 	{
-		if (ACharacter* Character = UGameplayStatics::GetPlayerCharacter(this, 0))
-		{
-			Character->SetActorHiddenInGame(true);
-		}
+		ToggleCharacterVisibility(false);
 	}
 	if (bPossessThis)
 	{
-		if (APlayerController* Player = GetWorld()->GetFirstPlayerController())
-		{
-			OriginalPawn = Player->GetPawn();
-			Player->SetViewTargetWithBlend(this, TransitionDuration);
-		}
+		SetViewTarget(this, ViewBlend);
 	}
-	if (IsValid(DialogueWidgetClass))
-	{
-		if (ASweetDreamsHUD* SweetDreamsHUD = Cast<ASweetDreamsHUD>(GetWorld()->GetFirstPlayerController()->GetHUD()))
-		{
-			DialogueWidget = Cast<UDialogueWidget>(SweetDreamsHUD->FindWidgetByClass(DialogueWidgetClass));
-			if (IsValid(DialogueWidget))
-			{
-				DialogueWidget->SetDialogueManager(this);
-				SweetDreamsHUD->ShowWidget(DialogueWidget);
-				DialogueWidget->OnDialogueStarted();
-			}
-		}
-	}
+	CreateShowWidget();
 	bIsDialogueActive = true;
-	UpdateDialogue();
+	if (HasAuthority())
+	{
+		UpdateDialogue();
+	}
 	OnDialogueStarted.Broadcast();
 }
 
 void ASweetDreamsDialogueManager::UpdateDialogue()
 {
 	if (bIsSelectingChoices) return;
+	MulticastUpdateDialogue();
+}
+
+void ASweetDreamsDialogueManager::MulticastUpdateDialogue_Implementation()
+{
 	if (bUseAnimatedDialogue && bIsAnimating)
 	{
-		return SkipAnimatedDialogue();
+		SkipAnimatedDialogue();
+		return;
 	}
 	if (IsValid(CurrentSequencePlayer) && CurrentSequencePlayer->IsPlaying())
 	{
-		if (!bStopSequenceOnUpdate) return;
+		if (!bStopSequenceOnUpdate) return; // will ignore trying to update if sequence is still playing
 		CurrentSequencePlayer->Stop();
 	}
 	if (CurrentDialogueID >= Dialogues.Num() - 1)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("ID greater then dialogue length, ENDING."));
 		EndDialogue();
 		return;
 	}
 	CurrentDialogueID = FMath::Clamp(++CurrentDialogueID, 0, Dialogues.Num());
+	OnRep_CurrentDialogue();
+}
+
+void ASweetDreamsDialogueManager::OnRep_CurrentDialogue()
+{
+	if (!Dialogues.IsValidIndex(CurrentDialogueID))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("current dialogue ID not valid index, ENDING."));
+		EndDialogue();
+		return;
+	}
 	CurrentDialogue = Dialogues[CurrentDialogueID];
 	CallFunctionsFromDialogue(CurrentDialogue);
 	EDialogueMode CurrentMode = CurrentDialogue.Mode;
@@ -260,36 +279,28 @@ void ASweetDreamsDialogueManager::ApplyChoiceAndContinue(FChoice Choice)
 
 void ASweetDreamsDialogueManager::EndDialogue()
 {
-	float TransitionDuration = EndTransitionDuration;
-	if (TransitionDuration <= 0.f) TransitionDuration = GetWorld()->GetDeltaSeconds();
+	MulticastEndDialogue();
+}
+
+void ASweetDreamsDialogueManager::MulticastEndDialogue_Implementation()
+{
 	bIsDialogueActive = false;
 	CurrentDialogue = FSweetDreamsDialogue();
 	DialogueLog.Empty();
 	CurrentDialogueID = -1;
-	if (bPossessThis)
-	{
-		if (APlayerController* Player = GetWorld()->GetFirstPlayerController())
-		{
-			Player->SetViewTargetWithBlend(OriginalPawn, TransitionDuration);
-		}
-	}
 	if (!bCanRepeatDialogue)
 	{
 		bIsDialogueEnabled = false;
 	}
+	if (bPossessThis)
+	{
+		SetViewTarget(nullptr, EndViewBlend);
+	}
 	if (bHideCharacter)
 	{
-		if (ACharacter* Character = UGameplayStatics::GetPlayerCharacter(this, 0))
-		{
-			Character->SetActorHiddenInGame(false);
-		}
+		ToggleCharacterVisibility();
 	}
-	if (IsValid(DialogueWidget))
-	{
-		DialogueWidget->OnDialogueEnded();
-		DialogueWidget->HideSelf();
-		DialogueWidget->SetDialogueManager(nullptr);
-	}
+	HideWidget();
 	OnDialogueEnded.Broadcast();
 }
 
@@ -373,6 +384,73 @@ bool ASweetDreamsDialogueManager::GetIsDialogueActive() const
 	return bIsDialogueActive;
 }
 
+void ASweetDreamsDialogueManager::CreateShowWidget()
+{
+	if (!IsValid(DialogueWidgetClass)) return;
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		if (!PC->IsLocalController()) return;
+		if (ASweetDreamsHUD* HUD = Cast<ASweetDreamsHUD>(PC->GetHUD()))
+		{
+			DialogueWidget = Cast<UDialogueWidget>(HUD->CreateAndStoreWidget(DialogueWidgetClass));
+			HUD->ShowWidget(DialogueWidget);
+		}
+		else
+		{
+			DialogueWidget = CreateWidget<UDialogueWidget>(PC, DialogueWidgetClass);
+			if (IsValid(DialogueWidget))
+			{
+				DialogueWidget->AddToViewport();
+			}
+		}
+	}
+	if (IsValid(DialogueWidget))
+	{
+		DialogueWidget->SetDialogueManager(this);
+		DialogueWidget->OnDialogueStarted();
+	}
+}
+
+void ASweetDreamsDialogueManager::ToggleCharacterVisibility(bool bVisible)
+{
+	if (ACharacter* Character = Cast<ACharacter>(GetWorld()->GetFirstLocalPlayerFromController()))
+	{
+		Character->SetActorHiddenInGame(!bVisible);
+	}
+}
+
+void ASweetDreamsDialogueManager::SetViewTarget(AActor* ViewTarget, const float& ViewTime)
+{
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		if (!IsValid(ViewTarget))
+		{
+			ViewTarget = PC->GetCharacter();
+		}
+		if (!IsValid(ViewTarget)) return;
+		PC->SetViewTargetWithBlend(ViewTarget, ViewTime);
+	}
+}
+
+void ASweetDreamsDialogueManager::HideWidget()
+{
+	if (!IsValid(DialogueWidget)) return;
+	DialogueWidget->OnDialogueEnded();
+	DialogueWidget->SetDialogueManager(nullptr);
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		if (!PC->IsLocalController()) return;
+		if (ASweetDreamsHUD* HUD = Cast<ASweetDreamsHUD>(PC->GetHUD()))
+		{
+			DialogueWidget->HideSelf();
+		}
+		else
+		{
+			DialogueWidget->RemoveFromViewport();
+		}
+	}
+}
+
 void ASweetDreamsDialogueManager::AddDialogueToLog(int32 DialogueID)
 {
 	FText LogText = Dialogues[DialogueID].DialogueBody;
@@ -384,13 +462,16 @@ void ASweetDreamsDialogueManager::AddDialogueToLog(int32 DialogueID)
 void ASweetDreamsDialogueManager::GetDialoguesFromData(UDialogueData* Data)
 {
 	if (!IsValid(Data)) return;
-	UpdateDialogueName(Data->Name);
-	Dialogues.Empty();
-	TArray<FSweetDreamsDialogue> DialoguesData = Data->Dialogues;
-	for (FSweetDreamsDialogue SingleData : DialoguesData)
-	{
-		Dialogues.Add(SingleData);
-	}
+	DialogueData = Data;
+	OnRep_DialogueData();
+}
+
+void ASweetDreamsDialogueManager::OnRep_DialogueData()
+{
+	if (!IsValid(DialogueData)) return;
+	UE_LOG(LogTemp, Warning, TEXT("Replicating dialogue data."));
+	UpdateDialogueName(DialogueData->Name);
+	Dialogues = DialogueData->Dialogues;
 }
 
 void ASweetDreamsDialogueManager::StartSequence(FSweetDreamsDialogue Dialogue)
@@ -424,6 +505,7 @@ void ASweetDreamsDialogueManager::EndSequence()
 	CurrentSequenceActor = nullptr;
 	UpdateDialogue();
 }
+
 
 
 

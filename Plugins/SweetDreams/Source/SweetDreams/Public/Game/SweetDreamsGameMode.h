@@ -7,6 +7,7 @@
 #include "SweetDreamsGameMode.generated.h"
 
 class USweetDreamsCore;
+class ASweetDreamsGameSession;
 class ULoadingWidget;
 class ASweetDreamsPlayerController;
 struct FDreamUserSettings;
@@ -23,6 +24,9 @@ public:
 	virtual void BeginPlay() override;
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
+	ASweetDreamsGameSession* GetSweetDreamsGameSession() const;
+	
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
 	void CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class, ASweetDreamsPlayerController* Player);
 	void ShowLoadingWidget(ASweetDreamsPlayerController* Player);

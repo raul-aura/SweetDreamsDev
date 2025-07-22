@@ -1,11 +1,25 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Inventory/InventoryComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "Inventory/ItemEvent.h"
 
 UInventoryComponent::UInventoryComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+    SetIsReplicatedByDefault(true);
+}
+
+void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(UInventoryComponent, Items);
+}
+
+void UInventoryComponent::BeginPlay()
+{
+    PreviousItems = Items;
+    Super::BeginPlay();
 }
 
 UInventoryComponent* UInventoryComponent::GetInventoryFromActor(const AActor* Actor)
@@ -59,6 +73,16 @@ void UInventoryComponent::AddItem(const TSoftObjectPtr<USweetDreamsItem>& ItemDa
         Items.Add(FInventoryItem(ItemObject));
         OnItemAdded.Broadcast(NewItem);
     }
+}
+
+void UInventoryComponent::AddItem_Internal(const TSoftObjectPtr<USweetDreamsItem>& ItemData, int32 Count, bool bAddAsUnique)
+{
+
+}
+
+void UInventoryComponent::ServerAddItem_Implementation(const TSoftObjectPtr<USweetDreamsItem>& ItemData, int32 Count, bool bAddAsUnique)
+{
+    AddItem_Internal(ItemData, Count, bAddAsUnique);
 }
 
 void UInventoryComponent::UseItem(const FInventoryItem& Item)
@@ -161,5 +185,39 @@ void UInventoryComponent::CleanInvalidItems()
             Items.RemoveAt(i);
         }
     }
+}
+
+void UInventoryComponent::OnRep_Items()
+{
+    //for (const FInventoryItem& NewItem : Items)
+    //{
+    //    const FInventoryItem* OldItem = PreviousItems.FindByPredicate([&](const FInventoryItem& Item)
+    //    {
+    //        return Item.ItemData == NewItem.ItemData;
+    //    });
+    //    if (!OldItem)
+    //    {
+    //        OnItemAdded.Broadcast(NewItem);
+    //    }
+    //    else if (OldItem->bIsEquipping != NewItem.bIsEquipping)
+    //    {
+    //        if (NewItem.bIsEquipping)
+    //            OnItemEquipped.Broadcast(NewItem);
+    //        else
+    //            OnItemUnequiped.Broadcast(NewItem);
+    //    }
+    //}
+    //for (const FInventoryItem& OldItem : PreviousItems)
+    //{
+    //    const FInventoryItem* NewItem = Items.FindByPredicate([&](const FInventoryItem& Item)
+    //    {
+    //        return Item.ItemData == OldItem.ItemData;
+    //    });
+    //    if (!NewItem)
+    //    {
+    //        OnItemRemoved.Broadcast(OldItem);
+    //    }
+    //}
+    //PreviousItems = Items;
 }
 

@@ -16,12 +16,15 @@ class SWEETDREAMS_API ASweetDreamsPlayerController : public APlayerController
 	GENERATED_BODY()
 	
 public:
+	void BeginPlay() override;
+
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	ASweetDreamsCharacter* GetDreamCharacter() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	ASweetDreamsHUD* GetDreamHUD() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player", meta = (DisplayName = "Toggle Input (Timer)"))
 	void ToggleInputTimer(float Duration = 1.f);
 
 	UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
@@ -36,6 +39,10 @@ public:
 	void Client_LoadingStart();
 	UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
 	void Client_LoadingEnd();
+	
+	virtual void ClientWasKicked_Implementation(const FText& KickReason) override;
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core|Player")
+	void OnPlayerKicked(const FText& KickReason);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Loading Screen")

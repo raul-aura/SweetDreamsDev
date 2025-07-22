@@ -6,6 +6,8 @@
 #include "UObject/Interface.h"
 #include "SweetDreamsSaveInterface.generated.h"
 
+class USweetDreamsSaveFile;
+
 UINTERFACE(MinimalAPI, Blueprintable)
 class USweetDreamsSaveInterface : public UInterface
 {
@@ -18,12 +20,13 @@ class SWEETDREAMS_API ISweetDreamsSaveInterface
 
 public:
 
-	//
-	// OnGameSaved, Loaded and etc native events
-	//
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Save")
+	void OnGameSaved(USweetDreamsSaveFile* SaveFile, const FString& Slot);
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Save")
+	void OnGameLoaded(USweetDreamsSaveFile* SaveFile, const FString& Slot);
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Save")
 	TMap<FName, FString> GetCustomData();
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Sweet Dreams|Save")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Save")
 	void LoadCustomData(const TMap<FName, FString>& Data);
 };

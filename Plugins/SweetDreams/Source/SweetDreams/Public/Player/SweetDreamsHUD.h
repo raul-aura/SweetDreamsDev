@@ -28,9 +28,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	USweetDreamsWidget* CreateAndStoreWidget(TSubclassOf<USweetDreamsWidget> WidgetClass);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
-	void ShowWidget(USweetDreamsWidget* Widget);
+	virtual void ShowWidget(USweetDreamsWidget* Widget);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
-	void HideWidget(USweetDreamsWidget* Widget);
+	virtual void HideWidget(USweetDreamsWidget* Widget);
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	void OverridePlayerInputMode(USweetDreamsWidget* WidgetToFocus);
@@ -47,7 +47,7 @@ public:
 	ULoadingWidget* GetLoadingWidget() const;
 	//
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
-	bool IsAnyWidgetVisible() const;
+	virtual bool IsAnyWidgetVisible() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	USweetDreamsWidget* GetHighestPriorityWidget() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")

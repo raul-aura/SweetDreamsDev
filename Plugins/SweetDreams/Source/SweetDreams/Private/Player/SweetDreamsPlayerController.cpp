@@ -2,6 +2,8 @@
 
 
 #include "Player/SweetDreamsPlayerController.h"
+#include "Core/SweetDreamsBPLibrary.h"
+#include "Core/SweetDreamsSettings.h"
 #include "Game/LoadingWidget.h"
 
 ASweetDreamsCharacter* ASweetDreamsPlayerController::GetDreamCharacter() const
@@ -14,13 +16,26 @@ ASweetDreamsHUD* ASweetDreamsPlayerController::GetDreamHUD() const
 	return GetHUD<ASweetDreamsHUD>();
 }
 
+void ASweetDreamsPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+	if (IsLocalController())
+	{
+		USweetDreamsCore* SweetDreamsCore = USweetDreamsBPLibrary::GetSweetDreamsCore(this);
+		if (IsValid(SweetDreamsCore) && SweetDreamsCore->CoreSettings->bEnableAutoLoadSave)
+		{
+			SweetDreamsCore->LoadCoreSaves();
+		}
+	}
+}
+
 void ASweetDreamsPlayerController::ToggleInputTimer(float Duration)
 {
 	FTimerHandle InputTimer;
 	DisableInput(this);
 	GetWorldTimerManager().SetTimer(InputTimer, [this]() {
 		EnableInput(this);
-		}, Duration, false);
+	}, Duration, false);
 }
 
 void ASweetDreamsPlayerController::Client_CreateLoadingWidget_Implementation(TSubclassOf<ULoadingWidget> WidgetClass)
@@ -70,4 +85,9 @@ void ASweetDreamsPlayerController::Client_LoadingEnd_Implementation()
 	{
 		GetDreamHUD()->GetLoadingWidget()->OnLoadingFinish();
 	}
+}
+
+void ASweetDreamsPlayerController::ClientWasKicked_Implementation(const FText& KickReason)
+{
+	OnPlayerKicked(KickReason);
 }

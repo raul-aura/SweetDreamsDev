@@ -9,7 +9,11 @@
 #include "Game/SweetDreamsGameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Curves/CurveFloat.h"
+#include "Online.h"
+#include "OnlineSubsystem.h"
+#include "OnlineSubsystemUtils.h"
 #include "Engine/Engine.h"
+#include "GameFramework/PlayerState.h"
 
 USweetDreamsBPLibrary::USweetDreamsBPLibrary(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
@@ -191,35 +195,6 @@ USweetDreamsSaveFile* USweetDreamsBPLibrary::GetLocalSave(const UObject* WorldCo
 	return false;
 }
 
-FDreamUserSettings USweetDreamsBPLibrary::GetUserSettings(const UObject* WorldContext)
-{
-	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
-	{
-		return Core->GetUserSettings();
-	}
-	return FDreamUserSettings();
-}
-
-void USweetDreamsBPLibrary::SetUserSettings(const UObject* WorldContext, FDreamUserSettings Settings)
-{
-	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
-	{
-		Settings.ApplySettings();
-		Core->SetUserSettings(Settings);
-	}
-}
-
-void USweetDreamsBPLibrary::SetSettingsQuality(const UObject* WorldContext, int32 Quality)
-{
-	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
-	{
-		Quality = FMath::Clamp(Quality, 0, 2);
-		FDreamUserSettings NewSettings(Quality);
-		NewSettings.ApplySettings();
-		Core->SetUserSettings(NewSettings);
-	}
-}
-
 void USweetDreamsBPLibrary::LoadLevel(const UObject* WorldContext, TSoftObjectPtr<UWorld> Level)
 {
 	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
@@ -256,6 +231,123 @@ bool USweetDreamsBPLibrary::IsMultipleOf(const float& Number, float Interval, fl
 {
 	float Reminder = FMath::Fmod(Number, Interval);
 	return FMath::IsNearlyZero(Reminder, Tolerance);
+}
+
+bool USweetDreamsBPLibrary::GetSessionSetting(FBlueprintSessionResult Result, FName Key, FString& Value)
+{
+	if (!Result.OnlineResult.IsValid()) return false;
+	if (Result.OnlineResult.Session.SessionSettings.Get(Key, Value))
+	{
+		return true;
+	}
+	return false;
+}
+
+void USweetDreamsBPLibrary::SetSessionSetting(FBlueprintSessionResult Result, FName Key, const FString& Value)
+{
+	if (!Result.OnlineResult.IsValid()) return;
+	Result.OnlineResult.Session.SessionSettings.Set(Key, Value);
+}
+
+FNamedOnlineSession* USweetDreamsBPLibrary::GetCurrentSession(UObject* WorldContext)
+{
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::LogAndReturnNull);
+	IOnlineSessionPtr SessionInterface = Online::GetSessionInterface(World);
+	if (!SessionInterface.IsValid()) return nullptr;
+	FNamedOnlineSession* Session = SessionInterface->GetNamedSession(NAME_GameSession);
+	if (Session != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Session found."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Session nullptr."));
+	}
+	return Session;
+}
+
+bool USweetDreamsBPLibrary::GetCurrentSessionSetting(UObject* WorldContext, FName Key, FString& Value)
+{
+	FNamedOnlineSession* Session = GetCurrentSession(WorldContext);
+	if (!Session)
+	{
+		return false;
+	}
+	return Session->SessionSettings.Get(Key, Value);
+}
+
+void USweetDreamsBPLibrary::SetCurrentSessionSetting(UObject* WorldContext, FName Key, const FString& Value)
+{
+	FNamedOnlineSession* Session = GetCurrentSession(WorldContext);
+	if (!Session)
+	{
+		return;
+	}
+	Session->SessionSettings.Set(Key, Value, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+}
+
+void USweetDreamsBPLibrary::RenameSession(UObject* WorldContext, const FString& NewName, int32 MaxLength)
+{
+	if (NewName.Len() > MaxLength || MaxLength < 0) return;
+	SetCurrentSessionSetting(WorldContext, FName(FString("SERVER_NAME")), NewName);
+}
+
+bool USweetDreamsBPLibrary::GetCurrentSessionName(UObject* WorldContext, FString& SessionName)
+{
+	if (GetCurrentSessionSetting(WorldContext, FName(FString("SERVER_NAME")), SessionName))
+	{
+		return true;
+	}
+	return false;
+}
+
+void USweetDreamsBPLibrary::SetSessionPlayerReady(UObject* WorldContext, const FString& PlayerID, bool bReady)
+{
+	SetCurrentSessionSetting(WorldContext, FName(FString("PLAYER_READY_" + PlayerID)), bReady ? TEXT("True") : TEXT("False"));
+}
+
+bool USweetDreamsBPLibrary::IsPlayerReady(UObject* WorldContext, const FString& PlayerID)
+{
+	FString Value;
+	if (GetCurrentSessionSetting(WorldContext, FName(FString("PLAYER_READY_") + PlayerID), Value))
+	{
+		return Value.Equals(TEXT("True"), ESearchCase::IgnoreCase);
+	}
+	return false;
+}
+
+bool USweetDreamsBPLibrary::ArePlayersReady(UObject* WorldContext)
+{
+	FNamedOnlineSession* Session = GetCurrentSession(WorldContext);
+	if (!Session) return false;
+	bool bReady = false;
+	UE_LOG(LogTemp, Warning, TEXT("%d"), Session->RegisteredPlayers.Num());
+	const FSessionSettings& Settings = Session->SessionSettings.Settings;
+	for (const TPair<FName, FOnlineSessionSetting>& Pair : Settings)
+	{
+		const FString KeyStr = Pair.Key.ToString();
+		if (KeyStr.StartsWith(TEXT("PLAYER_READY_")))
+		{
+			bReady = true;
+			FString Value;
+			if (!Session->SessionSettings.Get(Pair.Key, Value) || !Value.Equals(TEXT("True"), ESearchCase::IgnoreCase))
+			{
+				return false;
+			}
+		}
+	}
+	return bReady;
+}
+
+
+FString USweetDreamsBPLibrary::GetPlayerUniqueId(APlayerController* PlayerController)
+{
+	const FUniqueNetIdRepl UniqueID = PlayerController->PlayerState->GetUniqueId();
+	if (UniqueID.IsValid())
+	{
+		return UniqueID->ToString();
+	}
+	return FString();
 }
 
 void USweetDreamsBPLibrary::ShouldNotHappen(const UObject* WorldContext)

@@ -11,9 +11,7 @@
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 #include "Engine/AssetManager.h"
 
-USweetDreamsCore::USweetDreamsCore()
-	:
-	UserSettings(FDreamUserSettings()) {}
+USweetDreamsCore::USweetDreamsCore() {}
 
 void USweetDreamsCore::LoadSettings()
 {
@@ -94,24 +92,12 @@ void USweetDreamsCore::PrintDream(const UObject* DreamOrigin, FString Dream, EPr
 	}
 }
 
-// Settings
-void USweetDreamsCore::SetUserSettings(FDreamUserSettings Settings)
-{
-	PrintDream(nullptr, "Overriding User Settings.");
-	UserSettings = Settings;
-}
-
-FDreamUserSettings USweetDreamsCore::GetUserSettings() const
-{
-	return UserSettings;
-}
-
 // SAVE
 
-USweetDreamsSaveFile* USweetDreamsCore::CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, const FString& Slot, bool& bSuccess)
+USweetDreamsSaveFile* USweetDreamsCore::CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, const FString& Slot, bool& bSuccess, int32 UserIndex)
 {
 	bSuccess = false;
-	if (UGameplayStatics::DoesSaveGameExist(Slot, 0))
+	if (UGameplayStatics::DoesSaveGameExist(Slot, UserIndex))
 	{
 		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
 		{
@@ -139,16 +125,23 @@ USweetDreamsSaveFile* USweetDreamsCore::CreateSave(TSubclassOf<USweetDreamsSaveF
 	return nullptr;
 }
 
-bool USweetDreamsCore::Save(const FString& Slot)
+bool USweetDreamsCore::Save(const FString& Slot, int32 UserIndex)
 {
 	USweetDreamsSaveFile* Save = GetSaveObject(Slot);
 	if (!IsValid(Save)) return false;
 	SaveData(Save);
-	if (UGameplayStatics::SaveGameToSlot(Save, Slot, 0))
+	if (UGameplayStatics::SaveGameToSlot(Save, Slot, UserIndex))
 	{
 		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
 		{
 			PrintDream(nullptr, FString::Printf(TEXT("%s SAVED with SUCCESS."), *Slot));
+		}
+		TArray<AActor*> Actors;
+		UGameplayStatics::GetAllActorsWithInterface(GetWorld(), USweetDreamsSaveInterface::StaticClass(), Actors);
+		for (AActor* Actor : Actors)
+		{
+			if (!IsValid(Actor)) continue;
+			ISweetDreamsSaveInterface::Execute_OnGameSaved(Actor, Save, Slot);
 		}
 		return true;
 	}
@@ -159,9 +152,9 @@ bool USweetDreamsCore::Save(const FString& Slot)
 	return false;
 }
 
-USweetDreamsSaveFile* USweetDreamsCore::LoadSave(const FString& Slot)
+USweetDreamsSaveFile* USweetDreamsCore::LoadSave(const FString& Slot, int32 UserIndex)
 {
-	if (USaveGame* SaveObject = UGameplayStatics::LoadGameFromSlot(Slot, 0))
+	if (USaveGame* SaveObject = UGameplayStatics::LoadGameFromSlot(Slot, UserIndex))
 	{
 		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
 		{
@@ -170,6 +163,13 @@ USweetDreamsSaveFile* USweetDreamsCore::LoadSave(const FString& Slot)
 		USweetDreamsSaveFile* SweetSave = Cast<USweetDreamsSaveFile>(SaveObject);
 		UpdateSaveReference(SweetSave, Slot);
 		LoadData(SweetSave);
+		TArray<AActor*> Actors;
+		UGameplayStatics::GetAllActorsWithInterface(GetWorld(), USweetDreamsSaveInterface::StaticClass(), Actors);
+		for (AActor* Actor : Actors)
+		{
+			if (!IsValid(Actor)) continue;
+			ISweetDreamsSaveInterface::Execute_OnGameSaved(Actor, SweetSave, Slot);
+		}
 		return SweetSave;
 	}
 	if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
@@ -179,9 +179,9 @@ USweetDreamsSaveFile* USweetDreamsCore::LoadSave(const FString& Slot)
 	return nullptr;
 }
 
-bool USweetDreamsCore::DeleteSave(const FString& Slot)
+bool USweetDreamsCore::DeleteSave(const FString& Slot, int32 UserIndex)
 {
-	if (UGameplayStatics::DeleteGameInSlot(Slot, 0))
+	if (UGameplayStatics::DeleteGameInSlot(Slot, UserIndex))
 	{
 		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
 		{
@@ -262,11 +262,8 @@ void USweetDreamsCore::SaveData(USweetDreamsSaveFile* Save)
 
 void USweetDreamsCore::LoadCoreSaves()
 {
-	if (CoreSettings->bEnableAutoLoadSave)
-	{
-		LoadSave(SaveSlotPersistent);
-		LoadSave(SaveSlotLocal);
-	}
+	LoadSave(SaveSlotPersistent);
+	LoadSave(SaveSlotLocal);
 }
 
 void USweetDreamsCore::LoadData(USweetDreamsSaveFile* Save)
@@ -287,6 +284,7 @@ void USweetDreamsCore::LoadData(USweetDreamsSaveFile* Save)
 
 AActor* USweetDreamsCore::FindActorByName(FName Name)
 {
+	if (!GetWorld()) return nullptr;
 	TArray<AActor*> Actors;
 	UGameplayStatics::GetAllActorsWithInterface(GetWorld(), USweetDreamsSaveInterface::StaticClass(), Actors);
 	for (AActor* Actor : Actors)
