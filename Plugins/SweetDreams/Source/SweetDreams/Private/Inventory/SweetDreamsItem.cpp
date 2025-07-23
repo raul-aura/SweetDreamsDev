@@ -5,7 +5,7 @@
 
 void USweetDreamsItem::AssignItemToEvents()
 {
-	for (auto* Event : ItemEvents)
+	for (auto& Event : ItemEvents)
 	{
 		Event->CurrentItemData = this;
 	}

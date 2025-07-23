@@ -27,7 +27,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams | Core | Inventory")
 	void OnRemoved(AActor* Owner);
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Item")
+	UPROPERTY(BlueprintReadOnly, Category = "Item")
 	USweetDreamsItem* CurrentItemData;
 };
 

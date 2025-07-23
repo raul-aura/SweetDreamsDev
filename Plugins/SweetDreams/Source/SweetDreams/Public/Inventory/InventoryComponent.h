@@ -67,10 +67,6 @@ public:
     //
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory", meta = (AdvancedDisplay = 2))
     void AddItem(const TSoftObjectPtr<USweetDreamsItem>& ItemData, int32 Count = 1, bool bAddAsUnique = false);
-    void AddItem_Internal(const TSoftObjectPtr<USweetDreamsItem>& ItemData, int32 Count = 1, bool bAddAsUnique = false);
-    UFUNCTION(Server, Reliable)
-    void ServerAddItem(const TSoftObjectPtr<USweetDreamsItem>& ItemData, int32 Count = 1, bool bAddAsUnique = false);
-    //
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
     void UseItem(const FInventoryItem& Item);
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
@@ -106,10 +102,6 @@ public:
 
 protected:
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_Items, Category = "Inventory")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated, Category = "Inventory")
     TArray<FInventoryItem> Items;
-    UPROPERTY(Transient)
-    TArray<FInventoryItem> PreviousItems;
-    UFUNCTION(Category = "Inventory")
-    void OnRep_Items();
 };

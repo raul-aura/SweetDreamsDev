@@ -32,10 +32,19 @@ void UDialogueWidget::UpdateAnimatedDialogue(FText AnimatedText)
 	AnimatedDialogueBody = AnimatedText;
 }
 
-void UDialogueWidget::SelectChoice(FChoice ChoiceSelected)
+void UDialogueWidget::SelectChoice(FChoice Choice)
 {
 	if (IsValid(DialogueManager))
 	{
-		DialogueManager->ApplyChoiceAndContinue(ChoiceSelected);
+		DialogueManager->SelectChoiceAndUpdate(Choice);
+	}
+}
+
+void UDialogueWidget::SelectChoiceByIndex(int32 Choice)
+{
+	if (CurrentChoices.Num() > 0 && CurrentChoices.IsValidIndex(Choice))
+	{
+		FChoice ChoiceStruct = CurrentDialogue.Choices[Choice];
+		SelectChoice(ChoiceStruct);
 	}
 }

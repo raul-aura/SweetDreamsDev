@@ -7,7 +7,6 @@
 #include "SweetDreamsGameMode.generated.h"
 
 class USweetDreamsCore;
-class ASweetDreamsGameSession;
 class ULoadingWidget;
 class ASweetDreamsPlayerController;
 struct FDreamUserSettings;
@@ -23,15 +22,18 @@ public:
 	virtual void StartPlay() override;
 	virtual void BeginPlay() override;
 	virtual void PostLogin(APlayerController* NewPlayer) override;
-
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
-	ASweetDreamsGameSession* GetSweetDreamsGameSession() const;
+	virtual void Logout(AController* Exiting) override;
 	
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
 	void CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class, ASweetDreamsPlayerController* Player);
 	void ShowLoadingWidget(ASweetDreamsPlayerController* Player);
 	void LevelLoadStarted(TSoftObjectPtr<UWorld> LoadingLevel);
 	void LevelLoadFinished(TSoftObjectPtr<UWorld> LoadingLevel);
+
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
+	bool KickPlayer(APlayerController* KickedPlayer, const FText& KickReason);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
+	TArray<APlayerController*> GetConnectedPlayers(bool bExcludeLocalPlayer = false) const;
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Core")
@@ -48,4 +50,5 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen")
 	bool bHideAfterGracePeriod = true; // when grace period ends, should auto hide the widget?
 
+	TArray<APlayerController*> ConnectedPlayers;
 };

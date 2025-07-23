@@ -39,17 +39,12 @@ ASweetDreamsDialogueManager::ASweetDreamsDialogueManager()
 void ASweetDreamsDialogueManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(ASweetDreamsDialogueManager, CurrentDialogueID);
 	DOREPLIFETIME(ASweetDreamsDialogueManager, DialogueData);
 }
 
 void ASweetDreamsDialogueManager::BeginPlay()
 {
-	if (HasAuthority())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Updating dialogue data."));
-		GetDialoguesFromData(DialogueData);
-	}
+	GetDialoguesFromData(DialogueData);
 	Super::BeginPlay();
 }
 
@@ -84,6 +79,11 @@ void ASweetDreamsDialogueManager::StartDialogue(float ViewBlend)
 
 void ASweetDreamsDialogueManager::MulticastStartDialogue_Implementation(const float& ViewBlend)
 {
+	StartDialogue_Internal(ViewBlend);
+}
+
+void ASweetDreamsDialogueManager::StartDialogue_Internal(const float& ViewBlend)
+{
 	if (bHideCharacter)
 	{
 		ToggleCharacterVisibility(false);
@@ -103,11 +103,15 @@ void ASweetDreamsDialogueManager::MulticastStartDialogue_Implementation(const fl
 
 void ASweetDreamsDialogueManager::UpdateDialogue()
 {
-	if (bIsSelectingChoices) return;
 	MulticastUpdateDialogue();
 }
 
 void ASweetDreamsDialogueManager::MulticastUpdateDialogue_Implementation()
+{
+	UpdateDialogue_Internal();
+}
+
+void ASweetDreamsDialogueManager::UpdateDialogue_Internal()
 {
 	if (bUseAnimatedDialogue && bIsAnimating)
 	{
@@ -119,6 +123,7 @@ void ASweetDreamsDialogueManager::MulticastUpdateDialogue_Implementation()
 		if (!bStopSequenceOnUpdate) return; // will ignore trying to update if sequence is still playing
 		CurrentSequencePlayer->Stop();
 	}
+	if (bIsSelectingChoices) return;
 	if (CurrentDialogueID >= Dialogues.Num() - 1)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ID greater then dialogue length, ENDING."));
@@ -126,17 +131,6 @@ void ASweetDreamsDialogueManager::MulticastUpdateDialogue_Implementation()
 		return;
 	}
 	CurrentDialogueID = FMath::Clamp(++CurrentDialogueID, 0, Dialogues.Num());
-	OnRep_CurrentDialogue();
-}
-
-void ASweetDreamsDialogueManager::OnRep_CurrentDialogue()
-{
-	if (!Dialogues.IsValidIndex(CurrentDialogueID))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("current dialogue ID not valid index, ENDING."));
-		EndDialogue();
-		return;
-	}
 	CurrentDialogue = Dialogues[CurrentDialogueID];
 	CallFunctionsFromDialogue(CurrentDialogue);
 	EDialogueMode CurrentMode = CurrentDialogue.Mode;
@@ -156,8 +150,8 @@ void ASweetDreamsDialogueManager::OnRep_CurrentDialogue()
 void ASweetDreamsDialogueManager::SkipAnimatedDialogue()
 {
 	CurrentLetterIndex = ProcessedDialogueBody.Len();
-	UpdateAnimatedDialogue();
 	bIsAnimating = false;
+	UpdateAnimatedDialogue();
 }
 
 void ASweetDreamsDialogueManager::ProcessDialogue(FSweetDreamsDialogue Dialogue)
@@ -199,6 +193,10 @@ void ASweetDreamsDialogueManager::ProcessDialogue(FSweetDreamsDialogue Dialogue)
 		{
 			DialogueWidget->SetCurrentDialogue(CurrentDialogue);
 			DialogueWidget->OnUpdatedDialogue(CurrentDialogue, bIsSelectingChoices);
+			if (bUseAnimatedDialogue)
+			{
+				DialogueWidget->OnAnimatedDialogueStarted();
+			}
 		}
 		if (bIsSelectingChoices)
 		{
@@ -263,10 +261,14 @@ void ASweetDreamsDialogueManager::UpdateAnimatedDialogue()
 	if (IsValid(DialogueWidget))
 	{
 		DialogueWidget->UpdateAnimatedDialogue(AnimatedDialogueBody);
+		if (!bIsAnimating)
+		{
+			DialogueWidget->OnAnimatedDialogueFinished();
+		}
 	}
 }
 
-void ASweetDreamsDialogueManager::ApplyChoiceAndContinue(FChoice Choice)
+void ASweetDreamsDialogueManager::SelectChoiceAndUpdate(FChoice Choice)
 {
 	DialogueLog[CurrentDialogueID].UpdateChoice(Choice.ChoiceBody);
 	bIsSelectingChoices = false;
@@ -283,6 +285,11 @@ void ASweetDreamsDialogueManager::EndDialogue()
 }
 
 void ASweetDreamsDialogueManager::MulticastEndDialogue_Implementation()
+{
+	EndDialogue_Internal();
+}
+
+void ASweetDreamsDialogueManager::EndDialogue_Internal()
 {
 	bIsDialogueActive = false;
 	CurrentDialogue = FSweetDreamsDialogue();
@@ -468,8 +475,8 @@ void ASweetDreamsDialogueManager::GetDialoguesFromData(UDialogueData* Data)
 
 void ASweetDreamsDialogueManager::OnRep_DialogueData()
 {
+	Dialogues.Empty();
 	if (!IsValid(DialogueData)) return;
-	UE_LOG(LogTemp, Warning, TEXT("Replicating dialogue data."));
 	UpdateDialogueName(DialogueData->Name);
 	Dialogues = DialogueData->Dialogues;
 }

@@ -32,7 +32,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void SkipAnimatedDialogue();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
-	void ApplyChoiceAndContinue(FChoice Choice);
+	void SelectChoiceAndUpdate(FChoice Choice);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void EndDialogue();
 	//
@@ -73,6 +73,9 @@ protected:
 	void MulticastUpdateDialogue();
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastEndDialogue();
+	void StartDialogue_Internal(const float& ViewBlend);
+	void UpdateDialogue_Internal();
+	void EndDialogue_Internal();
 
 	void CreateShowWidget();
 	void ToggleCharacterVisibility(bool bVisible = true);
@@ -107,10 +110,8 @@ protected:
 	TArray<FSweetDreamsDialogueLog> DialogueLog;
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FSweetDreamsDialogue CurrentDialogue;
-	UPROPERTY(BlueprintReadWrite, ReplicatedUsing=OnRep_CurrentDialogue, Category = "Dialogue")
+	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
 	int32 CurrentDialogueID = -1;
-	UFUNCTION(Category = "Dialogue")
-	void OnRep_CurrentDialogue();
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue Sequence")
 	class ALevelSequenceActor* CurrentSequenceActor = nullptr;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue Sequence")

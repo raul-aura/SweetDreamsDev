@@ -34,13 +34,20 @@ public:
 	void OnSequenceStarted();
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void OnSequenceEnded();
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
+	void OnAnimatedDialogueStarted();
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
+	void OnAnimatedDialogueFinished();
+	
 	//
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void ShowChoices();
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void HideChoices();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
-	void SelectChoice(FChoice ChoiceSelected);
+	void SelectChoice(FChoice Choice);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
+	void SelectChoiceByIndex(int32 Choice);
 
 protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")

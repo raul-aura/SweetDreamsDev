@@ -9,12 +9,11 @@
 #include "GameFramework/GameState.h"
 #include "GameFramework/PlayerState.h"
 #include "Game/LoadingWidget.h"
-#include "Game/SweetDreamsGameSession.h"
+#include "GameFramework/GameSession.h"
 #include "Player/SweetDreamsPlayerController.h"
 
 ASweetDreamsGameMode::ASweetDreamsGameMode()
 {
-	GameSessionClass = ASweetDreamsGameSession::StaticClass();
 	DefaultPawnClass = ASweetDreamsCharacter::StaticClass();
 	PlayerControllerClass = ASweetDreamsPlayerController::StaticClass();
 	HUDClass = ASweetDreamsHUD::StaticClass();
@@ -39,6 +38,7 @@ void ASweetDreamsGameMode::BeginPlay()
 void ASweetDreamsGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
+	ConnectedPlayers.Add(NewPlayer);
 	if (ASweetDreamsPlayerController* DreamController = Cast<ASweetDreamsPlayerController>(NewPlayer))
 	{
 		CreateLoadingWidget(LoadingWidgetClass, DreamController);
@@ -46,9 +46,14 @@ void ASweetDreamsGameMode::PostLogin(APlayerController* NewPlayer)
 	}
 }
 
-ASweetDreamsGameSession* ASweetDreamsGameMode::GetSweetDreamsGameSession() const
+void ASweetDreamsGameMode::Logout(AController* Exiting)
 {
-	return Cast<ASweetDreamsGameSession>(GameSession);
+	APlayerController* ExitingPlayer = Cast<APlayerController>(Exiting);
+	if (ConnectedPlayers.Num() > 0 && IsValid(ExitingPlayer) && ConnectedPlayers.Contains(ExitingPlayer))
+	{
+		ConnectedPlayers.Remove(ExitingPlayer);
+	}
+	Super::Logout(Exiting);
 }
 
 void ASweetDreamsGameMode::CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class, ASweetDreamsPlayerController* Player)
@@ -94,6 +99,35 @@ void ASweetDreamsGameMode::LevelLoadFinished(TSoftObjectPtr<UWorld> LoadingLevel
 			DreamController->Client_LoadingEnd();
 		}
 	}
+}
+
+bool ASweetDreamsGameMode::KickPlayer(APlayerController* KickedPlayer, const FText& KickReason)
+{
+	if (IsValid(GameSession) && IsValid(KickedPlayer))
+	{
+		return GameSession->KickPlayer(KickedPlayer, KickReason);
+	}
+	return false;
+}
+
+TArray<APlayerController*> ASweetDreamsGameMode::GetConnectedPlayers(bool bExcludeLocalPlayer) const
+{
+	if (bExcludeLocalPlayer)
+	{
+		TArray<APlayerController*> PlayersNoLocal = ConnectedPlayers;
+		APlayerController* LocalPlayerC = nullptr;
+		for (auto& Player : PlayersNoLocal)
+		{
+			if (IsValid(Player) && Player->IsLocalController())
+			{
+				LocalPlayerC = Player;
+				break;
+			}
+		}
+		if (IsValid(LocalPlayerC)) PlayersNoLocal.Remove(LocalPlayerC);
+		return PlayersNoLocal;
+	}
+	return ConnectedPlayers;
 }
 
 
