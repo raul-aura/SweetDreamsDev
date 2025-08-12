@@ -21,6 +21,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
@@ -34,9 +35,13 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
 	float RunSpeed = 900.f;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
+	float CrouchSpeed = 400.f;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
 	float MaxRunTime = 0.f;
-	UPROPERTY(BlueprintReadOnly, Category = "Core")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_Run, Category = "Core")
 	bool bIsRunning = false;
+	UFUNCTION(Category = "Core")
+	void OnRep_Run();
 	UPROPERTY(BlueprintReadOnly, Category = "Core")
 	float CurrentRunTime = 0.f;
 	UPROPERTY(BlueprintReadOnly, Category = "Core")
@@ -44,23 +49,28 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
 	bool bCanMove = true;
-	UPROPERTY(BlueprintReadWrite, Category = "Core")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
 	bool bCanRun = true;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
 	bool bCanMoveCamera = true;
 
+	UFUNCTION(Server, Reliable)
+	void ServerRun(bool bRunning);
+	void Run_Internal();
+	void StopRunning_Internal();
+
 public:
 	//
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	virtual void MoveForward(float Value);
+	void MoveForward(float Value);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	virtual void MoveRight(float Value);
+	void MoveRight(float Value);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	virtual void Run();
+	void Run();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	virtual void StopRunning();
+	void StopRunning();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	virtual void CameraVertical(float Value, float Sensitivity = 1.0f);
+	void CameraVertical(float Value, float Sensitivity = 1.0f);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	virtual void CameraHorizontal(float Value, float Sensitivity = 1.0f);
+	void CameraHorizontal(float Value, float Sensitivity = 1.0f);
 };

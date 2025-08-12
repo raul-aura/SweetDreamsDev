@@ -18,11 +18,11 @@ class SWEETDREAMS_API ISweetDreamsInteractInterface
 
 public:
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")
-	void OnInteract();
-
+	void OnInteract(AActor* InteractionInstigator);
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")
+	void OnBeingTraced(AActor* TraceInstigator);
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")
 	bool IsInteractable() const;
-
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")
 	FText GetInteractableName() const;
 };

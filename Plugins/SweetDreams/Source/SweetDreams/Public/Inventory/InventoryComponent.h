@@ -41,7 +41,7 @@ public:
 
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemAdded, FInventoryItem, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemAdded, FInventoryItem, Item, int32, Index);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemUsed, FInventoryItem, Item);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemInspected, FInventoryItem, Item);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemEquipped, FInventoryItem, Item);
@@ -66,7 +66,7 @@ public:
     static bool IsItemValid(const FInventoryItem& Item);
     //
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory", meta = (AdvancedDisplay = 2))
-    void AddItem(const TSoftObjectPtr<USweetDreamsItem>& ItemData, int32 Count = 1, bool bAddAsUnique = false);
+    void AddItem(USweetDreamsItem* ItemData, int32 Count = 1, bool bAddAsUnique = false);
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
     void UseItem(const FInventoryItem& Item);
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
@@ -79,7 +79,7 @@ public:
     void RemoveItem(UPARAM(ref) FInventoryItem& Item);
     //
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
-    bool HasItem(const TSoftObjectPtr<USweetDreamsItem>& ItemData, FInventoryItem& FoundItem) const;
+    bool HasItem(USweetDreamsItem* ItemData, FInventoryItem& FoundItem, int32& Index) const;
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
     FInventoryItem GetItemByIndex(int32 Index, bool& bFound) const;
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")

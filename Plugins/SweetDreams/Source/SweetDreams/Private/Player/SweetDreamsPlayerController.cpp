@@ -4,6 +4,7 @@
 #include "Player/SweetDreamsPlayerController.h"
 #include "Core/SweetDreamsBPLibrary.h"
 #include "Core/SweetDreamsSettings.h"
+#include "Player/SweetDreamsCharacter.h"
 #include "Game/LoadingWidget.h"
 
 ASweetDreamsCharacter* ASweetDreamsPlayerController::GetDreamCharacter() const
@@ -14,6 +15,54 @@ ASweetDreamsCharacter* ASweetDreamsPlayerController::GetDreamCharacter() const
 ASweetDreamsHUD* ASweetDreamsPlayerController::GetDreamHUD() const
 {
 	return GetHUD<ASweetDreamsHUD>();
+}
+
+void ASweetDreamsPlayerController::MoveForward(float Value)
+{
+	if (auto DreamChar = GetDreamCharacter())
+	{
+		DreamChar->MoveForward(Value);
+	}
+}
+
+void ASweetDreamsPlayerController::MoveRight(float Value)
+{
+	if (auto DreamChar = GetDreamCharacter())
+	{
+		DreamChar->MoveRight(Value);
+	}
+}
+
+void ASweetDreamsPlayerController::Run()
+{
+	if (auto DreamChar = GetDreamCharacter())
+	{
+		DreamChar->Run();
+	}
+}
+
+void ASweetDreamsPlayerController::StopRunning()
+{
+	if (auto DreamChar = GetDreamCharacter())
+	{
+		DreamChar->StopRunning();
+	}
+}
+
+void ASweetDreamsPlayerController::CameraVertical(float Value, float Sensitivity)
+{
+	if (auto DreamChar = GetDreamCharacter())
+	{
+		DreamChar->CameraVertical(Value, Sensitivity);
+	}
+}
+
+void ASweetDreamsPlayerController::CameraHorizontal(float Value, float Sensitivity)
+{
+	if (auto DreamChar = GetDreamCharacter())
+	{
+		DreamChar->CameraHorizontal(Value, Sensitivity);
+	}
 }
 
 void ASweetDreamsPlayerController::BeginPlay()

@@ -13,7 +13,7 @@ UInteractComponent::UInteractComponent()
 void UInteractComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	if (bDrawDebugSphere)
+	if (bDrawDebugRanged)
 	{
 		FVector CharacterLocation = GetOwner()->GetActorLocation();
 		DrawDebugSphere(GetWorld(), CharacterLocation, InteractRadius, 12, FColor::Green, false, -1.f, 0, 5.f);
@@ -29,21 +29,28 @@ void UInteractComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 TArray<AActor*> UInteractComponent::FindInteractablesInRange()
 {
-	ActorsWithinRange.Empty();
-	TArray<struct FOverlapResult> Overlaps;
-	FVector ThisLocation = GetOwner()->GetActorLocation();
-	FCollisionShape Sphere = FCollisionShape::MakeSphere(InteractRadius);
+	ActorsWithinRange.Reset();
+	FVector Origin = GetOwner()->GetActorLocation();
+	FCollisionShape Shape = MakeRangedShape();
 	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(GetOwner());
-	TArray<AActor*> ChildActors;
-	GetOwner()->GetAllChildActors(ChildActors);
-	QueryParams.AddIgnoredActors(ChildActors);
-	bool bActorsFound = GetWorld()->OverlapMultiByObjectType(Overlaps, ThisLocation, FQuat::Identity, FCollisionObjectQueryParams::AllObjects, Sphere, QueryParams);
-	for (FOverlapResult Result : Overlaps)
+	QueryParams.AddIgnoredActors(GetIgnoredActors());
+	TArray<FOverlapResult> Overlaps;
+	if (GetWorld()->OverlapMultiByObjectType(Overlaps, Origin, FQuat::Identity, FCollisionObjectQueryParams::AllObjects, Shape, QueryParams))
 	{
-		if (Result.Actor->Implements<USweetDreamsInteractInterface>())
+		for (const FOverlapResult& Result : Overlaps)
 		{
-			ActorsWithinRange.Add(Result.GetActor());
+			AActor* HitActor = Result.GetActor();
+			if (!IsValid(HitActor)) continue;
+			const bool bIsInteractable = HitActor->Implements<USweetDreamsInteractInterface>();
+
+			if (!bLimitToInteractableInterface || bIsInteractable)
+			{
+				ActorsWithinRange.Add(HitActor);
+			}
+			if (bIsInteractable)
+			{
+				ISweetDreamsInteractInterface::Execute_OnBeingTraced(HitActor, GetOwner());
+			}
 		}
 	}
 	return ActorsWithinRange;
@@ -51,22 +58,32 @@ TArray<AActor*> UInteractComponent::FindInteractablesInRange()
 
 AActor* UInteractComponent::FindInteractableTraced()
 {
+
 	FHitResult HitResult;
 	UCameraComponent* Camera = GetOwner()->FindComponentByClass<UCameraComponent>();
 	FVector Start = Camera->GetComponentLocation();
 	FVector End = Start + (Camera->GetForwardVector() * InteractTraceDistance);
 	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(GetOwner());
-	TArray<AActor*> ChildActors;
-	GetOwner()->GetAllChildActors(ChildActors);
-	QueryParams.AddIgnoredActors(ChildActors);
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, QueryParams);
+	QueryParams.AddIgnoredActors(GetIgnoredActors());
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, TraceChannel, QueryParams);
 	if (bHit)
 	{
 		AActor* HitActor = HitResult.GetActor();
-		if (HitActor && HitActor->Implements<USweetDreamsInteractInterface>())
+		if (IsValid(HitActor))
 		{
-			ActorTraceHit = HitActor;
+			const bool bIsInteractable = HitActor->Implements<USweetDreamsInteractInterface>();
+			if (!bLimitToInteractableInterface || bIsInteractable)
+			{
+				ActorTraceHit = HitActor;
+			}
+			else if (bLimitToInteractableInterface && !bIsInteractable)
+			{
+				ActorTraceHit = nullptr;
+			}
+			if (bIsInteractable)
+			{
+				ISweetDreamsInteractInterface::Execute_OnBeingTraced(HitActor, GetOwner());
+			}
 		}
 		else
 		{
@@ -80,15 +97,52 @@ AActor* UInteractComponent::FindInteractableTraced()
 	return ActorTraceHit;
 }
 
-void UInteractComponent::Interact(bool bUseInRange, int32 RangeIndex)
+bool UInteractComponent::InteractTraced(AActor*& ActorTraced)
 {
-	AActor* InteractActor = ActorTraceHit;
-	if (bUseInRange)
+	if (!IsValid(ActorTraceHit)) return false;
+	ActorTraced = ActorTraceHit;
+	return InteractActor(ActorTraced);
+}
+
+bool UInteractComponent::InteractRanged(int32 Index, TArray<AActor*>& ActorsFound)
+{
+	if (ActorsWithinRange.Num() == 0 || !ActorsWithinRange.IsValidIndex(Index)) return false;
+	return InteractActor(ActorsWithinRange[Index]);
+}
+
+bool UInteractComponent::InteractActor(AActor* Interactable)
+{
+	if (IsValid(Interactable) && Interactable->Implements<USweetDreamsInteractInterface>())
 	{
-		if(ActorsWithinRange.IsValidIndex(RangeIndex)) InteractActor = ActorsWithinRange[RangeIndex];
+		ISweetDreamsInteractInterface::Execute_OnInteract(Interactable, GetOwner());
+		return true;
 	}
-	if (InteractActor && ISweetDreamsInteractInterface::Execute_IsInteractable(InteractActor))
+	return false;
+}
+
+FCollisionShape UInteractComponent::MakeRangedShape() const
+{
+	switch (RangedShape)
 	{
-		ISweetDreamsInteractInterface::Execute_OnInteract(InteractActor);
+	case ERangedTraceShape::Sphere: return FCollisionShape::MakeSphere(InteractRadius);
+	case ERangedTraceShape::Box:    return FCollisionShape::MakeBox(FVector(InteractRadius));
+	case ERangedTraceShape::Capsule:return FCollisionShape::MakeCapsule(InteractRadius, InteractHalfHeight);
+	default:                        return FCollisionShape::MakeSphere(InteractRadius);
 	}
+}
+
+TArray<AActor*> UInteractComponent::GetIgnoredActors() const
+{
+	TArray<AActor*> IgnoredActors;
+	if (bIgnoreOwner)
+	{
+		IgnoredActors.AddUnique(GetOwner());
+	}
+	if (bIgnoreChildActors)
+	{
+		TArray<AActor*> ChildActors;
+		GetOwner()->GetAllChildActors(ChildActors);
+		IgnoredActors.Append(ChildActors);
+	}
+	return IgnoredActors;
 }

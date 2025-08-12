@@ -7,6 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Player/MulticameraComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "Kismet/KismetStringLibrary.h"
 
 ASweetDreamsCharacter::ASweetDreamsCharacter()
@@ -38,11 +39,18 @@ ASweetDreamsCharacter::ASweetDreamsCharacter()
 	AddOwnedComponent(MulticameraComponent);
 }
 
+void ASweetDreamsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ASweetDreamsCharacter, bIsRunning);
+}
+
 void ASweetDreamsCharacter::BeginPlay()
 {
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+		GetCharacterMovement()->MaxWalkSpeedCrouched = CrouchSpeed;
 	}
 	Super::BeginPlay();
 }
@@ -71,26 +79,79 @@ void ASweetDreamsCharacter::MoveRight(float Value)
 
 void ASweetDreamsCharacter::Run()
 {
-	if (!bCanMove || !bCanRun) return;
-	if (MaxRunTime > 0.f && (CurrentRunTime >= MaxRunTime)) return;
-	bIsRunning = true;
-	GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
-	if (MaxRunTime <= 0.f) return;
-	GetWorldTimerManager().SetTimer(RunTimer, [this]() {
-		CurrentRunTime += GetWorld()->GetDeltaSeconds();
-		if (CurrentRunTime >= MaxRunTime)
-		{
-			StopRunning();
-		}
-		}, GetWorld()->GetDeltaSeconds(), true);
+	if (HasAuthority())
+	{
+		Run_Internal();
+	}
+	else 
+	{
+		ServerRun(true);
+	}
 }
 
 void ASweetDreamsCharacter::StopRunning()
 {
+	if (HasAuthority())
+	{
+		StopRunning_Internal();
+	}
+	else
+	{
+		ServerRun(false);
+	}
+}
+
+void ASweetDreamsCharacter::ServerRun_Implementation(bool bRunning)
+{
+	if (bRunning)
+	{
+		Run_Internal();
+	}
+	else 
+	{
+		StopRunning_Internal();
+	}
+}
+
+void ASweetDreamsCharacter::Run_Internal()
+{
+	if (!bCanMove || !bCanRun) return;
+	if (MaxRunTime > 0.f && (CurrentRunTime >= MaxRunTime)) return;
+	bIsRunning = true;
+	OnRep_Run();
+}
+
+void ASweetDreamsCharacter::StopRunning_Internal()
+{
 	bIsRunning = false;
-	CurrentRunTime = 0.f;
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-	GetWorldTimerManager().ClearTimer(RunTimer);
+	OnRep_Run();
+}
+
+void ASweetDreamsCharacter::OnRep_Run()
+{
+	if (!GetCharacterMovement()) return;
+	GetCharacterMovement()->MaxWalkSpeed = bIsRunning ? RunSpeed : WalkSpeed;
+	//if (bIsRunning)
+	//{
+	//	if (MaxRunTime > 0.f && !GetWorldTimerManager().IsTimerActive(RunTimer))
+	//	{
+	//		const float TickInterval = 0.1f;
+	//		GetWorldTimerManager().SetTimer(RunTimer, [this, TickInterval]()
+	//			{
+	//				CurrentRunTime += TickInterval;
+	//				if (CurrentRunTime >= MaxRunTime)
+	//				{
+	//					StopRunning();
+	//				}
+	//			}, TickInterval, true);
+	//	}
+	//}
+	//else
+	//{
+	//	CurrentRunTime = 0.f;
+	//	GetWorldTimerManager().ClearTimer(RunTimer);
+	//}
+	GetCharacterMovement()->bNetworkUpdateReceived = true;
 }
 
 void ASweetDreamsCharacter::CameraVertical(float Value, float Sensitivity)

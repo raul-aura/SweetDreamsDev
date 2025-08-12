@@ -42,36 +42,29 @@ bool UInventoryComponent::IsItemValid(const FInventoryItem& Item)
     return Item.IsItemValid();
 }
 
-void UInventoryComponent::AddItem(const TSoftObjectPtr<USweetDreamsItem>& ItemData, int32 Count, bool bAddAsUnique)
+void UInventoryComponent::AddItem(USweetDreamsItem* ItemData, int32 Count, bool bAddAsUnique)
 {
-    if (ItemData.IsValid())
+    if (!IsValid(ItemData) || Count <= 0) return;
+    int32 Index;
+    FInventoryItem ExistingItem;
+    if (!bAddAsUnique && HasItem(ItemData, ExistingItem, Index))
     {
-        USweetDreamsItem* ItemObject = ItemData.Get();
-        if (!bAddAsUnique)
+        Items[Index].Count += Count;
+        for (auto Event : Items[Index].ItemData->ItemEvents)
         {
-            for (FInventoryItem& ItemF : Items)
-            {
-                if (ItemF.ItemData == ItemObject)
-                {
-                    ItemF.Count += Count;
-                    for (auto Event : ItemF.ItemData->ItemEvents)
-                    {
-                        Event->OnAdded(GetOwner(), Count);
-                    }
-                    OnItemAdded.Broadcast(ItemF);
-                    return;
-                }
-            }
+            Event->OnAdded(GetOwner(), Count);
         }
-        FInventoryItem NewItem = FInventoryItem(ItemObject);
-        NewItem.ItemData->AssignItemToEvents();
-        for (auto Event : NewItem.ItemData->ItemEvents)
-        {
-            Event->OnAdded(GetOwner(), 1);
-        }
-        Items.Add(FInventoryItem(ItemObject));
-        OnItemAdded.Broadcast(NewItem);
+        OnItemAdded.Broadcast(Items[Index], Index);
+        return;
     }
+    FInventoryItem NewItem(ItemData);
+    NewItem.ItemData->AssignItemToEvents();
+    for (auto Event : NewItem.ItemData->ItemEvents)
+    {
+        Event->OnAdded(GetOwner(), Count);
+    }
+    Index = Items.Add(NewItem);
+    OnItemAdded.Broadcast(NewItem, Index);
 }
 
 void UInventoryComponent::UseItem(const FInventoryItem& Item)
@@ -138,17 +131,16 @@ void UInventoryComponent::RemoveItem(UPARAM(ref) FInventoryItem& Item)
     }
 }
 
-bool UInventoryComponent::HasItem(const TSoftObjectPtr<USweetDreamsItem>& ItemData, FInventoryItem& FoundItem) const
+bool UInventoryComponent::HasItem(USweetDreamsItem* ItemData, FInventoryItem& FoundItem, int32& Index) const
 {
-    if (ItemData.IsValid())
+    if (!IsValid(ItemData)) return false;
+    for (int32 i = 0; i < Items.Num(); i++)
     {
-        for (const FInventoryItem& ItemF : Items)
+        if (Items[i].ItemData == ItemData)
         {
-            if (ItemF.ItemData == ItemData)
-            {
-                FoundItem = ItemF;
-                return true;
-            }
+            FoundItem = Items[i];
+            Index = i;
+            return true;
         }
     }
     return false;

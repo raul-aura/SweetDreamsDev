@@ -23,7 +23,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	ASweetDreamsHUD* GetDreamHUD() const;
 
-
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void MoveForward(float Value);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void MoveRight(float Value);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void Run();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void StopRunning();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void CameraVertical(float Value, float Sensitivity = 1.0f);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void CameraHorizontal(float Value, float Sensitivity = 1.0f);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player", meta = (DisplayName = "Toggle Input (Timer)"))
 	void ToggleInputTimer(float Duration = 1.f);
 
