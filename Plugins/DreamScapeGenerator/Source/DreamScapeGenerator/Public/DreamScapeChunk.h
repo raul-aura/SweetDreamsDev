@@ -88,7 +88,7 @@ private:
 
 	uint16 GetBlock(int32 X, int32 Y, int32 Z) const
 	{
-		return InBounds(X, Y, Z) ? Blocks[Index(X, Y, Z)] : UINT16_MAX;
+		return InBounds(X, Y, Z) ? Blocks[Index(X, Y, Z)] : 0;
 	}
 
 	uint16 GetBlock(const FIntVector Location) const

@@ -104,6 +104,7 @@ void ADreamScapeChunk::GenerateMesh()
 {
 	VertexData.Reset();
 	TriangleData.Reset();
+	Normals.Reset();
 	UVData.Reset();
 	Colors.Reset();
 	VertexCount = 0;
@@ -235,14 +236,7 @@ void ADreamScapeChunk::CreateQuad(const FMask Mask,const FIntVector AxisMask,con
 {
 	const auto Normal = FVector(AxisMask * Mask.Normal);
 	const auto Color = FColor(0, 0, 0, GetTextureIndex(Mask.Block, Normal));
-
-	VertexData.Append({
-		FVector(V1) * 100,
-		FVector(V2) * 100,
-		FVector(V3) * 100,
-		FVector(V4) * 100
-		});
-
+	VertexData.Append({FVector(V1) * 100,FVector(V2) * 100,FVector(V3) * 100,FVector(V4) * 100});
 	TriangleData.Append({
 		VertexCount,
 		VertexCount + 2 + Mask.Normal,
@@ -250,22 +244,9 @@ void ADreamScapeChunk::CreateQuad(const FMask Mask,const FIntVector AxisMask,con
 		VertexCount + 3,
 		VertexCount + 1 - Mask.Normal,
 		VertexCount + 1 + Mask.Normal
-		});
-
-	Normals.Append({
-		Normal,
-		Normal,
-		Normal,
-		Normal
-		});
-
-	Colors.Append({
-		Color,
-		Color,
-		Color,
-		Color
-		});
-
+	});
+	Normals.Append({Normal,Normal,Normal,Normal});
+	Colors.Append({Color,Color,Color,Color});
 	if (Normal.X == 1 || Normal.X == -1)
 	{
 		UVData.Append({
@@ -273,7 +254,7 @@ void ADreamScapeChunk::CreateQuad(const FMask Mask,const FIntVector AxisMask,con
 			FVector2D(0, Height),
 			FVector2D(Width, 0),
 			FVector2D(0, 0),
-			});
+		});
 	}
 	else
 	{
@@ -282,9 +263,8 @@ void ADreamScapeChunk::CreateQuad(const FMask Mask,const FIntVector AxisMask,con
 			FVector2D(Height, 0),
 			FVector2D(0, Width),
 			FVector2D(0, 0),
-			});
+		});
 	}
-
 	VertexCount += 4;
 }
 
@@ -294,7 +274,7 @@ void ADreamScapeChunk::CreateQuad(const FMask Mask,const FIntVector AxisMask,con
 uint8 ADreamScapeChunk::GetTextureIndex(uint16 BlockID, const FVector Normal) const
 {
 	if (Normal == FVector::UpVector || BlockID == 0) return 0;
-	return 1;
+	return FMath::RandRange(0, 255);
 }
 
 

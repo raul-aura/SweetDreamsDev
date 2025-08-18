@@ -2,7 +2,6 @@
 
 #include "DreamScapeChunkGenerator.h"
 #include "DreamScapeChunk.h"
-#include "GreedyChunk.h"
 #include "EngineUtils.h"
 
 ADreamScapeChunkGenerator::ADreamScapeChunkGenerator()
@@ -41,7 +40,7 @@ void ADreamScapeChunkGenerator::GenerateChunks()
 		{
 			if (bGenerateInZAxis)
 			{
-				for (int32 z = -GenerationRadius; z <= GenerationRadius; z++)
+				for (int32 z = -GenerationRadius; z <= GenerationRadius; z++) // change to only spawn below actor location. add new variable Depth
 				{
 					FIntVector Coord(x, y, z);
 					const FVector Location = FVector(x * ChunkSize * BlockSize, y * ChunkSize * BlockSize, z * ChunkSize * BlockSize);
@@ -57,13 +56,11 @@ void ADreamScapeChunkGenerator::GenerateChunks()
 			{
 				FIntVector Coord(x, y, 0);
 				const FVector Location = FVector(x * ChunkSize * BlockSize, y * ChunkSize * BlockSize, GetActorLocation().Z * ChunkSize * BlockSize);
-				//ADreamScapeChunk* Chunk = GetWorld()->SpawnActor<ADreamScapeChunk>(Location, FRotator::ZeroRotator);
-				AGreedyChunk* Chunk = GetWorld()->SpawnActor<AGreedyChunk>(Location, FRotator::ZeroRotator);
+				ADreamScapeChunk* Chunk = GetWorld()->SpawnActor<ADreamScapeChunk>(Location, FRotator::ZeroRotator);
 				if (IsValid(Chunk))
 				{
-					//Chunk->Init(ChunkSize, BlockSize, Coord);
-					Chunk->Setup();
-					//GeneratedChunks.Add(Coord, Chunk);
+					Chunk->Init(ChunkSize, BlockSize, Coord);
+					GeneratedChunks.Add(Coord, Chunk);
 				}
 			}
 		}
