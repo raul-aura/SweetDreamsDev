@@ -17,17 +17,13 @@
 	"Modules": [
 		{
 			"Name": "DreamScapeGenerator",
-			"Type": "Editor",
+			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
 		{
 			"Name": "ProceduralMeshComponent",
-			"Enabled": true
-		},
-		{
-			"Name": "UnrealFastNoise2",
 			"Enabled": true
 		}
 	]

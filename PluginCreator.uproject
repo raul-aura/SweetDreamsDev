@@ -82,10 +82,6 @@
 			]
 		},
 		{
-			"Name": "UnrealFastNoise2",
-			"Enabled": true
-		},
-		{
 			"Name": "DreamScapeGenerator",
 			"Enabled": true
 		}
