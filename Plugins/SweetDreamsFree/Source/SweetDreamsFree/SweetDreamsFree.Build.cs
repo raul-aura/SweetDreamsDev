@@ -1,18 +1,17 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
-using System.IO;
 
-public class DreamScapeGenerator : ModuleRules
+public class SweetDreamsFree : ModuleRules
 {
-	public DreamScapeGenerator(ReadOnlyTargetRules Target) : base(Target)
+	public SweetDreamsFree(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-
+		
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
-            }
+			}
 			);
 				
 		
@@ -29,7 +28,7 @@ public class DreamScapeGenerator : ModuleRules
 				"Core",
 				// ... add other public dependencies that you statically link with here ...
 			}
-            );
+			);
 			
 		
 		PrivateDependencyModuleNames.AddRange(
@@ -39,10 +38,6 @@ public class DreamScapeGenerator : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"InputCore",
-				"UnrealEd",
-				"LevelEditor",
-				"ProceduralMeshComponent",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
@@ -54,6 +49,5 @@ public class DreamScapeGenerator : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
-
-    }
+	}
 }

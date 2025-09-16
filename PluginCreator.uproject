@@ -80,10 +80,6 @@
 				"Win64",
 				"Android"
 			]
-		},
-		{
-			"Name": "DreamScapeGenerator",
-			"Enabled": true
 		}
 	]
 }
