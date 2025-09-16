@@ -1,14 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Game/SweetDreamsGameMode.h"
 #include "Core/SweetDreamsBPLibrary.h"
 #include "Player/SweetDreamsCharacter.h"
 #include "Core/SweetDreamsSettings.h"
-#include "Player/SweetDreamsHUD.h"
 #include "GameFramework/GameState.h"
 #include "GameFramework/PlayerState.h"
-#include "Game/LoadingWidget.h"
 #include "GameFramework/GameSession.h"
 #include "Player/SweetDreamsPlayerController.h"
 

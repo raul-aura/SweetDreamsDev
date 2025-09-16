@@ -7,7 +7,6 @@
 #include "SweetDreamsGameMode.generated.h"
 
 class USweetDreamsCore;
-class ULoadingWidget;
 class ASweetDreamsPlayerController;
 struct FDreamUserSettings;
 

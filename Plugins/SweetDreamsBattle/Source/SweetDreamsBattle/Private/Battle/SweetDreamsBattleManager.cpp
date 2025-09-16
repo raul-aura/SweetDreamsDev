@@ -4,7 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Game/SweetDreamsWidget.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Player/MulticameraComponent.h"
+//#include "Player/MulticameraComponent.h"
 #include "Player/BattlerDataComponent.h"
 #include "Player/BattleCharacter.h"
 #include "Player/BattleNumberWidget.h"
@@ -19,8 +19,8 @@ ASweetDreamsBattleManager::ASweetDreamsBattleManager()
 	BattleCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Battle Camera"));
 	BattleCamera->SetupAttachment(BattleRoot);
 
-	MulticameraComponent = CreateDefaultSubobject<UMulticameraComponent>(TEXT("Multicamera Component"));
-	AddOwnedComponent(MulticameraComponent);
+	//MulticameraComponent = CreateDefaultSubobject<UMulticameraComponent>(TEXT("Multicamera Component"));
+	//AddOwnedComponent(MulticameraComponent);
 
 	DamageIndicatorClass = UBattleNumberWidget::StaticClass();
 }
@@ -272,11 +272,11 @@ void ASweetDreamsBattleManager::ChangeCameraView(ECameraView NewView, AActor* Se
 		SelfFocus = this;
 	}
 	ChangeCameraFocus(SelfFocus, BlendTime);
-	UMulticameraComponent* Multicamera = SelfFocus->FindComponentByClass<UMulticameraComponent>();
-	if (IsValid(Multicamera) && Multicamera->GetAllPossibleViews().IsValidIndex(Index))
-	{
-		Multicamera->SetNewCameraView(Index, BlendTime);
-	}
+	//UMulticameraComponent* Multicamera = SelfFocus->FindComponentByClass<UMulticameraComponent>();
+	//if (IsValid(Multicamera) && Multicamera->GetAllPossibleViews().IsValidIndex(Index))
+	//{
+	//	Multicamera->SetNewCameraView(Index, BlendTime);
+	//}
 }
 
 void ASweetDreamsBattleManager::AddDamageToBattle(AActor* DamageOwner, float Damage, bool bApplyCalculations)

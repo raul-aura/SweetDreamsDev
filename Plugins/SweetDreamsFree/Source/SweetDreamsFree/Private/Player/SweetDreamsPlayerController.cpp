@@ -5,7 +5,6 @@
 #include "Core/SweetDreamsBPLibrary.h"
 #include "Core/SweetDreamsSettings.h"
 #include "Player/SweetDreamsCharacter.h"
-#include "Game/LoadingWidget.h"
 
 ASweetDreamsCharacter* ASweetDreamsPlayerController::GetDreamCharacter() const
 {
@@ -19,7 +18,7 @@ ASweetDreamsCharacter* ASweetDreamsPlayerController::GetDreamCharacter() const
 
 void ASweetDreamsPlayerController::MoveForward(float Value)
 {
-	if (auto DreamChar = GetDreamCharacter())
+	if (ASweetDreamsCharacter* DreamChar = GetDreamCharacter())
 	{
 		DreamChar->MoveForward(Value);
 	}
@@ -27,7 +26,7 @@ void ASweetDreamsPlayerController::MoveForward(float Value)
 
 void ASweetDreamsPlayerController::MoveRight(float Value)
 {
-	if (auto DreamChar = GetDreamCharacter())
+	if (ASweetDreamsCharacter* DreamChar = GetDreamCharacter())
 	{
 		DreamChar->MoveRight(Value);
 	}
@@ -35,7 +34,7 @@ void ASweetDreamsPlayerController::MoveRight(float Value)
 
 void ASweetDreamsPlayerController::Run()
 {
-	if (auto DreamChar = GetDreamCharacter())
+	if (ASweetDreamsCharacter* DreamChar = GetDreamCharacter())
 	{
 		DreamChar->Run();
 	}
@@ -43,7 +42,7 @@ void ASweetDreamsPlayerController::Run()
 
 void ASweetDreamsPlayerController::StopRunning()
 {
-	if (auto DreamChar = GetDreamCharacter())
+	if (ASweetDreamsCharacter* DreamChar = GetDreamCharacter())
 	{
 		DreamChar->StopRunning();
 	}
@@ -51,7 +50,7 @@ void ASweetDreamsPlayerController::StopRunning()
 
 void ASweetDreamsPlayerController::CameraVertical(float Value, float Sensitivity)
 {
-	if (auto DreamChar = GetDreamCharacter())
+	if (ASweetDreamsCharacter* DreamChar = GetDreamCharacter())
 	{
 		DreamChar->CameraVertical(Value, Sensitivity);
 	}
@@ -59,7 +58,7 @@ void ASweetDreamsPlayerController::CameraVertical(float Value, float Sensitivity
 
 void ASweetDreamsPlayerController::CameraHorizontal(float Value, float Sensitivity)
 {
-	if (auto DreamChar = GetDreamCharacter())
+	if (ASweetDreamsCharacter* DreamChar = GetDreamCharacter())
 	{
 		DreamChar->CameraHorizontal(Value, Sensitivity);
 	}
@@ -135,8 +134,3 @@ void ASweetDreamsPlayerController::ToggleInputTimer(float Duration)
 //		GetDreamHUD()->GetLoadingWidget()->OnLoadingFinish();
 //	}
 //}
-
-void ASweetDreamsPlayerController::ClientWasKicked_Implementation(const FText& KickReason)
-{
-	OnPlayerKicked(KickReason);
-}

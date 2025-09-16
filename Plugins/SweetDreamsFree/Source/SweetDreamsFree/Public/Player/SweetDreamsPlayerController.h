@@ -38,7 +38,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player", meta = (DisplayName = "Toggle Input (Timer)"))
 	void ToggleInputTimer(float Duration = 1.f);
 
-	UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
+	//UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
 	//void Client_CreateLoadingWidget(TSubclassOf<ULoadingWidget> WidgetClass);
 	//UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
 	//void Client_ShowLoadingWidget();
@@ -51,11 +51,10 @@ public:
 	//UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
 	//void Client_LoadingEnd();
 	
-	virtual void ClientWasKicked_Implementation(const FText& KickReason) override;
 	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core|Player")
 	void OnPlayerKicked(const FText& KickReason);
 
 protected:
-	UPROPERTY(BlueprintReadOnly, Category = "Loading Screen")
+	//UPROPERTY(BlueprintReadOnly, Category = "Loading Screen")
 	//ULoadingWidget* LoadingWidget = nullptr;
 };

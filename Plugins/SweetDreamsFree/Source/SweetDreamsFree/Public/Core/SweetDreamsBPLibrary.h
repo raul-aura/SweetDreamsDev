@@ -12,7 +12,7 @@ class ASweetDreamsGameMode;
 struct FBlueprintSessionResult;
 
 UCLASS()
-class SWEETDREAMS_API USweetDreamsBPLibrary : public UBlueprintFunctionLibrary
+class SWEETDREAMSFREE_API USweetDreamsBPLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_UCLASS_BODY()
 

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Game/SweetDreamsWidget.h"
-#include "Player/SweetDreamsHUD.h"
+//#include "Player/SweetDreamsHUD.h"
 
 USweetDreamsWidget::USweetDreamsWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -11,10 +11,10 @@ USweetDreamsWidget::USweetDreamsWidget(const FObjectInitializer& ObjectInitializ
 
 void USweetDreamsWidget::HideSelf()
 {
-	if (ASweetDreamsHUD* SweetDreamsHUD = Cast<ASweetDreamsHUD>(GetOwningPlayer()->GetHUD()))
-	{
-		SweetDreamsHUD->HideWidget(this);
-	}
+	//if (ASweetDreamsHUD* SweetDreamsHUD = Cast<ASweetDreamsHUD>(GetOwningPlayer()->GetHUD()))
+	//{
+	//	SweetDreamsHUD->HideWidget(this);
+	//}
 }
 
 void USweetDreamsWidget::HUDShow()

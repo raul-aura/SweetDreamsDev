@@ -306,14 +306,14 @@ void USweetDreamsCore::LoadLevel(TSoftObjectPtr<UWorld> Level)
 	ASweetDreamsGameMode* DreamGameMode = Cast<ASweetDreamsGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 	if (IsValid(DreamGameMode))
 	{
-		DreamGameMode->LevelLoadStarted(Level);
+		//DreamGameMode->LevelLoadStarted(Level);
 	}
 	FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
 	FStreamableDelegate StreamableDelegate;
 	StreamableDelegate.BindLambda([this, DreamGameMode, Level]() {
 		if (IsValid(DreamGameMode))
 		{
-			DreamGameMode->LevelLoadFinished(Level);
+			//DreamGameMode->LevelLoadFinished(Level);
 		}
 		});
 	StreamableManager.RequestAsyncLoad(AssetList, StreamableDelegate);

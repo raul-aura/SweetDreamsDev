@@ -11,8 +11,6 @@
 
 class USceneComponent;
 class USweetDreamsWidget;
-class ASweetDreamsHUD;
-class UMulticameraComponent;
 class ABattleCharacter;
 class UBattleNumberWidget;
 class UBattleElement;
@@ -65,8 +63,6 @@ protected:
 	// COMPONENTS
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
 	UCameraComponent* BattleCamera;
-	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
-	UMulticameraComponent* MulticameraComponent;
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
 	USceneComponent* BattleRoot;
 	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")

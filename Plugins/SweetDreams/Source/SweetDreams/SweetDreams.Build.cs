@@ -24,6 +24,7 @@ public class SweetDreams : ModuleRules
 			new string[]
 			{
 				"Core",
+				"SweetDreamsFree",
                 "AIModule",
                 "LevelSequence",
                 "MovieScene",

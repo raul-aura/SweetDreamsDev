@@ -4,11 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Player/SweetDreamsHUD.h"
+//#include "Player/SweetDreamsHUD.h"
 #include "SweetDreamsWidget.generated.h"
 
+UENUM(BlueprintType)
+enum class EInputMode : uint8
+{
+	GAMEANDUI = 0 UMETA(DisplayName = "Game and UI"),
+	GAME = 1 UMETA(DisplayName = "Game"),
+	UI = 2 UMETA(DisplayName = "UI")
+};
+
 UCLASS()
-class SWEETDREAMS_API USweetDreamsWidget : public UUserWidget
+class SWEETDREAMSFREE_API USweetDreamsWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
