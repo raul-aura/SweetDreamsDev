@@ -4,49 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "SweetDreamsItem.h"
 #include "InventoryComponent.generated.h"
 
-USTRUCT(BlueprintType)
-struct FInventoryItem
-{
-    GENERATED_BODY()
+class UInventoryItem;
+class USweetDreamsItem;
 
-public:
-    FInventoryItem()
-        :ItemData(nullptr),
-        Count(1),
-        bIsEquipping(false)
-    {}
-
-    FInventoryItem(USweetDreamsItem* InItemData)
-        : ItemData(InItemData),
-        Count(1),
-        bIsEquipping(false)
-    {}
-
-    bool IsItemValid() const
-    {
-        return IsValid(ItemData);
-    }
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
-    USweetDreamsItem* ItemData;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-    int32 Count;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-    bool bIsEquipping;
-
-};
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemAdded, FInventoryItem, Item, int32, Index);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemUsed, FInventoryItem, Item);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemInspected, FInventoryItem, Item);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemEquipped, FInventoryItem, Item);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemUnequipped, FInventoryItem, Item);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemRemoved, FInventoryItem, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemAdded, UInventoryItem*, Item, int32, Index);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemUsed, UInventoryItem*, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemInspected, UInventoryItem*, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemEquipped, UInventoryItem*, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemUnequipped, UInventoryItem*, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemRemoved, UInventoryItem*, Item);
 
 UCLASS( ClassGroup = ("SweetDreams"), meta=(BlueprintSpawnableComponent))
 class SWEETDREAMS_API UInventoryComponent : public UActorComponent
@@ -61,31 +29,31 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Inventory")
 	static UInventoryComponent* GetInventoryFromActor(const AActor* Actor);
     UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Inventory")
-    static USweetDreamsItem* GetItemData(const FInventoryItem& Item, bool& ValidData);
-    UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Inventory")
-    static bool IsItemValid(const FInventoryItem& Item);
+    static USweetDreamsItem* GetItemData(UInventoryItem* Item, bool& ValidData);
     //
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory", meta = (AdvancedDisplay = 2))
-    void AddItem(USweetDreamsItem* ItemData, int32 Count = 1, bool bAddAsUnique = false);
+    int32 AddItem(UInventoryItem*& ItemAdded, USweetDreamsItem* ItemData, int32 Count = 1, bool bAddAsUnique = false);
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
-    void UseItem(const FInventoryItem& Item);
+    void UseItem(UPARAM(ref) UInventoryItem*& Item);
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
-    void InspectItem(const FInventoryItem& Item);
+    void InspectItem(UPARAM(ref) UInventoryItem*& Item);
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
-    void EquipItem(UPARAM(ref) FInventoryItem& Item);
+    void EquipItem(UPARAM(ref) UInventoryItem*& Item);
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
-    void UnequipItem(UPARAM(ref) FInventoryItem& Item);
+    void UnequipItem(UPARAM(ref) UInventoryItem*& Item);
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
-    void RemoveItem(UPARAM(ref) FInventoryItem& Item);
+    void RemoveItem(UPARAM(ref) UInventoryItem*& Item, int32 Count = 1);
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
+    void RemoveItemAll(UPARAM(ref) UInventoryItem*& Item);
     //
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
-    bool HasItem(USweetDreamsItem* ItemData, FInventoryItem& FoundItem, int32& Index) const;
+    bool HasItem(USweetDreamsItem* ItemData, UInventoryItem*& FoundItem, int32& Index) const;
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
-    FInventoryItem GetItemByIndex(int32 Index, bool& bFound) const;
+    UInventoryItem* GetItemByIndex(int32 Index, bool& bFound) const;
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
     void CleanInvalidItems();
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Inventory")
-    const TArray<FInventoryItem>& GetItems() const { return Items; }
+    const TArray<UInventoryItem*> GetItems() const { return Items; }
     //
     UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Core|Inventory")
     FOnItemAdded OnItemAdded;
@@ -103,5 +71,5 @@ public:
 protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated, Category = "Inventory")
-    TArray<FInventoryItem> Items;
+    TArray<UInventoryItem*> Items;
 };

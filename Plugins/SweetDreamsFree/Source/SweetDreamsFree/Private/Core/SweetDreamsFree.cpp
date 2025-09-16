@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "SweetDreamsFree.h"
+#include "Core/SweetDreamsFree.h"
 
 #define LOCTEXT_NAMESPACE "FSweetDreamsFreeModule"
 

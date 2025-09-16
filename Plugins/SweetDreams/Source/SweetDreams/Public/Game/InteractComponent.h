@@ -58,6 +58,7 @@ protected:
 	bool bDrawDebugLine = false;
 	UPROPERTY(BlueprintReadWrite, Category = "Interact")
 	AActor* ActorTraceHit;
+	void InvalidateActorTraced();
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Interact|Ranged", meta = (EditCondition = "bUseRangedInteraction"))
 	ERangedTraceShape RangedShape = ERangedTraceShape::Sphere;
@@ -69,6 +70,7 @@ protected:
 	bool bDrawDebugRanged = false;
 	UPROPERTY(BlueprintReadWrite, Category = "Interact")
 	TArray<AActor*> ActorsWithinRange;
+	void InvalidateActorsInRange(const TArray<AActor*>& PreviousActors);
 
 	FCollisionShape MakeRangedShape() const;
 

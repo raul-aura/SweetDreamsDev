@@ -18,12 +18,12 @@
 		{
 			"Name": "SweetDreamsBattle",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
 		{
-			"Name": "SweetDreams",
+			"Name": "SweetDreamsFree",
 			"Enabled": true
 		}
 	]

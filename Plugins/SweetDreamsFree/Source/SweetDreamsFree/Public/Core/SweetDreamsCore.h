@@ -19,7 +19,7 @@ enum class EPrintType : uint8
 };
 
 UCLASS(Category = "SweetDreams|Core")
-class SWEETDREAMS_API USweetDreamsCore : public UGameInstanceSubsystem
+class SWEETDREAMSFREE_API USweetDreamsCore : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 

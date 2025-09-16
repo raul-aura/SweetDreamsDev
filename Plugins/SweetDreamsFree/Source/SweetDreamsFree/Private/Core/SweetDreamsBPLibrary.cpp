@@ -233,6 +233,23 @@ bool USweetDreamsBPLibrary::IsMultipleOf(const float& Number, float Interval, fl
 	return FMath::IsNearlyZero(Reminder, Tolerance);
 }
 
+void USweetDreamsBPLibrary::ServerTravel(UObject* WorldContext, const FString& MapName, bool bIsListenServer)
+{
+	if (UWorld* World = GetValidWorld(WorldContext))
+	{
+		FString Options;
+		if (bIsListenServer)
+		{
+			Options = FString::Printf(TEXT("%s?listen"), *MapName);
+		}
+		else
+		{
+			Options = MapName;
+		}
+		World->ServerTravel(Options, true);
+	}
+}
+
 bool USweetDreamsBPLibrary::GetSessionSetting(FBlueprintSessionResult Result, FName Key, FString& Value)
 {
 	if (!Result.OnlineResult.IsValid()) return false;

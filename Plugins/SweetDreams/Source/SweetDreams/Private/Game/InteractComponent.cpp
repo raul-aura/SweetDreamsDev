@@ -29,6 +29,7 @@ void UInteractComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 TArray<AActor*> UInteractComponent::FindInteractablesInRange()
 {
+	TArray<AActor*> PreviousActors = ActorsWithinRange;
 	ActorsWithinRange.Reset();
 	FVector Origin = GetOwner()->GetActorLocation();
 	FCollisionShape Shape = MakeRangedShape();
@@ -42,23 +43,22 @@ TArray<AActor*> UInteractComponent::FindInteractablesInRange()
 			AActor* HitActor = Result.GetActor();
 			if (!IsValid(HitActor)) continue;
 			const bool bIsInteractable = HitActor->Implements<USweetDreamsInteractInterface>();
-
 			if (!bLimitToInteractableInterface || bIsInteractable)
 			{
 				ActorsWithinRange.Add(HitActor);
-			}
-			if (bIsInteractable)
-			{
-				ISweetDreamsInteractInterface::Execute_OnBeingTraced(HitActor, GetOwner());
+				if (!PreviousActors.Contains(HitActor) && bIsInteractable)
+				{
+					ISweetDreamsInteractInterface::Execute_OnBeginTrace(HitActor, GetOwner());
+				}
 			}
 		}
 	}
+	InvalidateActorsInRange(PreviousActors);
 	return ActorsWithinRange;
 }
 
 AActor* UInteractComponent::FindInteractableTraced()
 {
-
 	FHitResult HitResult;
 	UCameraComponent* Camera = GetOwner()->FindComponentByClass<UCameraComponent>();
 	FVector Start = Camera->GetComponentLocation();
@@ -74,25 +74,25 @@ AActor* UInteractComponent::FindInteractableTraced()
 			const bool bIsInteractable = HitActor->Implements<USweetDreamsInteractInterface>();
 			if (!bLimitToInteractableInterface || bIsInteractable)
 			{
-				ActorTraceHit = HitActor;
+				if (ActorTraceHit != HitActor)
+				{
+					InvalidateActorTraced();
+					ActorTraceHit = HitActor;
+					if (bIsInteractable)
+					{
+						ISweetDreamsInteractInterface::Execute_OnBeginTrace(HitActor, GetOwner());
+					}
+				}
 			}
-			else if (bLimitToInteractableInterface && !bIsInteractable)
+			else
 			{
-				ActorTraceHit = nullptr;
+				InvalidateActorTraced();
 			}
-			if (bIsInteractable)
-			{
-				ISweetDreamsInteractInterface::Execute_OnBeingTraced(HitActor, GetOwner());
-			}
-		}
-		else
-		{
-			ActorTraceHit = nullptr;
 		}
 	}
 	else
 	{
-		ActorTraceHit = nullptr;
+		InvalidateActorTraced();
 	}
 	return ActorTraceHit;
 }
@@ -118,6 +118,26 @@ bool UInteractComponent::InteractActor(AActor* Interactable)
 		return true;
 	}
 	return false;
+}
+
+void UInteractComponent::InvalidateActorTraced()
+{
+	if (IsValid(ActorTraceHit) && ActorTraceHit->Implements<USweetDreamsInteractInterface>())
+	{
+		ISweetDreamsInteractInterface::Execute_OnEndTrace(ActorTraceHit, GetOwner());
+	}
+	ActorTraceHit = nullptr;
+}
+
+void UInteractComponent::InvalidateActorsInRange(const TArray<AActor*>& PreviousActors)
+{
+	for (AActor* PrevActor : PreviousActors)
+	{
+		if (!ActorsWithinRange.Contains(PrevActor) && IsValid(PrevActor) && PrevActor->Implements<USweetDreamsInteractInterface>())
+		{
+			ISweetDreamsInteractInterface::Execute_OnEndTrace(PrevActor, GetOwner());
+		}
+	}
 }
 
 FCollisionShape UInteractComponent::MakeRangedShape() const

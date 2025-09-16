@@ -6,7 +6,7 @@
 #include "Engine/DataAsset.h"
 #include "SweetDreamsItem.generated.h"
 
-class UItemEvent;
+class UItemParameters;
 
 UCLASS(Blueprintable, BlueprintType)
 class SWEETDREAMS_API USweetDreamsItem : public UDataAsset
@@ -23,11 +23,12 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item", meta = (MultiLine = true))
     FText Description;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
-    TSoftObjectPtr<UTexture2D> Icon;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual")
+    UTexture2D* Icon;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "Item")
-    TArray<UItemEvent*> ItemEvents;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual")
+    UStaticMesh* Mesh;
 
-    void AssignItemToEvents();
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "Extra")
+    TArray<UItemParameters*> ExtraParameters;
 };

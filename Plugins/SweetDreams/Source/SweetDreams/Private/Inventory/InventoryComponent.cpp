@@ -2,7 +2,8 @@
 
 #include "Inventory/InventoryComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "Inventory/ItemEvent.h"
+#include "Inventory/InventoryItem.h"
+#include "Inventory/SweetDreamsItem.h"
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -31,112 +32,108 @@ UInventoryComponent* UInventoryComponent::GetInventoryFromActor(const AActor* Ac
 	return Component;
 }
 
-USweetDreamsItem* UInventoryComponent::GetItemData(const FInventoryItem& Item, bool& ValidData)
+USweetDreamsItem* UInventoryComponent::GetItemData(UInventoryItem* Item, bool& ValidData)
 {
-    ValidData = Item.IsItemValid();
-    return Item.ItemData;
+    return Item->GetItemData();
 }
 
-bool UInventoryComponent::IsItemValid(const FInventoryItem& Item)
+int32 UInventoryComponent::AddItem(UInventoryItem*& ItemAdded, USweetDreamsItem* ItemData, int32 Count, bool bAddAsUnique)
 {
-    return Item.IsItemValid();
-}
-
-void UInventoryComponent::AddItem(USweetDreamsItem* ItemData, int32 Count, bool bAddAsUnique)
-{
-    if (!IsValid(ItemData) || Count <= 0) return;
-    int32 Index;
-    FInventoryItem ExistingItem;
-    if (!bAddAsUnique && HasItem(ItemData, ExistingItem, Index))
+    int32 Index = -1;
+    if (!IsValid(ItemData) || Count <= 0) return Index;
+    UInventoryItem* Item = nullptr;
+    bool bCreated = false;
+    if (!bAddAsUnique && HasItem(ItemData, Item, Index))
     {
-        Items[Index].Count += Count;
-        for (auto Event : Items[Index].ItemData->ItemEvents)
-        {
-            Event->OnAdded(GetOwner(), Count);
-        }
-        OnItemAdded.Broadcast(Items[Index], Index);
-        return;
+        //HasItem filled Item and Index.
     }
-    FInventoryItem NewItem(ItemData);
-    NewItem.ItemData->AssignItemToEvents();
-    for (auto Event : NewItem.ItemData->ItemEvents)
+    else
     {
-        Event->OnAdded(GetOwner(), Count);
+        Item = NewObject<UInventoryItem>(this);
+        bCreated = true;
     }
-    Index = Items.Add(NewItem);
-    OnItemAdded.Broadcast(NewItem, Index);
+    if (IsValid(Item))
+    {
+        if (bCreated)
+        {
+            Item->UpdateItemData(ItemData);
+            Item->Amount = Count;
+            Index = Items.Add(Item);
+        }
+        else
+        {
+            Item->Amount += Count;
+        }
+        Item->OnAdded(GetOwner(), Count);
+        ItemAdded = Item;
+        OnItemAdded.Broadcast(Item, Index);
+    }
+    return Index;
 }
 
-void UInventoryComponent::UseItem(const FInventoryItem& Item)
+void UInventoryComponent::UseItem(UPARAM(ref) UInventoryItem*& Item)
 {
-    if (Item.IsItemValid())
+    if (IsValid(Item))
     {
-        for (auto* Event : Item.ItemData->ItemEvents)
-        {
-            Event->OnUsed(GetOwner());
-        }
+        Item->OnUsed(GetOwner());
         OnItemUsed.Broadcast(Item);
     }
 }
 
-void UInventoryComponent::InspectItem(const FInventoryItem& Item)
+void UInventoryComponent::InspectItem(UPARAM(ref) UInventoryItem*& Item)
 {
-    if (Item.IsItemValid())
+    if (IsValid(Item))
     {
-        for (auto* Event : Item.ItemData->ItemEvents)
-        {
-            Event->OnInspected(GetOwner());
-        }
+        Item->OnInspected(GetOwner());
         OnItemInspected.Broadcast(Item);
     }
 }
 
-void UInventoryComponent::EquipItem(UPARAM(ref) FInventoryItem& Item)
+void UInventoryComponent::EquipItem(UPARAM(ref) UInventoryItem*& Item)
 {
-    if (Item.IsItemValid())
+    if (IsValid(Item))
     {
-        Item.bIsEquipping = true;
-        for (auto* Event : Item.ItemData->ItemEvents)
-        {
-            Event->OnEquiped(GetOwner());
-        }
+        Item->bIsBeingEquiped = true;
+        Item->OnEquiped(GetOwner());
         OnItemEquipped.Broadcast(Item);
     }
 }
 
-void UInventoryComponent::UnequipItem(UPARAM(ref) FInventoryItem& Item)
+void UInventoryComponent::UnequipItem(UPARAM(ref) UInventoryItem*& Item)
 {
-    if (Item.IsItemValid())
+    if (IsValid(Item))
     {
-        Item.bIsEquipping = false;
-        for (auto* Event : Item.ItemData->ItemEvents)
-        {
-            Event->OnUnequiped(GetOwner());
-        }
+        Item->bIsBeingEquiped = false;
+        Item->OnUnequiped(GetOwner());
         OnItemUnequiped.Broadcast(Item);
     }
 }
 
-void UInventoryComponent::RemoveItem(UPARAM(ref) FInventoryItem& Item)
+void UInventoryComponent::RemoveItem(UPARAM(ref) UInventoryItem*& Item, int32 Count)
 {
-    if (Item.IsItemValid())
+    if (IsValid(Item))
     {
-        Item.Count = FMath::Max(Item.Count--, 0);
-        for (auto* Event : Item.ItemData->ItemEvents)
-        {
-            Event->OnRemoved(GetOwner());
-        }
+        Item->Amount = FMath::Max(Item->Amount - Count, 0);
+        Item->OnRemoved(GetOwner(), Count);
         OnItemRemoved.Broadcast(Item);
         CleanInvalidItems();
     }
 }
 
-bool UInventoryComponent::HasItem(USweetDreamsItem* ItemData, FInventoryItem& FoundItem, int32& Index) const
+void UInventoryComponent::RemoveItemAll(UPARAM(ref)UInventoryItem*& Item)
+{
+    if (IsValid(Item))
+    {
+        RemoveItem(Item, Item->Amount);
+    }
+}
+
+bool UInventoryComponent::HasItem(USweetDreamsItem* ItemData, UInventoryItem*& FoundItem, int32& Index) const
 {
     if (!IsValid(ItemData)) return false;
     for (int32 i = 0; i < Items.Num(); i++)
     {
-        if (Items[i].ItemData == ItemData)
+        if (IsValid(Items[i]) && Items[i]->GetItemData() == ItemData)
         {
             FoundItem = Items[i];
             Index = i;
@@ -146,7 +143,7 @@ bool UInventoryComponent::HasItem(USweetDreamsItem* ItemData, FInventoryItem& Fo
     return false;
 }
 
-FInventoryItem UInventoryComponent::GetItemByIndex(int32 Index, bool& bFound) const
+UInventoryItem* UInventoryComponent::GetItemByIndex(int32 Index, bool& bFound) const
 {
     bFound = false;
     if (Items.Num() > 0 && Items.IsValidIndex(Index))
@@ -154,14 +151,14 @@ FInventoryItem UInventoryComponent::GetItemByIndex(int32 Index, bool& bFound) co
         bFound = true;
         return Items[Index];
     }
-    return FInventoryItem();
+    return nullptr;
 }
 
 void UInventoryComponent::CleanInvalidItems()
 {
     for (int32 i = Items.Num() - 1; i >= 0; --i)
     {
-        if (Items.IsValidIndex(i) && Items[i].Count <= 0)
+        if (Items.IsValidIndex(i) && !IsValid(Items[i]) || Items[i]->Amount <= 0)
         {
             Items.RemoveAt(i);
         }

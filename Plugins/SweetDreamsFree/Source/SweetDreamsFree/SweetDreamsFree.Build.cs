@@ -26,6 +26,11 @@ public class SweetDreamsFree : ModuleRules
 			new string[]
 			{
 				"Core",
+                "DeveloperSettings",
+                "AIModule",
+                "UMG",
+                "OnlineSubsystem",
+                "OnlineSubsystemUtils",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

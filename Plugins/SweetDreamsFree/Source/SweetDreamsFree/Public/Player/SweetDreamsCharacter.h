@@ -12,12 +12,25 @@ class UCameraComponent;
 class UMulticameraComponent;
 
 UCLASS()
-class SWEETDREAMS_API ASweetDreamsCharacter : public ACharacter
+class SWEETDREAMSFREE_API ASweetDreamsCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
 	ASweetDreamsCharacter();
+
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
+	void MoveForward(float Value);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
+	void MoveRight(float Value);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
+	void Run();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
+	void StopRunning();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
+	void CameraVertical(float Value, float Sensitivity = 1.0f);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
+	void CameraHorizontal(float Value, float Sensitivity = 1.0f);
 
 protected:
 	virtual void BeginPlay() override;
@@ -59,18 +72,4 @@ protected:
 	void Run_Internal();
 	void StopRunning_Internal();
 
-public:
-	//
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	void MoveForward(float Value);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	void MoveRight(float Value);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	void Run();
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	void StopRunning();
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	void CameraVertical(float Value, float Sensitivity = 1.0f);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
-	void CameraHorizontal(float Value, float Sensitivity = 1.0f);
 };

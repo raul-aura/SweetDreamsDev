@@ -18,16 +18,12 @@
 		{
 			"Name": "SweetDreams",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
 		{
-			"Name": "OnlineSubsystem",
-			"Enabled": true
-		},
-		{
-			"Name": "OnlineSubsystemUtils",
+			"Name": "SweetDreamsFree",
 			"Enabled": true
 		}
 	]

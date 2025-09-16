@@ -76,6 +76,8 @@ public:
 	static bool IsMultipleOf(const float& Number, float Interval, float Tolerance = 0.01f);
 
 	// REPLICATION
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Replication", meta = (WorldContext = "WorldContext"))
+	static void ServerTravel(UObject* WorldContext, const FString& MapName, bool bIsListenServer);
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Replication")
 	static bool GetSessionSetting(FBlueprintSessionResult Result, FName Key, FString& Value);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Replication")

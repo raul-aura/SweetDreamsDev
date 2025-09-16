@@ -35,8 +35,8 @@ ASweetDreamsCharacter::ASweetDreamsCharacter()
 
 	GetCapsuleComponent()->SetCanEverAffectNavigation(true);
 
-	MulticameraComponent = CreateDefaultSubobject<UMulticameraComponent>("Multicamera Component");
-	AddOwnedComponent(MulticameraComponent);
+	//MulticameraComponent = CreateDefaultSubobject<UMulticameraComponent>("Multicamera Component");
+	//AddOwnedComponent(MulticameraComponent);
 }
 
 void ASweetDreamsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

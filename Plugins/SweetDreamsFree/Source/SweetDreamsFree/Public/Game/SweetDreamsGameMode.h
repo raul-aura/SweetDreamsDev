@@ -12,7 +12,7 @@ class ASweetDreamsPlayerController;
 struct FDreamUserSettings;
 
 UCLASS()
-class SWEETDREAMS_API ASweetDreamsGameMode : public AGameModeBase
+class SWEETDREAMSFREE_API ASweetDreamsGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 	
@@ -24,11 +24,11 @@ public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Logout(AController* Exiting) override;
 	
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
-	void CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class, ASweetDreamsPlayerController* Player);
-	void ShowLoadingWidget(ASweetDreamsPlayerController* Player);
-	void LevelLoadStarted(TSoftObjectPtr<UWorld> LoadingLevel);
-	void LevelLoadFinished(TSoftObjectPtr<UWorld> LoadingLevel);
+	//UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
+	//void CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class, ASweetDreamsPlayerController* Player);
+	//void ShowLoadingWidget(ASweetDreamsPlayerController* Player);
+	//void LevelLoadStarted(TSoftObjectPtr<UWorld> LoadingLevel);
+	//void LevelLoadFinished(TSoftObjectPtr<UWorld> LoadingLevel);
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
 	bool KickPlayer(APlayerController* KickedPlayer, const FText& KickReason);
@@ -39,8 +39,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Core")
 	USweetDreamsCore* SweetDreamsCore = nullptr;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen")
-	TSubclassOf<ULoadingWidget> LoadingWidgetClass;
+	//UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen")
+	//TSubclassOf<ULoadingWidget> LoadingWidgetClass;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen")
 	bool bShowOnBeginPlay = true;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen")
