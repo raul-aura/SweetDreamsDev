@@ -42,6 +42,19 @@ void UMulticameraComponent::UpdateCameraView()
 	ActiveCamera->SetRelativeLocationAndRotation(NewLocation, NewRotation);
 }
 
+void UMulticameraComponent::AddCameraView(FVector Location, FRotator Rotation, int32 Index)
+{
+	FCameraView NewView(Location, Rotation);
+	if (Index > 0)
+	{
+		CameraViews.Insert(NewView, Index);
+	}
+	else
+	{
+		CameraViews.Add(NewView);
+	}
+}
+
 void UMulticameraComponent::SetNewCameraView(int32 CameraToMatch, float BlendTime)
 {
 	if (CameraViews.Num() == 0 || !CameraViews.IsValidIndex(CameraToMatch) || !IsValid(ActiveCamera))
@@ -68,7 +81,7 @@ void UMulticameraComponent::SetActiveCamera(UPARAM(ref) UCameraComponent*& NewCa
 	ActiveCamera = NewCamera;
 }
 
-TArray<FCameraViews> UMulticameraComponent::GetAllPossibleViews() const
+TArray<FCameraView> UMulticameraComponent::GetAllPossibleViews() const
 {
 	return CameraViews;
 }

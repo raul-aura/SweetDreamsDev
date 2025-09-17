@@ -11,11 +11,6 @@ ASweetDreamsCharacter* ASweetDreamsPlayerController::GetDreamCharacter() const
 	return Cast<ASweetDreamsCharacter>(GetCharacter());
 }
 
-//ASweetDreamsHUD* ASweetDreamsPlayerController::GetDreamHUD() const
-//{
-//	return GetHUD<ASweetDreamsHUD>();
-//}
-
 void ASweetDreamsPlayerController::MoveForward(float Value)
 {
 	if (ASweetDreamsCharacter* DreamChar = GetDreamCharacter())
@@ -85,52 +80,3 @@ void ASweetDreamsPlayerController::ToggleInputTimer(float Duration)
 		EnableInput(this);
 	}, Duration, false);
 }
-
-//void ASweetDreamsPlayerController::Client_CreateLoadingWidget_Implementation(TSubclassOf<ULoadingWidget> WidgetClass)
-//{
-//	if (IsValid(GetDreamHUD()))
-//	{
-//		GetDreamHUD()->CreateLoadingWidget(WidgetClass);
-//	}
-//}
-//
-//void ASweetDreamsPlayerController::Client_ShowLoadingWidget_Implementation()
-//{
-//	if (IsValid(GetDreamHUD()))
-//	{
-//		GetDreamHUD()->ShowLoadingWidget();
-//	}
-//}
-//
-//void ASweetDreamsPlayerController::Client_LoadingGracePeriodEnd_Implementation(float GracePeriod)
-//{
-//	if (IsValid(GetDreamHUD()) && GetDreamHUD()->GetLoadingWidget())
-//	{
-//		GetDreamHUD()->GetLoadingWidget()->OnGracePeriodEnded(GracePeriod);
-//	}
-//}
-//
-//void ASweetDreamsPlayerController::Client_HideLoadingWidget_Implementation()
-//{
-//	if (IsValid(GetDreamHUD()))
-//	{
-//		GetDreamHUD()->HideLoadingWidget();
-//	}
-//}
-//
-//void ASweetDreamsPlayerController::Client_LoadingStart_Implementation()
-//{
-//	if (IsValid(GetDreamHUD()) && GetDreamHUD()->GetLoadingWidget())
-//	{
-//		GetDreamHUD()->GetLoadingWidget()->OnLoadingStart();
-//	}
-//	LoadingWidget->OnLoadingStart();
-//}
-//
-//void ASweetDreamsPlayerController::Client_LoadingEnd_Implementation()
-//{
-//	if (IsValid(GetDreamHUD()) && GetDreamHUD()->GetLoadingWidget())
-//	{
-//		GetDreamHUD()->GetLoadingWidget()->OnLoadingFinish();
-//	}
-//}

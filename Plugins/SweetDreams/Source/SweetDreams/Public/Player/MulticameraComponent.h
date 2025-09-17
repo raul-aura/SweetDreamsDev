@@ -10,18 +10,23 @@
 #include "MulticameraComponent.generated.h"
 
 USTRUCT(BlueprintType)
-struct SWEETDREAMS_API FCameraViews : public FTableRowBase
+struct SWEETDREAMS_API FCameraView : public FTableRowBase
 {
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams Multicamera", meta = (DisplayName = "Camera Location"))
-	FVector Location;
+	FVector Location = FVector::ZeroVector;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams Multicamera", meta = (DisplayName = "Camera Rotation"))
-	FRotator Rotation;
+	FRotator Rotation = FRotator::ZeroRotator;
 
-	FCameraViews()
+	FCameraView()
 		: Location(FVector(0)),
 		Rotation(FRotator(0))
+	{}
+
+	FCameraView(const FVector& InLocation, const FRotator& InRotation)
+		: Location(InLocation),
+		Rotation(InRotation)
 	{}
 };
 
@@ -36,39 +41,43 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Multicamera", CallInEditor)
 	void UpdateCameraView();
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Multicamera")
-	int32 CurrentView = 0;
-
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Multicamera")
+	void AddCameraView(FVector Location, FRotator Rotation, int32 Index = -1);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Multicamera", meta = (ToolTip = "Transfer the properties of the camera to match to the primary camera."))
 	void SetNewCameraView(int32 CameraToMatch = 0, float BlendTime = 1.0f);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Multicamera", meta = (ToolTip = "Defines a new camera to be the current one. Ideal when you have more than one camera."))
 	void SetActiveCamera(UPARAM(ref) UCameraComponent*& NewCamera);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Multicamera")
-	TArray<FCameraViews> GetAllPossibleViews() const;
+	TArray<FCameraView> GetAllPossibleViews() const;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Multicamera")
+	int32 CurrentView = 0;
 
 protected:
 	virtual void BeginPlay() override;
 	void FindCamera();
 	void CameraBlend();
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams Multicamera")
-	TArray<FCameraViews> CameraViews;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Multicamera")
+	TArray<FCameraView> CameraViews;
 
 	// COMPONENTS
-	UPROPERTY(BlueprintReadWrite, Category = "Sweet Dreams Multicamera")
+	UPROPERTY(BlueprintReadWrite, Category = "Multicamera")
 	UCameraComponent* ActiveCamera = nullptr;
 
 	// BLEND
+	UPROPERTY(BlueprintReadOnly, Category = "Multicamera")
 	FTimerHandle BlendHandle;
+	UPROPERTY(BlueprintReadOnly, Category = "Multicamera")
 	float BlendElapsedTime = 0.f;
+	UPROPERTY(BlueprintReadOnly, Category = "Multicamera")
 	float BlendTotalTime = 0.f;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams Multicamera")
-	UCurveFloat* AlphaCurve;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Multicamera")
+	UCurveFloat* AlphaCurve = nullptr;
 
 	// CAMERA PARAMS
-	FVector StartLocation;
-	FVector EndLocation;
-	FRotator StartRotation;
-	FRotator EndRotation;
+	FVector StartLocation = FVector::ZeroVector;
+	FVector EndLocation = FVector::ZeroVector;
+	FRotator StartRotation = FRotator::ZeroRotator;
+	FRotator EndRotation = FRotator::ZeroRotator;
 };

@@ -39,8 +39,6 @@ protected:
 	USpringArmComponent* CameraBoom;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* Camera;
-	//UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	//UMulticameraComponent* MulticameraComponent;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Core")
 	float WalkSpeed = 600.f;

@@ -33,9 +33,6 @@ ASweetDreamsCharacter::ASweetDreamsCharacter()
 	Camera->bUsePawnControlRotation = false;
 
 	GetCapsuleComponent()->SetCanEverAffectNavigation(true);
-
-	//MulticameraComponent = CreateDefaultSubobject<UMulticameraComponent>("Multicamera Component");
-	//AddOwnedComponent(MulticameraComponent);
 }
 
 void ASweetDreamsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -130,26 +127,6 @@ void ASweetDreamsCharacter::OnRep_Run()
 {
 	if (!GetCharacterMovement()) return;
 	GetCharacterMovement()->MaxWalkSpeed = bIsRunning ? RunSpeed : WalkSpeed;
-	//if (bIsRunning)
-	//{
-	//	if (MaxRunTime > 0.f && !GetWorldTimerManager().IsTimerActive(RunTimer))
-	//	{
-	//		const float TickInterval = 0.1f;
-	//		GetWorldTimerManager().SetTimer(RunTimer, [this, TickInterval]()
-	//			{
-	//				CurrentRunTime += TickInterval;
-	//				if (CurrentRunTime >= MaxRunTime)
-	//				{
-	//					StopRunning();
-	//				}
-	//			}, TickInterval, true);
-	//	}
-	//}
-	//else
-	//{
-	//	CurrentRunTime = 0.f;
-	//	GetWorldTimerManager().ClearTimer(RunTimer);
-	//}
 	GetCharacterMovement()->bNetworkUpdateReceived = true;
 }
 

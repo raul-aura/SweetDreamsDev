@@ -13,8 +13,6 @@ ASweetDreamsGameMode::ASweetDreamsGameMode()
 {
 	DefaultPawnClass = ASweetDreamsCharacter::StaticClass();
 	PlayerControllerClass = ASweetDreamsPlayerController::StaticClass();
-	//HUDClass = ASweetDreamsHUD::StaticClass();
-	//LoadingWidgetClass = ULoadingWidget::StaticClass();
 }
 
 void ASweetDreamsGameMode::StartPlay()

@@ -7,8 +7,6 @@
 #include "SweetDreamsPlayerController.generated.h"
 
 class ASweetDreamsCharacter;
-class ASweetDreamsHUD;
-class ULoadingWidget;
 
 UCLASS()
 class SWEETDREAMSFREE_API ASweetDreamsPlayerController : public APlayerController
@@ -20,8 +18,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	ASweetDreamsCharacter* GetDreamCharacter() const;
-	//UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
-	//ASweetDreamsHUD* GetDreamHUD() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	void MoveForward(float Value);
@@ -37,24 +33,4 @@ public:
 	void CameraHorizontal(float Value, float Sensitivity = 1.0f);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player", meta = (DisplayName = "Toggle Input (Timer)"))
 	void ToggleInputTimer(float Duration = 1.f);
-
-	//UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
-	//void Client_CreateLoadingWidget(TSubclassOf<ULoadingWidget> WidgetClass);
-	//UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
-	//void Client_ShowLoadingWidget();
-	//UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
-	//void Client_LoadingGracePeriodEnd(float GracePeriod);
-	//UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
-	//void Client_HideLoadingWidget();
-	//UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
-	//void Client_LoadingStart();
-	//UFUNCTION(Client, Reliable, Category = "Sweet Dreams|Core|Player")
-	//void Client_LoadingEnd();
-	
-	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core|Player")
-	void OnPlayerKicked(const FText& KickReason);
-
-protected:
-	//UPROPERTY(BlueprintReadOnly, Category = "Loading Screen")
-	//ULoadingWidget* LoadingWidget = nullptr;
 };

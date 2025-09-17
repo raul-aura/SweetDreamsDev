@@ -14,10 +14,10 @@ UCLASS()
 class SWEETDREAMSFREE_API ASweetDreamsGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
-	
-	ASweetDreamsGameMode();
 
 public:
+	ASweetDreamsGameMode();
+
 	virtual void StartPlay() override;
 	virtual void BeginPlay() override;
 	virtual void PostLogin(APlayerController* NewPlayer) override;
