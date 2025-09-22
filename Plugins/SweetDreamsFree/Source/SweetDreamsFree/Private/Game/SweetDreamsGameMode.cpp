@@ -34,11 +34,6 @@ void ASweetDreamsGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 	ConnectedPlayers.Add(NewPlayer);
-	//if (ASweetDreamsPlayerController* DreamController = Cast<ASweetDreamsPlayerController>(NewPlayer))
-	//{
-	//	CreateLoadingWidget(LoadingWidgetClass, DreamController);
-	//	if (bShowOnBeginPlay) ShowLoadingWidget(DreamController);
-	//}
 }
 
 void ASweetDreamsGameMode::Logout(AController* Exiting)
@@ -50,51 +45,6 @@ void ASweetDreamsGameMode::Logout(AController* Exiting)
 	}
 	Super::Logout(Exiting);
 }
-
-//void ASweetDreamsGameMode::CreateLoadingWidget(TSubclassOf<ULoadingWidget> Class, ASweetDreamsPlayerController* Player)
-//{
-//	if (!IsValid(Class) || !IsValid(Player)) return;
-//	WidgetGracePeriod = FMath::Max(WidgetGracePeriod, 0.01f);
-//	Player->Client_CreateLoadingWidget(Class);
-//	FTimerHandle WidgetRemoveTimer;
-//	GetWorld()->GetTimerManager().SetTimer(WidgetRemoveTimer, [this, Player]()
-//	{
-//		Player->Client_LoadingGracePeriodEnd(WidgetGracePeriod);
-//		if (bHideAfterGracePeriod)
-//		{
-//			Player->Client_HideLoadingWidget();
-//		}
-//	}, WidgetGracePeriod, false);
-//}
-//
-//void ASweetDreamsGameMode::ShowLoadingWidget(ASweetDreamsPlayerController* Player)
-//{
-//	if (!IsValid(Player)) return;
-//	Player->Client_ShowLoadingWidget();
-//}
-//
-//void ASweetDreamsGameMode::LevelLoadStarted(TSoftObjectPtr<UWorld> LoadingLevel)
-//{
-//	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
-//	{
-//		if (ASweetDreamsPlayerController* DreamController = Cast<ASweetDreamsPlayerController>(*It))
-//		{
-//			DreamController->Client_LoadingStart();
-//			if (bShowOnStartLoading) DreamController->Client_ShowLoadingWidget();
-//		}
-//	}
-//}
-//
-//void ASweetDreamsGameMode::LevelLoadFinished(TSoftObjectPtr<UWorld> LoadingLevel)
-//{
-//	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
-//	{
-//		if (ASweetDreamsPlayerController* DreamController = Cast<ASweetDreamsPlayerController>(*It))
-//		{
-//			DreamController->Client_LoadingEnd();
-//		}
-//	}
-//}
 
 bool ASweetDreamsGameMode::KickPlayer(APlayerController* KickedPlayer, const FText& KickReason)
 {

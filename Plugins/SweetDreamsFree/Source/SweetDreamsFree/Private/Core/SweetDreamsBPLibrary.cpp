@@ -1,17 +1,15 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Core/SweetDreamsBPLibrary.h"
-//#include "Core/SweetDreamsFree.h"
 #include "Core/SweetDreamsCore.h"
 #include "Core/SweetDreamsSettings.h"
-//#include "UMG/Public/Components/PanelWidget.h"
-//#include "UMG/Public/Blueprint/UserWidget.h"
 #include "Game/SweetDreamsGameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Online.h"
 #include "OnlineSubsystem.h"
 #include "OnlineSubsystemUtils.h"
 #include "Engine/Engine.h"
+#include "EngineUtils.h"
 #include "GameFramework/PlayerState.h"
 
 USweetDreamsBPLibrary::USweetDreamsBPLibrary(const FObjectInitializer& ObjectInitializer)
@@ -194,6 +192,54 @@ USweetDreamsSaveFile* USweetDreamsBPLibrary::GetLocalSave(const UObject* WorldCo
 	return false;
 }
 
+void USweetDreamsBPLibrary::PauseActors(UObject* WorldContext, TArray<AActor*> InActors)
+{
+	SetTimeDilationActors(WorldContext, InActors, 0.f);
+}
+
+void USweetDreamsBPLibrary::PauseAllActors(UObject* WorldContext, TSubclassOf<AActor> IgnoreActorClass)
+{
+	if (UWorld* World = GetValidWorld(WorldContext))
+	{
+		TArray<AActor*> AllActors;
+		if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+		{
+			AllActors = Core->GetAllActorsWorld();
+		}
+		SetTimeDilationActors(WorldContext, AllActors, 0.f, IgnoreActorClass);
+	}
+}
+
+void USweetDreamsBPLibrary::ResumeActors(UObject* WorldContext, TArray<AActor*> InActors)
+{
+	SetTimeDilationActors(WorldContext, InActors, 1.f);
+}
+
+void USweetDreamsBPLibrary::ResumeAllActors(UObject* WorldContext, TSubclassOf<AActor> IgnoreActorClass)
+{
+	if (UWorld* World = GetValidWorld(WorldContext))
+	{
+		TArray<AActor*> AllActors;
+		if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+		{
+			AllActors = Core->GetAllActorsWorld();
+		}
+		SetTimeDilationActors(WorldContext, AllActors, 1.f, IgnoreActorClass);
+	}
+}
+
+void USweetDreamsBPLibrary::SetTimeDilationActors(UObject* WorldContext, TArray<AActor*> InActors, const float NewTimeDilation, TSubclassOf<AActor> IgnoreActorClass)
+{
+	if (UWorld* World = GetValidWorld(WorldContext))
+	{
+		for (AActor* Actor : InActors)
+		{
+			if (!IsValid(Actor) || (IsValid(IgnoreActorClass) && Actor->IsA(IgnoreActorClass))) continue;
+			Actor->CustomTimeDilation = NewTimeDilation;
+		}
+	}
+}
+
 void USweetDreamsBPLibrary::LoadLevel(const UObject* WorldContext, TSoftObjectPtr<UWorld> Level)
 {
 	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
@@ -232,7 +278,7 @@ bool USweetDreamsBPLibrary::IsMultipleOf(const float& Number, float Interval, fl
 	return FMath::IsNearlyZero(Reminder, Tolerance);
 }
 
-void USweetDreamsBPLibrary::ServerTravel(UObject* WorldContext, const FString& MapName, bool bIsListenServer)
+void USweetDreamsBPLibrary::ServerTravel(UObject* WorldContext, FString MapName, bool bIsListenServer, bool bAbsolute)
 {
 	if (UWorld* World = GetValidWorld(WorldContext))
 	{
@@ -245,7 +291,7 @@ void USweetDreamsBPLibrary::ServerTravel(UObject* WorldContext, const FString& M
 		{
 			Options = MapName;
 		}
-		World->ServerTravel(Options, true);
+		World->ServerTravel(Options, bAbsolute);
 	}
 }
 

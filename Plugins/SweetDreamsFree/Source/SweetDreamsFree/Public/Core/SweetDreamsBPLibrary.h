@@ -61,6 +61,18 @@ public:
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* GetLocalSave(const UObject* WorldContext);
 
+	// WORLD
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|World")
+	static void PauseActors(UObject* WorldContext, TArray<AActor*> InActors);
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|World")
+	static void PauseAllActors(UObject* WorldContext, TSubclassOf<AActor> IgnoreActorClass = nullptr);
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|World")
+	static void ResumeActors(UObject* WorldContext, TArray<AActor*> InActors);
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|World")
+	static void ResumeAllActors(UObject* WorldContext, TSubclassOf<AActor> IgnoreActorClass = nullptr);
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|World")
+	static void SetTimeDilationActors(UObject* WorldContext, TArray<AActor*> InActors, const float NewTimeDilation = 0.f, TSubclassOf<AActor> IgnoreActorClass = nullptr);
+
 	// LOADING
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Loading")
 	static void LoadLevel(const UObject* WorldContext, TSoftObjectPtr<UWorld> Level);
@@ -77,7 +89,7 @@ public:
 
 	// REPLICATION
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Replication", meta = (WorldContext = "WorldContext"))
-	static void ServerTravel(UObject* WorldContext, const FString& MapName, bool bIsListenServer);
+	static void ServerTravel(UObject* WorldContext, FString MapName, bool bIsListenServer, bool bAbsolute);
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Replication")
 	static bool GetSessionSetting(FBlueprintSessionResult Result, FName Key, FString& Value);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Replication")

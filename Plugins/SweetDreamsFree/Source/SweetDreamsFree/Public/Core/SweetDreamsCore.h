@@ -49,13 +49,13 @@ public:
 
 	// WORLD
 	AActor* FindActorByName(FName Name);
+	TArray<AActor*> GetAllActorsWorld() const;
 
 	// LOADING
 	void LoadLevel(TSoftObjectPtr<UWorld> Level);
 	TSoftObjectPtr<UWorld> CurrentLoadingLevel;
 
 protected:
-
 
 	// SAVE
 	TMap<FString, USweetDreamsSaveFile*> CustomSaveFiles;
