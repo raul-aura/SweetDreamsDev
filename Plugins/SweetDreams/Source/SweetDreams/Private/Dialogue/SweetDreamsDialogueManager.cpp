@@ -13,6 +13,7 @@
 #include "Dialogue/DialogueData.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/Character.h"
+#include "EngineUtils.h"
 
 ASweetDreamsDialogueManager::ASweetDreamsDialogueManager()
 {
@@ -44,7 +45,7 @@ void ASweetDreamsDialogueManager::GetLifetimeReplicatedProps(TArray<FLifetimePro
 
 void ASweetDreamsDialogueManager::BeginPlay()
 {
-	GetDialoguesFromData(DialogueData);
+	UpdateDialogueData(DialogueData);
 	Super::BeginPlay();
 }
 
@@ -74,16 +75,6 @@ void ASweetDreamsDialogueManager::StartDialogue(float ViewBlend)
 {
 	if (!bIsDialogueEnabled || bIsDialogueActive || Dialogues.Num() == 0) return;
 	if (ViewBlend <= 0.f) ViewBlend = GetWorld()->GetDeltaSeconds();
-	MulticastStartDialogue(ViewBlend);
-}
-
-void ASweetDreamsDialogueManager::MulticastStartDialogue_Implementation(const float& ViewBlend)
-{
-	StartDialogue_Internal(ViewBlend);
-}
-
-void ASweetDreamsDialogueManager::StartDialogue_Internal(const float& ViewBlend)
-{
 	if (bHideCharacter)
 	{
 		ToggleCharacterVisibility(false);
@@ -98,20 +89,12 @@ void ASweetDreamsDialogueManager::StartDialogue_Internal(const float& ViewBlend)
 	{
 		UpdateDialogue();
 	}
-	OnDialogueStarted.Broadcast();
+	OnDialogueStarted();
+	OnDialogueStartedDelegate.Broadcast();
 }
+
 
 void ASweetDreamsDialogueManager::UpdateDialogue()
-{
-	MulticastUpdateDialogue();
-}
-
-void ASweetDreamsDialogueManager::MulticastUpdateDialogue_Implementation()
-{
-	UpdateDialogue_Internal();
-}
-
-void ASweetDreamsDialogueManager::UpdateDialogue_Internal()
 {
 	if (bUseAnimatedDialogue && bIsAnimating)
 	{
@@ -120,13 +103,12 @@ void ASweetDreamsDialogueManager::UpdateDialogue_Internal()
 	}
 	if (IsValid(CurrentSequencePlayer) && CurrentSequencePlayer->IsPlaying())
 	{
-		if (!bStopSequenceOnUpdate) return; // will ignore trying to update if sequence is still playing
+		if (!bStopSequenceOnUpdate) return;
 		CurrentSequencePlayer->Stop();
 	}
 	if (bIsSelectingChoices) return;
 	if (CurrentDialogueID >= Dialogues.Num() - 1)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ID greater then dialogue length, ENDING."));
 		EndDialogue();
 		return;
 	}
@@ -207,7 +189,8 @@ void ASweetDreamsDialogueManager::ProcessDialogue(FSweetDreamsDialogue Dialogue)
 			DialogueWidget->HideChoices();
 		}
 	}
-	OnDialogueChanged.Broadcast(CurrentDialogue, CurrentDialogueID);
+	OnDialogueUpdated(CurrentDialogue, CurrentDialogueID);
+	OnDialogueUpdatedDelegate.Broadcast(CurrentDialogue, CurrentDialogueID);
 }
 
 void ASweetDreamsDialogueManager::CallFunctionsFromDialogue(FSweetDreamsDialogue Dialogue)
@@ -281,16 +264,6 @@ void ASweetDreamsDialogueManager::SelectChoiceAndUpdate(FChoice Choice)
 
 void ASweetDreamsDialogueManager::EndDialogue()
 {
-	MulticastEndDialogue();
-}
-
-void ASweetDreamsDialogueManager::MulticastEndDialogue_Implementation()
-{
-	EndDialogue_Internal();
-}
-
-void ASweetDreamsDialogueManager::EndDialogue_Internal()
-{
 	bIsDialogueActive = false;
 	CurrentDialogue = FSweetDreamsDialogue();
 	DialogueLog.Empty();
@@ -308,41 +281,18 @@ void ASweetDreamsDialogueManager::EndDialogue_Internal()
 		ToggleCharacterVisibility();
 	}
 	HideWidget();
-	OnDialogueEnded.Broadcast();
+	OnDialogueEnded();
+	OnDialogueEndedDelegate.Broadcast();
 }
 
 ASweetDreamsDialogueManager* ASweetDreamsDialogueManager::GetActiveDialogue(const UObject* WorldContext)
 {
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")))
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::LogAndReturnNull))
 	{
-		return nullptr;
-	}
-	TArray<AActor*> Dialogues;
-	UGameplayStatics::GetAllActorsOfClass(WorldContext, ASweetDreamsDialogueManager::StaticClass(), Dialogues);
-	for (AActor* Actor : Dialogues)
-	{
-		ASweetDreamsDialogueManager* Dialogue = Cast<ASweetDreamsDialogueManager>(Actor);
-		if (IsValid(Dialogue) && Dialogue->bIsDialogueActive)
+		for (TActorIterator<ASweetDreamsDialogueManager> It(World); It; ++It)
 		{
-			return Dialogue;
-		}
-	}
-	return nullptr;
-}
-
-ASweetDreamsDialogueManager* ASweetDreamsDialogueManager::FindDialogueByName(const UObject* WorldContext, FName Name)
-{
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")) || Name.IsNone())
-	{
-		return nullptr;
-	}
-	TArray<AActor*> Dialogues;
-	UGameplayStatics::GetAllActorsOfClass(WorldContext, ASweetDreamsDialogueManager::StaticClass(), Dialogues);
-	for (AActor* Actor : Dialogues)
-	{
-		if (auto* Dialogue = Cast<ASweetDreamsDialogueManager>(Actor))
-		{
-			if (Dialogue->DialogueName.IsEqual(Name))
+			ASweetDreamsDialogueManager* Dialogue = *It;
+			if (IsValid(Dialogue) && Dialogue->bIsDialogueActive)
 			{
 				return Dialogue;
 			}
@@ -351,13 +301,30 @@ ASweetDreamsDialogueManager* ASweetDreamsDialogueManager::FindDialogueByName(con
 	return nullptr;
 }
 
-ASweetDreamsDialogueManager* ASweetDreamsDialogueManager::StartDialogueByName(const UObject* WorldContext, FName Name, float StartTransition)
+ASweetDreamsDialogueManager* ASweetDreamsDialogueManager::FindDialogueByName(const UObject* WorldContext, FName Name, bool bIsCaseSensitive)
 {
-	if (!ensureAlwaysMsgf(IsValid(WorldContext), TEXT("World Context was not valid.")) || Name.IsNone())
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::LogAndReturnNull))
 	{
-		return nullptr;
+		for (TActorIterator<ASweetDreamsDialogueManager> It(World); It; ++It)
+		{
+			ASweetDreamsDialogueManager* Dialogue = *It;
+			ENameCase CompareMethod = ENameCase::IgnoreCase;
+			if (bIsCaseSensitive)
+			{
+				CompareMethod = ENameCase::CaseSensitive;
+			}
+			if (IsValid(Dialogue) && Dialogue->DialogueName.IsEqual(Name, CompareMethod))
+			{
+				return Dialogue;
+			}
+		}
 	}
-	ASweetDreamsDialogueManager* Dialogue = FindDialogueByName(WorldContext, Name);
+	return nullptr;
+}
+
+ASweetDreamsDialogueManager* ASweetDreamsDialogueManager::StartDialogueByName(const UObject* WorldContext, FName Name, float StartTransition, bool bIsCaseSensitive)
+{
+	ASweetDreamsDialogueManager* Dialogue = FindDialogueByName(WorldContext, Name, bIsCaseSensitive);
 	if (IsValid(Dialogue))
 	{
 		Dialogue->StartDialogue(StartTransition);
@@ -466,19 +433,51 @@ void ASweetDreamsDialogueManager::AddDialogueToLog(int32 DialogueID)
 	DialogueLog.Add(NewLog);
 }
 
-void ASweetDreamsDialogueManager::GetDialoguesFromData(UDialogueData* Data)
-{
-	if (!IsValid(Data)) return;
-	DialogueData = Data;
-	OnRep_DialogueData();
-}
-
-void ASweetDreamsDialogueManager::OnRep_DialogueData()
+void ASweetDreamsDialogueManager::UpdateDialogueData(UDialogueData* Data)
 {
 	Dialogues.Empty();
-	if (!IsValid(DialogueData)) return;
+	if (!IsValid(Data)) return;
+	DialogueData = Data;
 	UpdateDialogueName(DialogueData->Name);
 	Dialogues = DialogueData->Dialogues;
+}
+
+void ASweetDreamsDialogueManager::InsertDialogue(UDialogueData* Data, int32 Index)
+{
+	if (!IsValid(Data)) return;
+	TArray<FSweetDreamsDialogue> NewDialogue = Data->Dialogues;
+	if (Index > 0)
+	{
+		Dialogues.Insert(NewDialogue, Index);
+	}
+	else
+	{
+		Dialogues.Append(NewDialogue);
+	}
+}
+
+void ASweetDreamsDialogueManager::TrimDialogue(int32 Amount, int32 Index)
+{
+	if (Dialogues.Num() == 0 || Amount <= 0) return;
+	Amount = FMath::Min(Amount, Dialogues.Num());
+	if (Index > 0)
+	{
+		const int32 StartIndex = FMath::Clamp(Index, 0, Dialogues.Num() - 1);
+		const int32 ElementsToRemove = FMath::Min(Amount, Dialogues.Num() - StartIndex);
+		if (ElementsToRemove > 0)
+		{
+			Dialogues.RemoveAt(StartIndex, ElementsToRemove);
+		}
+	}
+	else
+	{
+		const int32 StartIndex = FMath::Max(0, Dialogues.Num() - Amount);
+		const int32 ElementsToRemove = Dialogues.Num() - StartIndex;
+		if (ElementsToRemove > 0)
+		{
+			Dialogues.RemoveAt(StartIndex, ElementsToRemove);
+		}
+	}
 }
 
 void ASweetDreamsDialogueManager::StartSequence(FSweetDreamsDialogue Dialogue)

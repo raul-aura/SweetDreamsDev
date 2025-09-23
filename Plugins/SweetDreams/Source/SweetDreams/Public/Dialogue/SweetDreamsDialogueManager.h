@@ -38,20 +38,32 @@ public:
 	//
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void UpdateDialogueName(FName NewName);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
+	void UpdateDialogueData(UDialogueData* Data);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
+	void InsertDialogue(UDialogueData* Data, int32 Index = -1);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
+	void TrimDialogue(int32 Amount = 1, int32 Index = -1);
 	//
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core|Dialogue")
+	void OnDialogueStarted();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core|Dialogue")
+	void OnDialogueUpdated(FSweetDreamsDialogue Dialogue, int32 DialogueID);
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core|Dialogue")
+	void OnDialogueEnded();
 	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Core|Dialogue")
-	FOnDialogueStarted OnDialogueStarted;
+	FOnDialogueStarted OnDialogueStartedDelegate;
 	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Core|Dialogue")
-	FOnDialogueChanged OnDialogueChanged;
+	FOnDialogueChanged OnDialogueUpdatedDelegate;
 	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Core|Dialogue")
-	FOnDialogueEnded OnDialogueEnded;
+	FOnDialogueEnded OnDialogueEndedDelegate;
 	//
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Dialogue", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static ASweetDreamsDialogueManager* GetActiveDialogue(const UObject* WorldContext);
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Dialogue", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
-	static ASweetDreamsDialogueManager* FindDialogueByName(const UObject* WorldContext, FName Name);
+	static ASweetDreamsDialogueManager* FindDialogueByName(const UObject* WorldContext, FName Name, bool bIsCaseSensitive = false);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
-	static ASweetDreamsDialogueManager* StartDialogueByName(const UObject* WorldContext, FName Name, float StartTransition = 2.0f);
+	static ASweetDreamsDialogueManager* StartDialogueByName(const UObject* WorldContext, FName Name, float StartTransition = 2.0f, bool bIsCaseSensitive = false);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	int32 GetCurrentDialogueID() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
@@ -67,16 +79,6 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastStartDialogue(const float& ViewBlend);
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastUpdateDialogue();
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastEndDialogue();
-	void StartDialogue_Internal(const float& ViewBlend);
-	void UpdateDialogue_Internal();
-	void EndDialogue_Internal();
-
 	void CreateShowWidget();
 	void ToggleCharacterVisibility(bool bVisible = true);
 	void SetViewTarget(AActor* ViewTarget, const float& ViewTime);
@@ -91,10 +93,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	USceneComponent* CameraGroup;
 
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_DialogueData, EditAnywhere, Category = "Dialogues")
+	UPROPERTY(BlueprintReadOnly, Replicated, EditAnywhere, Category = "Dialogues")
 	UDialogueData* DialogueData;
-	UFUNCTION(Category = "Dialogue")
-	void OnRep_DialogueData();
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FName DialogueName = NAME_None;
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
@@ -119,8 +119,6 @@ protected:
 	//
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void AddDialogueToLog(int32 DialogueID);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
-	void GetDialoguesFromData(UDialogueData* Data);
 	UFUNCTION(Category = "Sweet Dreams|Core|Dialogue")
 	void StartSequence(FSweetDreamsDialogue Dialogue);
 	UFUNCTION(Category = "Sweet Dreams|Core|Dialogue")
