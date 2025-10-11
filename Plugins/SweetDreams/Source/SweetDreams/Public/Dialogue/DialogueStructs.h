@@ -25,6 +25,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
 	FName ChoiceResult;
+
 	FChoice() {}
 };
 

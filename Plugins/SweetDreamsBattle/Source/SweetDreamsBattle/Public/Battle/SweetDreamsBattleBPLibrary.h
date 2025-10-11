@@ -27,6 +27,7 @@ public:
 	static int32 GetAverageLevel(const UObject* WorldContext, const TArray<AActor*>& Actors);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static void OverrideLevels(const UObject* WorldContext, const TArray<AActor*>& Actors, int32 NewLevel = 1);
+
 	// PARAM MATH
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG")
 	static float IncreaseParameterLinear(UPARAM(ref)float& Parameter, float BaseParameter, float AdditionalParameter, float Multiplier);

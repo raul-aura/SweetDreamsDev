@@ -6,8 +6,6 @@
 
 USweetDreamsBattleCore::USweetDreamsBattleCore() {}
 
-USweetDreamsBattleCore::~USweetDreamsBattleCore() {}
-
 void USweetDreamsBattleCore::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);

@@ -15,7 +15,6 @@ class SWEETDREAMSBATTLE_API USweetDreamsBattleCore : public UGameInstanceSubsyst
 
 public:
 	USweetDreamsBattleCore();
-	virtual ~USweetDreamsBattleCore();
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	// DIFFICULTY

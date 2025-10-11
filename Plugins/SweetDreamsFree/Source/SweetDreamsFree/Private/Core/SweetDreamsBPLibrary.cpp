@@ -272,9 +272,9 @@ bool USweetDreamsBPLibrary::CalculateChance(float& RandomizedValue, float Chance
 	return RandomizedValue <= Chance;
 }
 
-bool USweetDreamsBPLibrary::IsMultipleOf(const float& Number, float Interval, float Tolerance)
+bool USweetDreamsBPLibrary::IsMultipleOf(const float Number, float Interval, float Tolerance)
 {
-	float Reminder = FMath::Fmod(Number, Interval);
+	const float Reminder = FMath::Fmod(Number, Interval);
 	return FMath::IsNearlyZero(Reminder, Tolerance);
 }
 
