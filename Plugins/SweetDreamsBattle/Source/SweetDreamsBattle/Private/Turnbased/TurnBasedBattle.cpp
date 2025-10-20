@@ -12,35 +12,13 @@
 ATurnBasedBattle::ATurnBasedBattle()
 {
 	AllyRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Allies"));
-	AllyRoot->SetupAttachment(BattleRoot);
 
 	EnemyRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Enemies"));
-	EnemyRoot->SetupAttachment(BattleRoot);
 }
 
 void ATurnBasedBattle::BeginPlay()
 {
 	Super::BeginPlay();
-	if (IsValid(BattleWidget))
-	{
-		TurnBattleWidget = Cast<UTurnBasedBattleWidget>(BattleWidget);
-	}
-}
-
-void ATurnBasedBattle::StartBattle(float BlendTime)
-{
-	if (bIsBattleActive) return;
-	Super::StartBattle(BlendTime);
-	CurrentTurn = -1;
-	CurrentAction = 0;
-	Actions.Empty();
-	GetWorldTimerManager().SetTimer(BattleTimer, this, &ATurnBasedBattle::StartTurn, FirstTurnDelay + BlendTime, false);
-	if (IsValid(TurnBattleWidget))
-	{
-		TurnBattleWidget->SetBattleManager(this);
-		TurnBattleWidget->OnBattleStarted();
-	}
-	ChangeBattleSpeed(BattleSpeed);
 }
 
 void ATurnBasedBattle::EvaluateTransforms()
@@ -85,43 +63,6 @@ void ATurnBasedBattle::EvaluateTransforms()
 		for (USceneComponent* Component : AllComponents)
 		{
 			Component->SetHiddenInGame(true, false);
-		}
-	}
-}
-
-void ATurnBasedBattle::LoadBattlers_Implementation()
-{
-	LoadSpawnBattlers(EnemyClasses, EBattlerType::Enemy, EnemyRoot, EnemyTransforms);
-	LoadSpawnBattlers(AllyClasses, EBattlerType::Ally, AllyRoot, AllyTransforms);
-	if (bHandleDuplicateAllyNames) HandleDuplicateNames(Allies);
-	if (bHandleDuplicateEnemyNames) HandleDuplicateNames(Enemies);
-	Super::LoadBattlers_Implementation();
-}
-
-bool ATurnBasedBattle::EvaluateEndBattle_Implementation()
-{
-	if (MaxTurns > 0 && CurrentTurn >= MaxTurns)
-	{
-		bIsVictorious = bVictoryWhenMaxTurns;
-		EndBattle();
-		return true;
-	}
-	return Super::EvaluateEndBattle_Implementation();
-}
-
-void ATurnBasedBattle::LoadSpawnBattlers(TArray<TSoftClassPtr<AActor>> Battlers, EBattlerType BattlerType, USceneComponent* BattlerRoot, TArray<FTransform> TransformGroup)
-{
-	if (!GetWorld() || !BattlerRoot) return;
-	int32 Length = FMath::Min(Battlers.Num(), TransformGroup.Num());
-	if (Length <= 0) return;
-	for (int32 Index = 0; Index < Length; Index++)
-	{
-		TSubclassOf<AActor> LoadedBattler = Battlers[Index].LoadSynchronous();
-		if (!LoadedBattler) continue;
-		AActor* SpawnedBattler = SpawnBattler(LoadedBattler, TransformGroup[Index], BattlerType, BattlerRoot, true);
-		if (IsValid(SpawnedBattler))
-		{
-			AllBattlers.Add(SpawnedBattler);
 		}
 	}
 }
@@ -198,61 +139,11 @@ TArray<TSoftClassPtr<AActor>> ATurnBasedBattle::LoadRandomEnemyGroup()
 
 FTransform ATurnBasedBattle::GetFreeAllyTransform() const
 {
-	return GetFreeTransform(EBattlerType::Ally);
+	return FTransform();
 }
 
 FTransform ATurnBasedBattle::GetFreeEnemyTransform() const
 {
-	return GetFreeTransform(EBattlerType::Enemy);
-}
-
-FTransform ATurnBasedBattle::GetFreeTransform(EBattlerType BattlerType) const
-{
-	TArray<AActor*> BattlerGroup;
-	TArray<FTransform> TransformGroup;
-	switch (BattlerType)
-	{
-	case EBattlerType::None:
-		return FTransform();
-	case EBattlerType::Ally:
-		BattlerGroup = Allies;
-		TransformGroup = AllyTransforms;
-		break;
-	case EBattlerType::Enemy:
-		BattlerGroup = Enemies;
-		TransformGroup = EnemyTransforms;
-		break;
-	default:
-		return FTransform();
-	}
-	if (BattlerGroup.Num() == 0 || TransformGroup.Num() == 0)
-	{
-		return FTransform();
-	}
-	for (const FTransform& Transform : TransformGroup)
-	{
-		bool bIsOccupied = false;
-		FVector TransformLocation = Transform.GetLocation();
-		for (AActor* Battler : BattlerGroup)
-		{
-			if (IsValid(Battler))
-			{
-				if (bIgnoreZForTransform)
-				{
-					bIsOccupied = FVector::DistXY(Battler->GetActorLocation(), TransformLocation) < TransformDistanceTolerance;
-				}
-				else
-				{
-					bIsOccupied = FVector::Dist(Battler->GetActorLocation(), TransformLocation) < TransformDistanceTolerance;
-				}
-				if (bIsOccupied) break;
-			}
-		}
-		if (!bIsOccupied)
-		{
-			return Transform;
-		}
-	}
 	return FTransform();
 }
 
@@ -266,24 +157,14 @@ AActor* ATurnBasedBattle::SpawnEnemy(TSubclassOf<AActor> EnemyClass, bool bSpawn
 {
 	FTransform EmptyTransform = GetFreeEnemyTransform();
 	if (bSpawnOnlyIfEmpty && EmptyTransform.Equals(FTransform())) return nullptr;
-	AActor* Spawned = SpawnBattler(EnemyClass, EmptyTransform, EBattlerType::Enemy, EnemyRoot);
-	if (IsValid(Spawned))
-	{
-		EnemyDamage.Add(0.f);
-	}
-	return Spawned;
+	return nullptr;
 }
 
 AActor* ATurnBasedBattle::SpawnAlly(TSubclassOf<AActor> AllyClass, bool bSpawnOnlyIfEmpty)
 {
 	FTransform EmptyTransform = GetFreeAllyTransform();
 	if (bSpawnOnlyIfEmpty && EmptyTransform.Equals(FTransform())) return nullptr;
-	AActor* Spawned = SpawnBattler(AllyClass, EmptyTransform, EBattlerType::Ally, AllyRoot);
-	if (IsValid(Spawned))
-	{
-		AllyDamage.Add(0.f);
-	}
-	return Spawned;
+	return nullptr;
 }
 
 UTurnBasedBattleWidget* ATurnBasedBattle::GetTurnBattleWidget() const
@@ -293,12 +174,12 @@ UTurnBasedBattleWidget* ATurnBasedBattle::GetTurnBattleWidget() const
 
 ATurnBasedBattle* ATurnBasedBattle::FindActiveTurnBattle(const UObject* WorldContext, int32& BattleId)
 {
-	return Cast<ATurnBasedBattle>(ASweetDreamsBattleManager::FindActiveBattle(WorldContext, BattleId));
+	return nullptr;
 }
 
 ATurnBasedBattle* ATurnBasedBattle::FindTurnBattleByIndex(const UObject* WorldContext, int32 Index)
 {
-	return Cast<ATurnBasedBattle>(ASweetDreamsBattleManager::FindBattleByIndex(WorldContext, Index));
+	return nullptr;
 }
 
 FString ATurnBasedBattle::GetBattlerBaseName(const FString& Name)
@@ -312,7 +193,6 @@ FString ATurnBasedBattle::GetBattlerBaseName(const FString& Name)
 
 void ATurnBasedBattle::StartTurn()
 {
-	if (bBattlePaused || EvaluateEndBattle()) return;
 	CurrentTurn++;
 	for (AActor* Battler : AllBattlers)
 	{
@@ -329,8 +209,6 @@ void ATurnBasedBattle::StartTurn()
 	}
 	CurrentAction = 0;
 	Actions.Empty();
-	if (bAutoLoadAllyActions) LoadTurnActions(Allies, true);
-	if (bAutoLoadEnemyActions) LoadTurnActions(Enemies, false);
 	StartTurnAction();
 	OnTurnStarted(CurrentTurn);
 }
@@ -424,7 +302,6 @@ bool ATurnBasedBattle::RemoveTurnAction(UBattleElement* Action, int32& ActionCou
 
 void ATurnBasedBattle::StartTurnAction()
 {
-	if (Actions.Num() <= 0 || bBattlePaused || EvaluateEndBattle()) return;
 	while (CurrentAction < Actions.Num())
 	{
 		//UBattleAction* CurrentActionRef = Actions[CurrentAction++];
@@ -461,27 +338,13 @@ bool ATurnBasedBattle::TurnContainsActionOfClass(TSubclassOf<UBattleElement> Act
 	return Amount > 0;
 }
 
-void ATurnBasedBattle::EndBattle(float BlendTime)
-{
-	if (TurnBattleWidget) TurnBattleWidget->OnBattleEnded(bIsVictorious);
-	ChangeBattleSpeed(1.f);
-	Super::EndBattle(BlendTime);
-}
-
-void ATurnBasedBattle::SetBattlePaused(bool bPaused)
-{
-	if (bBattlePaused == bPaused) return;
-	bPaused == true ? PauseTurnBattle() : UnpauseTurnBattle();
-}
 
 void ATurnBasedBattle::PauseTurnBattle()
 {
-	bBattlePaused = true;
 }
 
 void ATurnBasedBattle::UnpauseTurnBattle()
 {
-	bBattlePaused = false;
 	CurrentAction < Actions.Num() == true ? StartTurnAction() : StartTurn();
 }
 

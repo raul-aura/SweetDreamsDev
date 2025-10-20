@@ -23,7 +23,7 @@ public:
 };
 
 UCLASS()
-class SWEETDREAMSBATTLE_API ATurnBasedBattle : public ASweetDreamsBattleManager
+class SWEETDREAMSBATTLE_API ATurnBasedBattle : public AActor
 {
 	GENERATED_BODY()
 	
@@ -102,20 +102,13 @@ protected:
 public:
 
 	// BATTLE
-	virtual void StartBattle(float BlendTime = 2.0f) override;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual void EvaluateTransforms();
-	virtual void LoadBattlers_Implementation() override;
-	virtual bool EvaluateEndBattle_Implementation() override;
-	virtual void EndBattle(float BlendTime = 2.0f) override;
-	virtual void SetBattlePaused(bool bPaused = true) override;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual void PauseTurnBattle();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual void UnpauseTurnBattle();
 	// LOAD SPAWN
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager", meta = (DisplayName = "Load and Spawn Battlers"))
-	virtual void LoadSpawnBattlers(TArray<TSoftClassPtr<AActor>> Battlers, EBattlerType BattlerType, USceneComponent* BattlerRoot, TArray<FTransform> TransformGroup);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual void HandleDuplicateNames(const TArray<AActor*>& Battlers);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
@@ -135,8 +128,6 @@ public:
 	virtual FTransform GetFreeAllyTransform() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual FTransform GetFreeEnemyTransform() const;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
-	virtual FTransform GetFreeTransform(EBattlerType BattlerType) const;
 	// SPEED
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Turn Battle Manager")
 	virtual float GetBattleSpeed() const { return BattleSpeed; }

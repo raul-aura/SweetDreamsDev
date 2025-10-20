@@ -22,7 +22,7 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	class UWidgetComponent* OwningWidgetComponent;
 	UPROPERTY(BlueprintReadOnly)
-	class ABattleCharacter* OwningBattler;
+	class AActor* OwningActor;
 
 };
 

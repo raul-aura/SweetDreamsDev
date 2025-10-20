@@ -8,7 +8,7 @@
 class UTurnBasedBattleWidget;
 
 UCLASS()
-class SWEETDREAMSBATTLE_API UBattleInputAction : public UBattleElement
+class SWEETDREAMSBATTLE_API UBattleInputAction : public UObject
 {
 	GENERATED_BODY()
 	
