@@ -1,13 +1,9 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "SweetDreamsEditor.h"
-#include "TSweetDreamsAssetAction.h"
+#include "SweetDreamsAssetActions.h"
 #include "AssetToolsModule.h"
-#include "Game/SweetDreamsGameMode.h"
-#include "Game/SweetDreamsWidget.h"
-#include "Player/SweetDreamsCharacter.h"
-#include "Player/SweetDreamsPlayerController.h"
-#include "Save/SweetDreamsSaveFile.h"
+#include "IAssetTools.h"
 
 #define LOCTEXT_NAMESPACE "FSweetDreamsEditorModule"
 
@@ -17,11 +13,8 @@ void FSweetDreamsEditorModule::StartupModule()
 
 	EAssetTypeCategories::Type SweetDreamsCategory = AssetTools.RegisterAdvancedAssetCategory(FName("SweetDreams"), FText::FromString("Sweet Dreams"));
 
-	AssetTools.RegisterAssetTypeActions(MakeShareable(new SweetDreamsAssetAction(SweetDreamsCategory, ASweetDreamsGameMode::StaticClass())));
-	AssetTools.RegisterAssetTypeActions(MakeShareable(new SweetDreamsAssetAction(SweetDreamsCategory, USweetDreamsWidget::StaticClass())));
-	AssetTools.RegisterAssetTypeActions(MakeShareable(new SweetDreamsAssetAction(SweetDreamsCategory, ASweetDreamsCharacter::StaticClass())));
-	AssetTools.RegisterAssetTypeActions(MakeShareable(new SweetDreamsAssetAction(SweetDreamsCategory, ASweetDreamsPlayerController::StaticClass())));
-	AssetTools.RegisterAssetTypeActions(MakeShareable(new SweetDreamsAssetAction(SweetDreamsCategory, USweetDreamsSaveFile::StaticClass())));
+	TSharedRef<IAssetTypeActions> Action = MakeShareable(new FAssetTypeActions_SweetDreamsGameMode(SweetDreamsCategory));
+	AssetTools.RegisterAssetTypeActions(Action);
 
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 }

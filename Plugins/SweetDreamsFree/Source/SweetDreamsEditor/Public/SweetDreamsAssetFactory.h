@@ -5,16 +5,14 @@
 #include "SweetDreamsAssetFactory.generated.h"
 
 UCLASS()
-class USweetDreamsAssetFactory : public UFactory
+class USweetDreamsGameModeFactory : public UFactory
 {
 	GENERATED_BODY()
 
 public:
-	USweetDreamsAssetFactory(const FObjectInitializer& objectInitializer);
-
-    UPROPERTY(EditAnywhere, Category = "SweetDreams")
-    TSubclassOf<UObject> ParentClass;
+	USweetDreamsGameModeFactory(const FObjectInitializer& objectInitializer);
 
     virtual UObject* FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
 };
+
 

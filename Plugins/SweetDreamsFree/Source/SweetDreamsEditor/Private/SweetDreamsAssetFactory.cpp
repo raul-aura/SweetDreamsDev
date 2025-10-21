@@ -1,22 +1,19 @@
 
 #include "SweetDreamsAssetFactory.h"
+#include "AssetActionsHeaders.h"
 
-USweetDreamsAssetFactory::USweetDreamsAssetFactory(const FObjectInitializer& objectInitializer)
+#include "KismetCompilerModule.h"
+#include "Kismet2/KismetEditorUtilities.h"
+#include "BlueprintEditorModule.h"
+
+USweetDreamsGameModeFactory::USweetDreamsGameModeFactory(const FObjectInitializer& objectInitializer)
 {
-    SupportedClass = UBlueprint::StaticClass();
-    bCreateNew = true;
+	SupportedClass = ASweetDreamsGameMode::StaticClass();
+	bCreateNew = true;
     bEditAfterNew = true;
-
-    ParentClass = UObject::StaticClass();
 }
 
-UObject* USweetDreamsAssetFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
+UObject* USweetDreamsGameModeFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
 {
-    return NewObject(
-        InParent,
-        Name,
-        Flags
-    );
+    return FKismetEditorUtilities::CreateBlueprint(ASweetDreamsGameMode::StaticClass(), InParent, Name, BPTYPE_Normal, UBlueprint::StaticClass(), UBlueprintGeneratedClass::StaticClass());
 }
-
-
