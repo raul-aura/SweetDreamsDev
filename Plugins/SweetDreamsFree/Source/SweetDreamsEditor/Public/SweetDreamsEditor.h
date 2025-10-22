@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AssetTypeCategories.h"
 #include "Modules/ModuleManager.h"
 
 class FSweetDreamsEditorModule : public IModuleInterface

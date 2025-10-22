@@ -40,7 +40,8 @@ public class SweetDreamsEditor : ModuleRules
 				"SlateCore",
 				"SweetDreamsFree",
 				"AssetTools",
-				"UnrealEd"
+				"UnrealEd",
+				"UMGEditor"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

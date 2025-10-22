@@ -13,8 +13,11 @@ void FSweetDreamsEditorModule::StartupModule()
 
 	EAssetTypeCategories::Type SweetDreamsCategory = AssetTools.RegisterAdvancedAssetCategory(FName("SweetDreams"), FText::FromString("Sweet Dreams"));
 
-	TSharedRef<IAssetTypeActions> Action = MakeShareable(new FAssetTypeActions_SweetDreamsGameMode(SweetDreamsCategory));
-	AssetTools.RegisterAssetTypeActions(Action);
+	AssetTools.RegisterAssetTypeActions(MakeShareable(new FAssetTypeActions_SweetDreamsGameMode(SweetDreamsCategory)));
+	AssetTools.RegisterAssetTypeActions(MakeShareable(new FAssetTypeActions_SweetDreamsCharacter(SweetDreamsCategory)));
+	AssetTools.RegisterAssetTypeActions(MakeShareable(new FAssetTypeActions_SweetDreamsPlayerController(SweetDreamsCategory)));
+	AssetTools.RegisterAssetTypeActions(MakeShareable(new FAssetTypeActions_SweetDreamsWidget(SweetDreamsCategory)));
+	AssetTools.RegisterAssetTypeActions(MakeShareable(new FAssetTypeActions_SweetDreamsSaveFile(SweetDreamsCategory)));
 
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 }
