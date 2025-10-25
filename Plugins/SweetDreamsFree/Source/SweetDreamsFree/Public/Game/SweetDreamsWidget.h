@@ -21,7 +21,6 @@ class SWEETDREAMSFREE_API USweetDreamsWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	USweetDreamsWidget(const FObjectInitializer& ObjectInitializer);
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams Widget")
 	FName WidgetName;
@@ -30,24 +29,26 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams Widget")
 	bool bIgnoreThisForVisibility = false;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams Widget")
-	EInputMode InputMode;
+	EInputMode InputMode = EInputMode::UI;
 
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Widget")
-	void OnFirstShow();
+	//
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Widget")
 	void OnShow();
+	//
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Widget")
 	void OnHide();
+
+
+	// Changes the visibility 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Widget")
-	void HideSelf();
+	virtual void ShowWidget();
+	//
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Widget")
+	virtual void HideWidget();
+
+	//
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Widget")
 	int32 GetInitialZOrder() const { return InitialZOrder; }
-	//
-	void HUDShow();
-
-protected:
-	UPROPERTY(BlueprintReadOnly, Category = "Sweet Dreams Widget")
-	bool bWidgetShowed = false;
 
 };
 

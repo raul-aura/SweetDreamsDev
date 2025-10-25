@@ -39,9 +39,9 @@ public:
 	FColor ErrorColor = FColor(216, 29, 29);
 
 	// SAVE
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings", meta = (Tooltip = "On Core initialize, the Persistent Save and Local Save will always be created and saved."))
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings", meta = (Tooltip = "On Core Initialize(), the Persistent Save and Local Save will always be created and saved."))
 	bool bEnableAutoCreateSave = true;
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings", meta = (Tooltip = "On Game Mode initialize, the Persistent and Local save files will always be loaded, if any."))
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings", meta = (Tooltip = "On Game Mode StartPlay(), the Persistent and Local save files will always be loaded, if any."))
 	bool bEnableAutoLoadSave = true;
 	
 	//Name of the Persistent Save File

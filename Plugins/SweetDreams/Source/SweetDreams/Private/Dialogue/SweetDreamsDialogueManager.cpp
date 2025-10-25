@@ -416,7 +416,7 @@ void ASweetDreamsDialogueManager::HideWidget()
 		if (!PC->IsLocalController()) return;
 		if (ASweetDreamsHUD* HUD = Cast<ASweetDreamsHUD>(PC->GetHUD()))
 		{
-			DialogueWidget->HideSelf();
+			HUD->HideWidget(DialogueWidget);
 		}
 		else
 		{

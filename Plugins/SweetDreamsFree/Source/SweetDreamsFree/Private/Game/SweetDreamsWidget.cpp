@@ -1,29 +1,17 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Game/SweetDreamsWidget.h"
-//#include "Player/SweetDreamsHUD.h"
 
-USweetDreamsWidget::USweetDreamsWidget(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+void USweetDreamsWidget::ShowWidget()
 {
-	InputMode = EInputMode::UI;
-}
-
-void USweetDreamsWidget::HideSelf()
-{
-	//if (ASweetDreamsHUD* SweetDreamsHUD = Cast<ASweetDreamsHUD>(GetOwningPlayer()->GetHUD()))
-	//{
-	//	SweetDreamsHUD->HideWidget(this);
-	//}
-}
-
-void USweetDreamsWidget::HUDShow()
-{
-	if (!bWidgetShowed)
-	{
-		OnFirstShow();
-		bWidgetShowed = true;
-		return;
-	}
+	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	OnShow();
 }
+
+void USweetDreamsWidget::HideWidget()
+{
+	SetVisibility(ESlateVisibility::Collapsed);
+	OnHide();
+}
+
+

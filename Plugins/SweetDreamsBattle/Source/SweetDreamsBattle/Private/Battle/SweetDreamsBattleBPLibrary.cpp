@@ -2,7 +2,6 @@
 
 #include "Battle/SweetDreamsBattleBPLibrary.h"
 #include "Battle/SweetDreamsBattleCore.h"
-#include "Player/BattlerDataComponent.h"
 #include "Battle/SweetDreamsBattle.h"
 
 USweetDreamsBattleCore* USweetDreamsBattleBPLibrary::SweetDreamsBattleCore = nullptr;
@@ -62,7 +61,7 @@ int32 USweetDreamsBattleBPLibrary::UpdateLevelsByAverage(const UObject* WorldCon
 int32 USweetDreamsBattleBPLibrary::GetAverageLevel(const UObject* WorldContext, const TArray<AActor*>& Actors)
 {
 	int32 Avarage = 0;
-	if (Actors.Num() == 0) return 0;
+	/*if (Actors.Num() == 0) return 0;
 	for (const AActor* Actor : Actors)
 	{
 		if (IsValid(Actor))
@@ -74,14 +73,14 @@ int32 USweetDreamsBattleBPLibrary::GetAverageLevel(const UObject* WorldContext, 
 			}
 		}
 	}
-	Avarage /= Actors.Num();
+	Avarage /= Actors.Num();*/
 	return Avarage;
 }
 
 void USweetDreamsBattleBPLibrary::OverrideLevels(const UObject* WorldContext, const TArray<AActor*>& Actors, int32 NewLevel)
 {
 	if (Actors.Num() == 0) return;
-	for (const AActor* Actor : Actors)
+	/*for (const AActor* Actor : Actors)
 	{
 		if (IsValid(Actor))
 		{
@@ -91,7 +90,7 @@ void USweetDreamsBattleBPLibrary::OverrideLevels(const UObject* WorldContext, co
 				Data->SetLevelNumber(NewLevel);
 			}
 		}
-	}
+	}*/
 }
 
 float USweetDreamsBattleBPLibrary::IncreaseParameterLinear(UPARAM(ref) float& Parameter, float BaseParameter, float AdditionalParameter, float Multiplier)

@@ -23,13 +23,17 @@ public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Logout(AController* Exiting) override;
 	
+	// Implementable event called by the SweetDreamsCore subsystem when a new level started loading.
 	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core")
 	void OnLevelLoadStarted(UWorld* LoadingLevel);
+	// Implementable event called by the SweetDreamsCore subsystem when a new level finished loading.
 	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core")
 	void OnLevelLoadFinished(UWorld* LoadingLevel);
 
+	// Helper function that calls "KickPlayer()" on the current GameSession class.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
 	bool KickPlayer(APlayerController* KickedPlayer, const FText& KickReason);
+	// Pure function that returns all connected Player Controllers to this server, added on PostLogin() function.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core")
 	TArray<APlayerController*> GetConnectedPlayers(bool bExcludeLocalPlayer = false) const;
 

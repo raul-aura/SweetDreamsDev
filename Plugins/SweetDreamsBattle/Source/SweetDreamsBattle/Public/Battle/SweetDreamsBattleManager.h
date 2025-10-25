@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Battle/BattleManagerStructs.h"
+#include "Data/BattleDataTypes.h"
 #include "SweetDreamsBattleManager.generated.h"
 
 class USceneComponent;
@@ -55,6 +55,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")
 	bool bBattlePaused = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")
-	TArray<FBattleActorData> Battlers;
+	TArray<AActor*> Battlers;
 	
 };

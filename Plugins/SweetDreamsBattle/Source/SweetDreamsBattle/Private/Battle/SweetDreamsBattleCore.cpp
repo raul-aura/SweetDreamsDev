@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Battle/SweetDreamsBattleCore.h"
-#include "Player/BattlerDataComponent.h"
 #include "Data/SweetDreamsLevel.h"
 
 USweetDreamsBattleCore::USweetDreamsBattleCore() {}

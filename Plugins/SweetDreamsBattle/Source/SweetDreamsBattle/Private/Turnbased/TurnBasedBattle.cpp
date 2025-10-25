@@ -5,7 +5,6 @@
 #include "Turnbased/BattleInputAction.h"
 #include "Algo/Count.h"
 #include "Turnbased/TurnBasedBattleWidget.h"
-#include "Player/BattlerDataComponent.h"
 #include "Data/BattleElement.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -70,7 +69,7 @@ void ATurnBasedBattle::EvaluateTransforms()
 void ATurnBasedBattle::HandleDuplicateNames(const TArray<AActor*>& Battlers)
 {
 	if (Battlers.Num() == 0) return;
-	TMap<FString, TArray<UBattlerDataComponent*>> NameToBattlers;
+	/*TMap<FString, TArray<UBattlerDataComponent*>> NameToBattlers;
 	for (AActor* Battler : Battlers)
 	{
 		if (IsValid(Battler))
@@ -98,7 +97,7 @@ void ATurnBasedBattle::HandleDuplicateNames(const TArray<AActor*>& Battlers)
 				BattlersWithName[i]->SetCharacterName(UniqueName);
 			}
 		}
-	}
+	}*/
 }
 
 void ATurnBasedBattle::GetAlliesFromArray(TArray<TSoftClassPtr<AActor>> NewAllies)
@@ -194,19 +193,19 @@ FString ATurnBasedBattle::GetBattlerBaseName(const FString& Name)
 void ATurnBasedBattle::StartTurn()
 {
 	CurrentTurn++;
-	for (AActor* Battler : AllBattlers)
-	{
-		if (IsValid(Battler))
-		{
-			UBattlerDataComponent* Data;
-			Data = Battler->FindComponentByClass<UBattlerDataComponent>();
-			if (IsValid(Data))
-			{
-				// call TURN STARTED on interface of all battlers
-				// consume TURN LIFESTATE on State elements
-			}
-		}
-	}
+	//for (AActor* Battler : AllBattlers)
+	//{
+	//	if (IsValid(Battler))
+	//	{
+	//		UBattlerDataComponent* Data;
+	//		Data = Battler->FindComponentByClass<UBattlerDataComponent>();
+	//		if (IsValid(Data))
+	//		{
+	//			// call TURN STARTED on interface of all battlers
+	//			// consume TURN LIFESTATE on State elements
+	//		}
+	//	}
+	//}
 	CurrentAction = 0;
 	Actions.Empty();
 	StartTurnAction();
@@ -219,8 +218,8 @@ void ATurnBasedBattle::LoadTurnActions(TArray<AActor*> Battlers, bool bIsAlly)
 	{
 		if (IsValid(Battler))
 		{
-			UBattlerDataComponent* Data;
-			Data = Battler->FindComponentByClass<UBattlerDataComponent>();
+			/*UBattlerDataComponent* Data;
+			Data = Battler->FindComponentByClass<UBattlerDataComponent>();*/
 			//if (IsValid(Data) && Data->GetIsAbleToAct() && !Data->IsDead())
 			//{
 			//	int32 ActionsToAdd = Data->GetActionsPerTurn();

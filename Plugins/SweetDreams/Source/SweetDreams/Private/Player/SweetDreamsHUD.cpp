@@ -23,6 +23,7 @@ void ASweetDreamsHUD::CreateStartingWidgets()
 		{
 			NewWidget->SetVisibility(ESlateVisibility::Collapsed);
 			NewWidget->AddToViewport(NewWidget->GetInitialZOrder());
+			// TODO: bind hide/show functions to widget delegates
 			AllWidgets.Add(NewWidget);
 		}
 	}
@@ -44,17 +45,15 @@ USweetDreamsWidget* ASweetDreamsHUD::CreateAndStoreWidget(TSubclassOf<USweetDrea
 void ASweetDreamsHUD::ShowWidget(USweetDreamsWidget* Widget)
 {
 	if (!IsValid(Widget)) return;
-	Widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	UpdatePlayerInputMode();
-	Widget->HUDShow();
+	Widget->ShowWidget();
 }
 
 void ASweetDreamsHUD::HideWidget(USweetDreamsWidget* Widget)
 {
 	if (!IsValid(Widget)) return;
-	Widget->SetVisibility(ESlateVisibility::Collapsed);
 	UpdatePlayerInputMode();
-	Widget->OnHide();
+	Widget->HideWidget();
 }
 
 void ASweetDreamsHUD::OverridePlayerInputMode(USweetDreamsWidget* WidgetToFocus)
