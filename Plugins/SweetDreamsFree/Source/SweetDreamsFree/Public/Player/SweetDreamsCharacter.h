@@ -18,16 +18,22 @@ class SWEETDREAMSFREE_API ASweetDreamsCharacter : public ACharacter
 public:
 	ASweetDreamsCharacter();
 
+	// Adds movement input in the forward direction of this character.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
 	void MoveForward(float Value);
+	// Adds movement input in the right direction of this character.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
 	void MoveRight(float Value);
+	// Changes the MaxWalkSpeed of the character movement to the running value.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
 	void Run();
+	// Changes the MaxWalkSpeed of the character movement to the walk value.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
 	void StopRunning();
+	// Adds input to the controller control rotation, affecting pitch and adjusted by sensitivity.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
 	void CameraVertical(float Value, float Sensitivity = 1.0f);
+	// Adds input to the controller control rotation, affecting yaw and adjusted by sensitivity.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Character")
 	void CameraHorizontal(float Value, float Sensitivity = 1.0f);
 

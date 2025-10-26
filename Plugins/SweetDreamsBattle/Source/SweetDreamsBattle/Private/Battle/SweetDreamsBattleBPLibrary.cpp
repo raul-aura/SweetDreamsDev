@@ -3,52 +3,45 @@
 #include "Battle/SweetDreamsBattleBPLibrary.h"
 #include "Battle/SweetDreamsBattleCore.h"
 #include "Battle/SweetDreamsBattle.h"
+#include "Core/SweetDreamsBPLibrary.h"
 
-USweetDreamsBattleCore* USweetDreamsBattleBPLibrary::SweetDreamsBattleCore = nullptr;
 
 USweetDreamsBattleBPLibrary::USweetDreamsBattleBPLibrary(const FObjectInitializer& ObjectInitializer)
-: Super(ObjectInitializer)
-{
-}
+	: Super(ObjectInitializer)
+{}
 
 USweetDreamsBattleCore* USweetDreamsBattleBPLibrary::GetSweetDreamsBattleCore(const UObject* WorldContext)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
-	if (!IsValid(WorldContext) && !IsValid(World))
+	if (UWorld* World = USweetDreamsBPLibrary::GetValidWorld(WorldContext))
 	{
-		return nullptr;
+		if (UGameInstance* GameInstance = World->GetGameInstance())
+		{
+			return GameInstance->GetSubsystem<USweetDreamsBattleCore>();
+		}
 	}
-	if (UGameInstance* GameInstance = World->GetGameInstance())
-	{
-		SweetDreamsBattleCore = GameInstance->GetSubsystem<USweetDreamsBattleCore>();
-	}
-	return SweetDreamsBattleCore;
+	return nullptr;
+}
+
+bool USweetDreamsBattleBPLibrary::AreTeamsHostile(const ETeamType TeamA, const ETeamType TeamB)
+{
+	return TeamA != TeamB;
 }
 
 int32 USweetDreamsBattleBPLibrary::GetDifficulty(const UObject* WorldContext)
 {
-	if (!IsValid(SweetDreamsBattleCore))
+	if (USweetDreamsBattleCore* BattleCore = GetSweetDreamsBattleCore(WorldContext))
 	{
-		SweetDreamsBattleCore = GetSweetDreamsBattleCore(WorldContext);
+		return BattleCore->GetDifficulty();
 	}
-	if (!IsValid(SweetDreamsBattleCore))
-	{
-		return 0;
-	}
-	return SweetDreamsBattleCore->GetDifficulty();
+	return INDEX_NONE;
 }
 
 void USweetDreamsBattleBPLibrary::SetDifficulty(const UObject* WorldContext, int32 NewDifficulty)
 {
-	if (!IsValid(SweetDreamsBattleCore))
+	if (USweetDreamsBattleCore* BattleCore = GetSweetDreamsBattleCore(WorldContext))
 	{
-		SweetDreamsBattleCore = GetSweetDreamsBattleCore(WorldContext);
+		return BattleCore->SetDifficulty(NewDifficulty);
 	}
-	if (!IsValid(SweetDreamsBattleCore))
-	{
-		return;
-	}
-	SweetDreamsBattleCore->SetDifficulty(NewDifficulty);
 }
 
 int32 USweetDreamsBattleBPLibrary::UpdateLevelsByAverage(const UObject* WorldContext, const TArray<AActor*>& TargetActors, const TArray<AActor*>& AvarageActors)

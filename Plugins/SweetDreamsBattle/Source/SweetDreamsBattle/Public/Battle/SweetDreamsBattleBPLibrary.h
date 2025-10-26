@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Data/BattleDataTypes.h"
 #include "SweetDreamsBattleBPLibrary.generated.h"
 
 UCLASS()
@@ -11,10 +12,18 @@ class USweetDreamsBattleBPLibrary : public UBlueprintFunctionLibrary
 	GENERATED_UCLASS_BODY()
 
 public:
-	static class USweetDreamsBattleCore* SweetDreamsBattleCore;
 
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static USweetDreamsBattleCore* GetSweetDreamsBattleCore(const UObject* WorldContext);
+
+	// BATTLE
+	static bool AreTeamsHostile(const ETeamType TeamA, const ETeamType TeamB);
+
+
+
+
+
+
 	// DIFFICULTY
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
 	static int32 GetDifficulty(const UObject* WorldContext);

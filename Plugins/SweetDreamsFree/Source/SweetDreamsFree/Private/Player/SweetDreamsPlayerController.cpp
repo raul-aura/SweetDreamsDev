@@ -74,7 +74,6 @@ void ASweetDreamsPlayerController::BeginPlay()
 
 void ASweetDreamsPlayerController::ToggleInputTimer(float Duration)
 {
-	FTimerHandle InputTimer;
 	DisableInput(this);
 	GetWorldTimerManager().SetTimer(InputTimer, [this]() {
 		EnableInput(this);

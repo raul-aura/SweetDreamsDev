@@ -38,6 +38,16 @@ public:
 		: ModifierType(EParameterModifierType::Absolute),
 		Value(0.f)
 	{}
+
+	FBattleParameterModifier(EParameterModifierType InType, float InValue)
+		: ModifierType(InType),
+		Value(InValue)
+	{}
+
+	bool operator==(const FBattleParameterModifier& Other) const
+	{
+		return ModifierType == Other.ModifierType && FMath::IsNearlyEqual(Value, Other.Value);
+	}
 };
 
 
@@ -63,6 +73,21 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle Parameter")
 	TArray<FBattleParameterModifier> Modifiers;
 
+	void AddModifier(const FBattleParameterModifier& Modifier)
+	{
+		Modifiers.Add(Modifier);
+		EvaluateModifiers();
+	}
+
+	void RemoveModifier(const FBattleParameterModifier& Modifier)
+	{
+		if (Modifiers.Contains(Modifier))
+		{
+			Modifiers.Remove(Modifier);
+			EvaluateModifiers();
+		}
+	}
+	
 	void EvaluateModifiers() 
 	{
 		float Additive = 0.f;
@@ -78,6 +103,7 @@ public:
 			}
 		}
 		CurrentValue = (BaseValue + Additive + (BaseValue * (Percentage / 100.0f))) * Multiplier;
+		CurrentValue = FMath::Clamp(CurrentValue, MinValue, MaxValue);
 	}
 
 	FBattleParamater()

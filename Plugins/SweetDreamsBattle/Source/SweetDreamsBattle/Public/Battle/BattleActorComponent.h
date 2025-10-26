@@ -1,12 +1,10 @@
 
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Data/BattleDataTypes.h"
 #include "BattleActorComponent.generated.h"
-
 
 UCLASS( ClassGroup=("SweetDreams"), meta = (BlueprintSpawnableComponent))
 class SWEETDREAMSBATTLE_API UBattleActorComponent : public UActorComponent
@@ -22,24 +20,37 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void Damage(AActor* Target, float Amount);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void ReceiveDamage(AActor* Instigator, float Amount);
-
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void Heal(AActor* Target, float Amount);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void ReceiveHeal(AActor* Instigator, float Amount);
-
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void Kill();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void Kill(AActor* Target);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void Ressurect();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void Ressurect(AActor* Target);
-
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void SetInCombat(bool bInIsInCombat);
-
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	bool IsAlive() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	bool IsInCombat() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	void AddModifierToParameter(UPARAM(ref) FBattleParamater& Parameter, EParameterModifierType ModifierType, float ModifierValue);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	void RemoveModifierFromParameter(UPARAM(ref) FBattleParamater& Parameter, FBattleParameterModifier Modifier);
 
 protected:
 	virtual void BeginPlay() override;
+
+	TArray<UObject*> GetBattleDependents() const;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters")
 	FBattleParamater Health;

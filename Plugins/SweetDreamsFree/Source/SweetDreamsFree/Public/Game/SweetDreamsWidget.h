@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-//#include "Player/SweetDreamsHUD.h"
 #include "SweetDreamsWidget.generated.h"
 
 UENUM(BlueprintType)
@@ -31,22 +30,22 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sweet Dreams Widget")
 	EInputMode InputMode = EInputMode::UI;
 
-	//
+	// Implementable event called when this widget changes visibility to Self Hit-Test Invisible by ShowWidget() function.
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Widget")
 	void OnShow();
-	//
+	// Implementable event called when this widget changes visibility to Collapsed by HideWidget() function.
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Widget")
 	void OnHide();
 
 
-	// Changes the visibility 
+	// Changes the visibility of this widget to Self Hit-Test Invisible, without affecting children.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Widget")
-	virtual void ShowWidget();
-	//
+	void ShowWidget();
+	// Changes the visibility of this widget to Collapsed.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Widget")
-	virtual void HideWidget();
+	void HideWidget();
 
-	//
+	// Returns the InitialZOrder variable.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Widget")
 	int32 GetInitialZOrder() const { return InitialZOrder; }
 
