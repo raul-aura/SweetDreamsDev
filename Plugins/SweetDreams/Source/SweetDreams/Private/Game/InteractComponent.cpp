@@ -4,6 +4,7 @@
 #include "Game/SweetDreamsInteractInterface.h"
 #include "Camera/CameraComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/OverlapResult.h"
 
 UInteractComponent::UInteractComponent()
 {

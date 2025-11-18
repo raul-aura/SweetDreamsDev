@@ -8,7 +8,8 @@ public class PluginCreatorTarget : TargetRules
 	public PluginCreatorTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
-		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.Add("PluginCreator");
+        DefaultBuildSettings = BuildSettingsVersion.V6;
+        IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
+        ExtraModuleNames.Add("PluginCreator");
 	}
 }

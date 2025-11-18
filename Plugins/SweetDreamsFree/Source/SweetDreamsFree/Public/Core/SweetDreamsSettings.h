@@ -8,7 +8,7 @@
 
 class USweetDreamsSaveFile;
 
-UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
+UENUM(BlueprintType)
 enum class EDebugFlags : uint8
 {
 	NONE = 0 UMETA(Hidden),
@@ -29,7 +29,7 @@ public:
 	FString GameVersion = TEXT("1.0");
 
 	// DEBUG
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (Bitmask, BitmaskEnum = EDebugFlags))
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (Bitmask, BitmaskEnum = "/Script/SweetDreamsFree.EDebugFlags"))
 	int32 DebugFlags;
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (DisplayName = "Info Print Color"))
 	FColor InfoColor = FColor(195, 150, 255);

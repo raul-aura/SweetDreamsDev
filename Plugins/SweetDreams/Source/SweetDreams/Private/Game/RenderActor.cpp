@@ -70,7 +70,7 @@ void ARenderActor::QuickChangeFog(int32 Index)
 	if (FogQuickRender.IsValidIndex(Index))
 	{
 		Fog->FogDensity = FogQuickRender[Index].FogDensity;
-		Fog->FogInscatteringColor = FogQuickRender[Index].FogColor;
+		Fog->FogInscatteringLuminance = FogQuickRender[Index].FogColor;
 		Fog->SetVolumetricFog(FogQuickRender[Index].bIsVolumetric);
 	}
 }

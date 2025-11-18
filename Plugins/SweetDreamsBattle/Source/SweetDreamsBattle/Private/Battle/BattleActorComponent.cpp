@@ -80,7 +80,7 @@ void UBattleActorComponent::Kill()
 	}
 }
 
-void UBattleActorComponent::Kill(AActor* Target)
+void UBattleActorComponent::Kill_Target(AActor* Target)
 {
 	if (UBattleActorComponent* Component = GetBattleActorComponent(Target))
 	{
@@ -96,7 +96,7 @@ void UBattleActorComponent::Ressurect()
 	}
 }
 
-void UBattleActorComponent::Ressurect(AActor* Target)
+void UBattleActorComponent::Ressurect_Target(AActor* Target)
 {
 	if (UBattleActorComponent* Component = GetBattleActorComponent(Target))
 	{

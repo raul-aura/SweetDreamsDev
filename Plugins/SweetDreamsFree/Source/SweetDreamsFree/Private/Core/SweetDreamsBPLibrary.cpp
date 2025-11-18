@@ -179,7 +179,7 @@ USweetDreamsSaveFile* USweetDreamsBPLibrary::GetPersistentSave(const UObject* Wo
 		FString Slot = Core->GetCoreSaveSlot(true);
 		return Core->GetSaveObject(Slot);
 	}
-	return false;
+	return nullptr;
 }
 
 USweetDreamsSaveFile* USweetDreamsBPLibrary::GetLocalSave(const UObject* WorldContext)
@@ -189,7 +189,7 @@ USweetDreamsSaveFile* USweetDreamsBPLibrary::GetLocalSave(const UObject* WorldCo
 		FString Slot = Core->GetCoreSaveSlot(false);
 		return Core->GetSaveObject(Slot);
 	}
-	return false;
+	return nullptr;
 }
 
 void USweetDreamsBPLibrary::PauseActors(UObject* WorldContext, TArray<AActor*> InActors)

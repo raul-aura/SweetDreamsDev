@@ -420,7 +420,7 @@ void ASweetDreamsDialogueManager::HideWidget()
 		}
 		else
 		{
-			DialogueWidget->RemoveFromViewport();
+			DialogueWidget->RemoveFromParent();
 		}
 	}
 }
