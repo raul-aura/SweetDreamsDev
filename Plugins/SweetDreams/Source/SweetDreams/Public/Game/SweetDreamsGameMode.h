@@ -8,10 +8,11 @@
 
 class USweetDreamsCore;
 class ASweetDreamsPlayerController;
+class ULoadingWidget;
 struct FDreamUserSettings;
 
 UCLASS()
-class SWEETDREAMSFREE_API ASweetDreamsGameMode : public AGameModeBase
+class SWEETDREAMS_API ASweetDreamsGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
@@ -23,6 +24,10 @@ public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Logout(AController* Exiting) override;
 	
+	void StartLoadingLevel(TObjectPtr<UWorld> LoadingLevel);
+	void FinishLoadingLevel(TObjectPtr<UWorld> LoadingLevel);
+	void BeginPlayNewLevel(TObjectPtr<UWorld> LoadingLevel);
+
 	// Implementable event called by the SweetDreamsCore subsystem when a new level started loading.
 	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core")
 	void OnLevelLoadStarted(UWorld* LoadingLevel);
@@ -40,6 +45,8 @@ public:
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Core")
 	USweetDreamsCore* SweetDreamsCore = nullptr;
+
+	TSubclassOf<ULoadingWidget> LoadingWidgetClass;
 
 	TArray<APlayerController*> ConnectedPlayers;
 };

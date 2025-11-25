@@ -7,12 +7,14 @@
 #include "GameFramework/GameState.h"
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/GameSession.h"
+#include "Player/SweetDreamsHUD.h"
 #include "Player/SweetDreamsPlayerController.h"
 
 ASweetDreamsGameMode::ASweetDreamsGameMode()
 {
 	DefaultPawnClass = ASweetDreamsCharacter::StaticClass();
 	PlayerControllerClass = ASweetDreamsPlayerController::StaticClass();
+	HUDClass = ASweetDreamsHUD::StaticClass();
 }
 
 void ASweetDreamsGameMode::StartPlay()
@@ -27,6 +29,10 @@ void ASweetDreamsGameMode::StartPlay()
 
 void ASweetDreamsGameMode::BeginPlay()
 {
+	if (IsValid(SweetDreamsCore) && SweetDreamsCore->bIsLoadingLevel) {
+		BeginPlayNewLevel(SweetDreamsCore->CurrentLoadingLevel.Get());
+	}
+
 	Super::BeginPlay();
 }
 
@@ -44,6 +50,37 @@ void ASweetDreamsGameMode::Logout(AController* Exiting)
 		ConnectedPlayers.Remove(ExitingPlayer);
 	}
 	Super::Logout(Exiting);
+}
+
+void ASweetDreamsGameMode::StartLoadingLevel(TObjectPtr<UWorld> LoadingLevel)
+{
+	OnLevelLoadStarted(LoadingLevel.Get());
+
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		if (ASweetDreamsHUD* HUD = Cast<ASweetDreamsHUD>(PC->GetHUD()))
+		{
+			HUD->CreateLoadingWidget(LoadingWidgetClass);
+			HUD->ShowLoadingWidget();
+		}
+	}
+}
+
+void ASweetDreamsGameMode::FinishLoadingLevel(TObjectPtr<UWorld> LoadingLevel)
+{
+	OnLevelLoadFinished(LoadingLevel.Get());
+
+}
+
+void ASweetDreamsGameMode::BeginPlayNewLevel(TObjectPtr<UWorld> LoadingLevel)
+{
+	if (IsValid(SweetDreamsCore)) {
+
+		// create then destroy loading widget
+
+		SweetDreamsCore->bIsLoadingLevel = false;
+		SweetDreamsCore->CurrentLoadingLevel = nullptr;
+	}
 }
 
 bool ASweetDreamsGameMode::KickPlayer(APlayerController* KickedPlayer, const FText& KickReason)

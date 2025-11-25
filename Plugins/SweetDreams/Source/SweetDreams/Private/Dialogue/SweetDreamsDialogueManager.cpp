@@ -387,7 +387,7 @@ void ASweetDreamsDialogueManager::CreateShowWidget()
 
 void ASweetDreamsDialogueManager::ToggleCharacterVisibility(bool bVisible)
 {
-	if (ACharacter* Character = Cast<ACharacter>(GetWorld()->GetFirstLocalPlayerFromController()))
+	if (ACharacter* Character = GetWorld()->GetFirstPlayerController()->GetCharacter())
 	{
 		Character->SetActorHiddenInGame(!bVisible);
 	}

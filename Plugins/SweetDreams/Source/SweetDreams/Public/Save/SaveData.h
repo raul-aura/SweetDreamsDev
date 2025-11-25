@@ -6,7 +6,7 @@
 #include "SaveData.generated.h"
 
 USTRUCT(BlueprintType)
-struct SWEETDREAMSFREE_API FSaveData
+struct SWEETDREAMS_API FSaveData
 {
 	GENERATED_BODY()
 

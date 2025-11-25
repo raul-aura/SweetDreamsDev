@@ -26,7 +26,7 @@ public class SweetDreamsBattle : ModuleRules
 			{
 				"Core",
 				"UMG",
-				"SweetDreamsFree",
+				"SweetDreams",
 				"LevelSequence",
 				"MovieScene",
 				"AIModule",

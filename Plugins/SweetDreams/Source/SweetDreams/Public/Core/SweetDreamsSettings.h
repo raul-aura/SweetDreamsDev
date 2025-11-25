@@ -18,7 +18,7 @@ enum class EDebugFlags : uint8
 ENUM_CLASS_FLAGS(EDebugFlags)
 
 UCLASS(Config = Game, defaultconfig, meta = (DisplayName = "Sweet Dreams Core"))
-class SWEETDREAMSFREE_API USweetDreamsSettings : public UDeveloperSettings
+class SWEETDREAMS_API USweetDreamsSettings : public UDeveloperSettings
 {
 	GENERATED_BODY()
 	

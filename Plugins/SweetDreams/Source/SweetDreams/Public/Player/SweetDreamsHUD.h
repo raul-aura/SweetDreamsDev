@@ -30,11 +30,13 @@ public:
 	void UpdatePlayerInputMode();
 	//
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
-	ULoadingWidget* CreateLoadingWidget(TSubclassOf<USweetDreamsWidget> WidgetClass);
+	ULoadingWidget* CreateLoadingWidget(TSubclassOf<ULoadingWidget> WidgetClass);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	void ShowLoadingWidget();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	void HideLoadingWidget();
+	// destroy loading widget
+	// begin play new level loading widget
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	ULoadingWidget* GetLoadingWidget() const;
 	//

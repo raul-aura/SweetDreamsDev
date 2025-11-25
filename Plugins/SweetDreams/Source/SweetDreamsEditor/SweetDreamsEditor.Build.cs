@@ -38,7 +38,7 @@ public class SweetDreamsEditor : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"SweetDreamsFree",
+				"SweetDreams",
 				"AssetTools",
 				"UnrealEd",
 				"UMGEditor"

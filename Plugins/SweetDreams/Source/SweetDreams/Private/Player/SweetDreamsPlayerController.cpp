@@ -5,10 +5,16 @@
 #include "Core/SweetDreamsBPLibrary.h"
 #include "Core/SweetDreamsSettings.h"
 #include "Player/SweetDreamsCharacter.h"
+#include "Player/SweetDreamsHUD.h"
 
 ASweetDreamsCharacter* ASweetDreamsPlayerController::GetDreamCharacter() const
 {
 	return Cast<ASweetDreamsCharacter>(GetCharacter());
+}
+
+ASweetDreamsHUD* ASweetDreamsPlayerController::GetSweetDreamsHUD() const
+{
+	return Cast<ASweetDreamsHUD>(GetHUD());
 }
 
 void ASweetDreamsPlayerController::MoveForward(float Value)

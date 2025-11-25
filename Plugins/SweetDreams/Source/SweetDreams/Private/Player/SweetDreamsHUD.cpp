@@ -23,7 +23,10 @@ void ASweetDreamsHUD::CreateStartingWidgets()
 		{
 			NewWidget->SetVisibility(ESlateVisibility::Collapsed);
 			NewWidget->AddToViewport(NewWidget->GetInitialZOrder());
-			// TODO: bind hide/show functions to widget delegates
+
+			NewWidget->OnWidgetShow.AddUniqueDynamic(this, &ASweetDreamsHUD::ShowWidget);
+			NewWidget->OnWidgetHide.AddUniqueDynamic(this, &ASweetDreamsHUD::HideWidget);
+
 			AllWidgets.Add(NewWidget);
 		}
 	}
@@ -37,6 +40,10 @@ USweetDreamsWidget* ASweetDreamsHUD::CreateAndStoreWidget(TSubclassOf<USweetDrea
 	{
 		NewWidget->SetVisibility(ESlateVisibility::Collapsed);
 		NewWidget->AddToViewport(NewWidget->GetInitialZOrder());
+
+		NewWidget->OnWidgetShow.AddUniqueDynamic(this, &ASweetDreamsHUD::ShowWidget);
+		NewWidget->OnWidgetHide.AddUniqueDynamic(this, &ASweetDreamsHUD::HideWidget);
+
 		AllWidgets.Add(NewWidget);
 	}
 	return NewWidget;
@@ -101,7 +108,7 @@ void ASweetDreamsHUD::UpdatePlayerInputMode()
 	OverridePlayerInputMode(TopWidget);
 }
 
-ULoadingWidget* ASweetDreamsHUD::CreateLoadingWidget(TSubclassOf<USweetDreamsWidget> WidgetClass)
+ULoadingWidget* ASweetDreamsHUD::CreateLoadingWidget(TSubclassOf<ULoadingWidget> WidgetClass)
 {
 	LoadingWidget = Cast<ULoadingWidget>(CreateAndStoreWidget(WidgetClass));
 	return LoadingWidget;

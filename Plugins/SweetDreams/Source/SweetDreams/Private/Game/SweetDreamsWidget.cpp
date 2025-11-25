@@ -5,13 +5,17 @@
 void USweetDreamsWidget::ShowWidget()
 {
 	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
 	OnShow();
+	OnWidgetShow.Broadcast(this);
 }
 
 void USweetDreamsWidget::HideWidget()
 {
 	SetVisibility(ESlateVisibility::Collapsed);
+
 	OnHide();
+	OnWidgetHide.Broadcast(this);
 }
 
 

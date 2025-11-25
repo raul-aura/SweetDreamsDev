@@ -24,12 +24,14 @@ public class SweetDreams : ModuleRules
 			new string[]
 			{
 				"Core",
-				"SweetDreamsFree",
                 "AIModule",
                 "LevelSequence",
                 "MovieScene",
                 "UMG",
-				"CinematicCamera",
+                "DeveloperSettings",
+                "CinematicCamera",
+                "OnlineSubsystem",
+                "OnlineSubsystemUtils"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

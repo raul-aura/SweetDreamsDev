@@ -9,7 +9,7 @@
 class ASweetDreamsCharacter;
 
 UCLASS()
-class SWEETDREAMSFREE_API ASweetDreamsPlayerController : public APlayerController
+class SWEETDREAMS_API ASweetDreamsPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
@@ -19,6 +19,8 @@ public:
 	// Gets the Character casted to SweetDreamsCharacter class.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	ASweetDreamsCharacter* GetDreamCharacter() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	ASweetDreamsHUD* GetSweetDreamsHUD() const;
 
 	// Gets DreamCharacter and calls the internal MoveForward() function, if valid.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")

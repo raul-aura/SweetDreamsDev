@@ -11,7 +11,7 @@ class USpringArmComponent;
 class UCameraComponent;
 
 UCLASS()
-class SWEETDREAMSFREE_API ASweetDreamsCharacter : public ACharacter
+class SWEETDREAMS_API ASweetDreamsCharacter : public ACharacter
 {
 	GENERATED_BODY()
 

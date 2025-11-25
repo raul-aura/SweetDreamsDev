@@ -14,7 +14,7 @@ class USweetDreamsSaveInterface : public UInterface
 	GENERATED_BODY()
 };
 
-class SWEETDREAMSFREE_API ISweetDreamsSaveInterface
+class SWEETDREAMS_API ISweetDreamsSaveInterface
 {
 	GENERATED_BODY()
 

@@ -309,20 +309,25 @@ TArray<AActor*> USweetDreamsCore::GetAllActorsWorld() const
 void USweetDreamsCore::LoadLevel(TSoftObjectPtr<UWorld> Level)
 {
 	if (Level.IsNull()) return;
+
+	bIsLoadingLevel = true;
 	CurrentLoadingLevel = Level;
+
 	TArray<FSoftObjectPath> AssetList;
 	AssetList.Add(Level.ToSoftObjectPath());
+
 	ASweetDreamsGameMode* DreamGameMode = Cast<ASweetDreamsGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 	if (IsValid(DreamGameMode))
 	{
-		DreamGameMode->OnLevelLoadStarted(Level.Get());
+		DreamGameMode->StartLoadingLevel(Level.Get());
 	}
+
 	FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
 	FStreamableDelegate StreamableDelegate;
 	StreamableDelegate.BindLambda([this, DreamGameMode, Level]() {
 		if (IsValid(DreamGameMode))
 		{
-			DreamGameMode->OnLevelLoadFinished(Level.Get());
+			DreamGameMode->FinishLoadingLevel(Level.Get());
 		}
 		});
 	StreamableManager.RequestAsyncLoad(AssetList, StreamableDelegate);

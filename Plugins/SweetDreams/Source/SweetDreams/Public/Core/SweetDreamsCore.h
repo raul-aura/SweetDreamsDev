@@ -19,7 +19,7 @@ enum class EPrintType : uint8
 };
 
 UCLASS(Category = "SweetDreams|Core")
-class SWEETDREAMSFREE_API USweetDreamsCore : public UGameInstanceSubsystem
+class SWEETDREAMS_API USweetDreamsCore : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
@@ -54,6 +54,7 @@ public:
 	// LOADING
 	void LoadLevel(TSoftObjectPtr<UWorld> Level);
 	TSoftObjectPtr<UWorld> CurrentLoadingLevel;
+	bool bIsLoadingLevel = false;
 
 protected:
 
