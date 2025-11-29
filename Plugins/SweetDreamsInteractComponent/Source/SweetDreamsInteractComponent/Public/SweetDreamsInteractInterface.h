@@ -12,7 +12,7 @@ class USweetDreamsInteractInterface : public UInterface
 	GENERATED_BODY()
 };
 
-class SWEETDREAMS_API ISweetDreamsInteractInterface
+class SWEETDREAMSINTERACTCOMPONENT_API ISweetDreamsInteractInterface
 {
 	GENERATED_BODY()
 

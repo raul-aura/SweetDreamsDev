@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Dialogue/DialogueStructs.h"
+#include "DialogueStructs.h"
 #include "SweetDreamsDialogueManager.generated.h"
 
 class UDialogueWidget;
@@ -13,7 +13,7 @@ class UCineCameraComponent;
 class UMulticameraComponent;
 
 UCLASS()
-class SWEETDREAMS_API ASweetDreamsDialogueManager : public AActor
+class SWEETDREAMSDIALOGUE_API ASweetDreamsDialogueManager : public AActor
 {
 	GENERATED_BODY()
 	

@@ -17,7 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemUnequipped, UInventoryItem*, 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemRemoved, UInventoryItem*, Item);
 
 UCLASS( ClassGroup = ("SweetDreams"), meta=(BlueprintSpawnableComponent))
-class SWEETDREAMS_API UInventoryComponent : public UActorComponent
+class SWEETDREAMSITEMSYSTEM_API UInventoryComponent : public UActorComponent
 {
 	GENERATED_BODY()
 

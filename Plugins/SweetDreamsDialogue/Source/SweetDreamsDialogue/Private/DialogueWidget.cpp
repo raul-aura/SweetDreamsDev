@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Dialogue/DialogueWidget.h"
-#include "Dialogue/SweetDreamsDialogueManager.h"
+#include "DialogueWidget.h"
+#include "SweetDreamsDialogueManager.h"
 
 void UDialogueWidget::SetCurrentDialogue(FSweetDreamsDialogue Dialogue)
 {

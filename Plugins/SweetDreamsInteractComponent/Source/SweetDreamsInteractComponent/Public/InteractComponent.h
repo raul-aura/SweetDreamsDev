@@ -17,7 +17,7 @@ enum class ERangedTraceShape : uint8
 };
 
 UCLASS(ClassGroup = ("SweetDreams"), meta = (BlueprintSpawnableComponent))
-class SWEETDREAMS_API UInteractComponent : public UActorComponent
+class SWEETDREAMSINTERACTCOMPONENT_API UInteractComponent : public UActorComponent
 {
 	GENERATED_BODY()
 

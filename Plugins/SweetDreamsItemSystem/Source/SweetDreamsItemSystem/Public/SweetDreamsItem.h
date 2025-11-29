@@ -9,7 +9,7 @@
 class UItemParameters;
 
 UCLASS(Blueprintable, BlueprintType)
-class SWEETDREAMS_API USweetDreamsItem : public UDataAsset
+class SWEETDREAMSITEMSYSTEM_API USweetDreamsItem : public UDataAsset
 {
 	GENERATED_BODY()
 

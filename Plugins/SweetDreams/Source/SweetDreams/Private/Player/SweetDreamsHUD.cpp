@@ -124,6 +124,31 @@ void ASweetDreamsHUD::HideLoadingWidget()
 	HideWidget(LoadingWidget);
 }
 
+void ASweetDreamsHUD::DestroyLoadingWidget()
+{
+	if (IsValid(LoadingWidget))
+	{
+		HideWidget(LoadingWidget);
+		LoadingWidget->RemoveFromParent();
+		LoadingWidget = nullptr;
+	}
+}
+
+void ASweetDreamsHUD::StartLoadingWidget()
+{
+	LoadingWidget->OnLoadingStart();
+}
+
+void ASweetDreamsHUD::FinishLoadingWidget()
+{
+	LoadingWidget->OnLoadingFinish();
+}
+
+void ASweetDreamsHUD::BeginPlayNewLevelLoadingWidget()
+{
+	LoadingWidget->OnBeginPlayLoadedLevel();
+}
+
 ULoadingWidget* ASweetDreamsHUD::GetLoadingWidget() const
 {
 	return LoadingWidget;

@@ -36,6 +36,7 @@ public:
 	static FString GetGameVersion(const UObject* WorldContext);
 
 	// SAVE
+	
 	// Creates a custom Save Object using the specified class and stores in the CustomSaves array of the SweetDreamsCore Subsystem.
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* CreateCustomSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, FString CustomSlot, bool& bSuccessful);
@@ -115,11 +116,21 @@ public:
 	// MATH
 
 	// Returns true if the random number is equal or less than the specified chance normalized.
-	UFUNCTION(BlueprintPure, meta = (ExpandBoolAsExecs = "ReturnValue"), Category = "Sweet Dreams|Core|Math")
+	UFUNCTION(BlueprintCallable, meta = (ExpandBoolAsExecs = "ReturnValue"), Category = "Sweet Dreams|Core|Math")
 	static bool CalculateChance(float& RandomizedValue, float Chance = 100.f);
 	// Returns true if the number is multiple of the interval, accepting a tolerance.
-	UFUNCTION(BlueprintPure, meta = (ExpandBoolAsExecs = "ReturnValue"), Category = "Sweet Dreams|Core|Math")
+	UFUNCTION(BlueprintCallable, meta = (ExpandBoolAsExecs = "ReturnValue"), Category = "Sweet Dreams|Core|Math")
 	static bool IsMultipleOf(const float Number, const float Interval, const float Tolerance = 0.01f);
+
+	// GLOBAL VARIABLES
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Global Variables", meta = (WorldContext = "WorldContext"))
+	static void SetGlobalInt(const UObject* WorldContext, FName Key, int32 Value);
+	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Global Variables", meta = (WorldContext = "WorldContext"))
+	static int32 GetGlobalInt(const UObject* WorldContext, FName Key);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Global Variables", meta = (WorldContext = "WorldContext"))
+	static void SetGlobalBool(const UObject* WorldContext, FName Key, bool Value);
+	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|Core|Global Variables", meta = (WorldContext = "WorldContext"))
+	static bool GetGlobalBool(const UObject* WorldContext, FName Key);
 
 	// REPLICATION
 

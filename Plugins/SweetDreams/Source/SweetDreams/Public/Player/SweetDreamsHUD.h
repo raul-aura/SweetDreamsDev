@@ -35,8 +35,11 @@ public:
 	void ShowLoadingWidget();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	void HideLoadingWidget();
-	// destroy loading widget
-	// begin play new level loading widget
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	void DestroyLoadingWidget();
+	void StartLoadingWidget();
+	void FinishLoadingWidget();
+	void BeginPlayNewLevelLoadingWidget();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	ULoadingWidget* GetLoadingWidget() const;
 	//

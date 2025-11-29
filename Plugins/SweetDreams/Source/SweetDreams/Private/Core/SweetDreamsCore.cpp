@@ -56,39 +56,38 @@ void USweetDreamsCore::Deinitialize()
 // Debug
 void USweetDreamsCore::PrintDream(const UObject* DreamOrigin, FString Dream, EPrintType Severity, float Duration)
 {
-	if (!CoreSettings || !(CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintEnabled)))
-	{
-		return;
-	}
-	FString Origin = TEXT("[SweetDreams]");
-	if (IsValid(DreamOrigin))
-	{
-		Origin = FString::Printf(TEXT("[%s]"), *DreamOrigin->GetName());
-	}
-	Dream = Origin + " " + Dream;
-	FColor DreamColor;
+	if (!CoreSettings || !(CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintEnabled))) return;
+
+	const FString Origin = IsValid(DreamOrigin)
+		? FString::Printf(TEXT("[%s]"), *DreamOrigin->GetName())
+		: TEXT("[SweetDreams]");
+
+	Dream = Origin + TEXT(" ") + Dream;
+
+	FColor Color = FColor::White;
+
 	switch (Severity)
 	{
-	case EPrintType::INFO:
-		DreamColor = CoreSettings->InfoColor;
-		UE_LOG(LogCore, Display, TEXT("%s"), *Dream);
-		break;
 	case EPrintType::WARNING:
-		DreamColor = CoreSettings->WarningColor;
+		Color = CoreSettings->WarningColor;
 		UE_LOG(LogCore, Warning, TEXT("%s"), *Dream);
 		break;
+
 	case EPrintType::ERROR:
-		DreamColor = CoreSettings->ErrorColor;
+		Color = CoreSettings->ErrorColor;
 		UE_LOG(LogCore, Error, TEXT("%s"), *Dream);
 		break;
+
+	case EPrintType::INFO:
 	default:
-		DreamColor = FColor::White;
+		Color = CoreSettings->InfoColor;
 		UE_LOG(LogCore, Display, TEXT("%s"), *Dream);
 		break;
 	}
+
 	if (GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, Duration, DreamColor, Dream);
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, Duration, Color, Dream);
 	}
 }
 
@@ -237,21 +236,27 @@ USweetDreamsSaveFile* USweetDreamsCore::GetSaveObject(const FString& Slot) const
 void USweetDreamsCore::SaveData(USweetDreamsSaveFile* Save)
 {
 	if (!IsValid(Save)) return;
+
 	FName CurrentLevelName = FName(GetWorld()->GetMapName());
+
 	Save->SavedData.RemoveAll([&CurrentLevelName](const FSaveData& Data) {
 		return Data.LevelName == CurrentLevelName;
-		});
+	});
+
 	for (AActor* Actor : GetAllActorsWorld())
 	{
 		if (!IsValid(Actor) || !Actor->Implements<USweetDreamsSaveInterface>()) continue;
+
 		FSaveData Data;
 		Data.ActorName = Actor->GetFName();
 		Data.LevelName = CurrentLevelName;
 		Data.CustomData = ISweetDreamsSaveInterface::Execute_GetCustomData(Actor);
+
 		FMemoryWriter MemoryWriter(Data.ByteData);
 		FObjectAndNameAsStringProxyArchive Archive(MemoryWriter, true);
 		Archive.ArIsSaveGame = true;
 		Actor->Serialize(Archive);
+
 		Save->SavedData.Add(Data);
 	}
 	Save->LastTimeSaved = FDateTime::Now();
@@ -329,6 +334,36 @@ void USweetDreamsCore::LoadLevel(TSoftObjectPtr<UWorld> Level)
 		{
 			DreamGameMode->FinishLoadingLevel(Level.Get());
 		}
-		});
+	});
 	StreamableManager.RequestAsyncLoad(AssetList, StreamableDelegate);
+}
+
+void USweetDreamsCore::SetGlobalInt(FName Key, int32 Value)
+{
+	GlobalInts.Emplace(Key, Value);
+}
+
+int32 USweetDreamsCore::GetGlobalInt(FName Key)
+{
+	if (int32* Value = GlobalInts.Find(Key))
+	{
+		return *Value;
+	}
+
+	return INDEX_NONE;
+}
+
+void USweetDreamsCore::SetGlobalBool(FName Key, bool Value)
+{
+	GlobalBools.Emplace(Key, Value);
+}
+
+bool USweetDreamsCore::GetGlobalBool(FName Key)
+{
+	if (bool* Value = GlobalBools.Find(Key))
+	{
+		return *Value;
+	}
+
+	return false;
 }

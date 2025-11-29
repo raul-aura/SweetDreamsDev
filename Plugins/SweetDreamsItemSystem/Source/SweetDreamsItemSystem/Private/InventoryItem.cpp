@@ -1,6 +1,6 @@
-#include "Inventory/InventoryItem.h"
-#include "Inventory/SweetDreamsItem.h"
-#include "Inventory/ItemParameters.h"
+#include "InventoryItem.h"
+#include "SweetDreamsItem.h"
+#include "ItemParameters.h"
 
 UItemParameters* UInventoryItem::GetExtraParameters(int32 Index) const
 {

@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "Dialogue/DialogueStructs.h"
+#include "DialogueStructs.h"
 #include "DialogueData.generated.h"
 
 UCLASS()
-class SWEETDREAMS_API UDialogueData : public UDataAsset
+class SWEETDREAMSDIALOGUE_API UDialogueData : public UDataAsset
 {
 	GENERATED_BODY()
 

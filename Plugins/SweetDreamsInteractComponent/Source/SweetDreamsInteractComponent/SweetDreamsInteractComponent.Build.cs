@@ -1,22 +1,24 @@
-// Some copyright should be here...
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
 
-public class SweetDreams : ModuleRules
+public class SweetDreamsInteractComponent : ModuleRules
 {
-	public SweetDreams(ReadOnlyTargetRules Target) : base(Target)
+	public SweetDreamsInteractComponent(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
-            }
+				// ... add public include paths required here ...
+			}
 			);
 				
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
-            }
+				// ... add other private include paths required here ...
+			}
 			);
 			
 		
@@ -24,11 +26,6 @@ public class SweetDreams : ModuleRules
 			new string[]
 			{
 				"Core",
-                "AIModule",
-                "UMG",
-                "DeveloperSettings",
-                "OnlineSubsystem",
-                "OnlineSubsystemUtils"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

@@ -62,6 +62,7 @@ void ASweetDreamsGameMode::StartLoadingLevel(TObjectPtr<UWorld> LoadingLevel)
 		{
 			HUD->CreateLoadingWidget(LoadingWidgetClass);
 			HUD->ShowLoadingWidget();
+			HUD->StartLoadingWidget();
 		}
 	}
 }
@@ -70,13 +71,28 @@ void ASweetDreamsGameMode::FinishLoadingLevel(TObjectPtr<UWorld> LoadingLevel)
 {
 	OnLevelLoadFinished(LoadingLevel.Get());
 
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		if (ASweetDreamsHUD* HUD = Cast<ASweetDreamsHUD>(PC->GetHUD()))
+		{
+			HUD->FinishLoadingWidget();
+		}
+	}
 }
 
 void ASweetDreamsGameMode::BeginPlayNewLevel(TObjectPtr<UWorld> LoadingLevel)
 {
 	if (IsValid(SweetDreamsCore)) {
 
-		// create then destroy loading widget
+		if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+		{
+			if (ASweetDreamsHUD* HUD = Cast<ASweetDreamsHUD>(PC->GetHUD()))
+			{
+				HUD->CreateLoadingWidget(LoadingWidgetClass);
+				HUD->ShowLoadingWidget();
+				HUD->BeginPlayNewLevelLoadingWidget();
+			}
+		}
 
 		SweetDreamsCore->bIsLoadingLevel = false;
 		SweetDreamsCore->CurrentLoadingLevel = nullptr;

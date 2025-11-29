@@ -8,7 +8,7 @@ class UItemParameters;
 class USweetDreamsItem;
 
 UCLASS()
-class SWEETDREAMS_API UInventoryItem : public UObject
+class SWEETDREAMSITEMSYSTEM_API UInventoryItem : public UObject
 {
 	GENERATED_BODY()
 

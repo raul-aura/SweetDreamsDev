@@ -15,7 +15,7 @@ enum class EDialogueMode : uint8
 };
 
 USTRUCT(BlueprintType)
-struct SWEETDREAMS_API FChoice
+struct SWEETDREAMSDIALOGUE_API FChoice
 {
 	GENERATED_BODY()
 
@@ -30,7 +30,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct SWEETDREAMS_API FSweetDreamsDialogue
+struct SWEETDREAMSDIALOGUE_API FSweetDreamsDialogue
 {
 	GENERATED_BODY()
 
@@ -83,7 +83,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct SWEETDREAMS_API FChoiceDialogue
+struct SWEETDREAMSDIALOGUE_API FChoiceDialogue
 {
 	GENERATED_BODY()
 
@@ -94,7 +94,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct SWEETDREAMS_API FSweetDreamsDialogueLog
+struct SWEETDREAMSDIALOGUE_API FSweetDreamsDialogueLog
 {
 	GENERATED_BODY()
 

@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Inventory/InventoryComponent.h"
+#include "InventoryComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "Inventory/InventoryItem.h"
-#include "Inventory/SweetDreamsItem.h"
+#include "InventoryItem.h"
+#include "SweetDreamsItem.h"
 
 UInventoryComponent::UInventoryComponent()
 {

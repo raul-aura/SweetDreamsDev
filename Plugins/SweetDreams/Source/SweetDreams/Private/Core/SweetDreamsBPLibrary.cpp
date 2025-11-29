@@ -44,7 +44,7 @@ FString USweetDreamsBPLibrary::GetGameVersion(const UObject* WorldContext)
 	{
 		return Core->CoreSettings->GameVersion;
 	}
-	return TEXT("No Sweet Dreams Core found.");
+	return TEXT("No Sweet Dreams Core or Sweet Dreams Core Settings found.");
 }
 
 USweetDreamsSaveFile* USweetDreamsBPLibrary::CreateCustomSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, FString CustomSlot, bool& bSuccessful)
@@ -278,6 +278,42 @@ bool USweetDreamsBPLibrary::IsMultipleOf(const float Number, float Interval, flo
 	return FMath::IsNearlyZero(Reminder, Tolerance);
 }
 
+void USweetDreamsBPLibrary::SetGlobalInt(const UObject* WorldContext, FName Key, int32 Value)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+	{
+		Core->SetGlobalInt(Key, Value);
+	}
+}
+
+int32 USweetDreamsBPLibrary::GetGlobalInt(const UObject* WorldContext, FName Key)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+	{
+		return Core->GetGlobalInt(Key);
+	}
+
+	return INDEX_NONE;
+}
+
+void USweetDreamsBPLibrary::SetGlobalBool(const UObject* WorldContext, FName Key, bool Value)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+	{
+		Core->SetGlobalBool(Key, Value);
+	}
+}
+
+bool USweetDreamsBPLibrary::GetGlobalBool(const UObject* WorldContext, FName Key)
+{
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+	{
+		return Core->GetGlobalBool(Key);
+	}
+
+	return false;
+}
+
 void USweetDreamsBPLibrary::ServerTravel(UObject* WorldContext, FString MapName, bool bIsListenServer, bool bAbsolute)
 {
 	if (UWorld* World = GetValidWorld(WorldContext))
@@ -383,7 +419,6 @@ bool USweetDreamsBPLibrary::ArePlayersReady(UObject* WorldContext)
 	FNamedOnlineSession* Session = GetCurrentSession(WorldContext);
 	if (!Session) return false;
 	bool bReady = false;
-	UE_LOG(LogTemp, Warning, TEXT("%d"), Session->RegisteredPlayers.Num());
 	const FSessionSettings& Settings = Session->SessionSettings.Settings;
 	for (const TPair<FName, FOnlineSessionSetting>& Pair : Settings)
 	{

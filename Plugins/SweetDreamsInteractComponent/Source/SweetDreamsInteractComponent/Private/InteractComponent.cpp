@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Game/InteractComponent.h"
-#include "Game/SweetDreamsInteractInterface.h"
+#include "InteractComponent.h"
+#include "SweetDreamsInteractInterface.h"
 #include "Camera/CameraComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/OverlapResult.h"

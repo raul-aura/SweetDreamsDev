@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Game/SweetDreamsWidget.h"
-#include "Dialogue/DialogueStructs.h"
+#include "DialogueStructs.h"
 #include "DialogueWidget.generated.h"
 
 class ASweetDreamsDialogueManager;
 
 UCLASS()
-class SWEETDREAMS_API UDialogueWidget : public USweetDreamsWidget
+class SWEETDREAMSDIALOGUE_API UDialogueWidget : public USweetDreamsWidget
 {
 	GENERATED_BODY()
 

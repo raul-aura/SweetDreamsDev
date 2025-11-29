@@ -56,6 +56,14 @@ public:
 	TSoftObjectPtr<UWorld> CurrentLoadingLevel;
 	bool bIsLoadingLevel = false;
 
+	// GLOBAL BOOLs + INTs32
+	void SetGlobalInt(FName Key, int32 Value);
+	int32 GetGlobalInt(FName Key);
+	void SetGlobalBool(FName Key, bool Value);
+	bool GetGlobalBool(FName Key);
+	TMap<FName, int32> GlobalInts;
+	TMap<FName, bool> GlobalBools;
+
 protected:
 
 	// SAVE
