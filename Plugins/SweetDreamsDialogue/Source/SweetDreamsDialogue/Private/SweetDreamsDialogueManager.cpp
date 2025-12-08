@@ -14,6 +14,7 @@
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/Character.h"
 #include "EngineUtils.h"
+#include "SweetDreamsDialogueSubsystem.h"
 
 ASweetDreamsDialogueManager::ASweetDreamsDialogueManager()
 {

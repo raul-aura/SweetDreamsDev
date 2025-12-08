@@ -23,8 +23,8 @@ class SWEETDREAMS_API USweetDreamsCore : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
-	USweetDreamsCore();
 public:
+	USweetDreamsCore();
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	void LoadSettings();

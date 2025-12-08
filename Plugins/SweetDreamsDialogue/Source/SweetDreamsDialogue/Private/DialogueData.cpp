@@ -2,7 +2,7 @@
 
 #include "DialogueData.h"
 
-void UDialogueData::GetNameAndBody(int32 DialogueID, UPARAM(ref) FText& DialogueName, UPARAM(ref) FText& DialogueBody) const
+void UDialogueData::GetNameAndBody(int32 DialogueID, FText& DialogueName, FText& DialogueBody) const
 {
 	if (Dialogues.IsValidIndex(DialogueID))
 	{

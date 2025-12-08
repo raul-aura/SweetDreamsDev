@@ -23,6 +23,6 @@ public:
 	TMap<FName, FChoiceDialogue> ChoiceResults;
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
-	void GetNameAndBody(int32 DialogueID, UPARAM(ref) FText& DialogueName, UPARAM(ref) FText& DialogueBody) const;
+	void GetNameAndBody(int32 DialogueID, FText& DialogueName, FText& DialogueBody) const;
 };
 
