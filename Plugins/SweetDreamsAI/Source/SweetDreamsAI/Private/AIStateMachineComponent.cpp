@@ -1,9 +1,9 @@
 
 
 
-#include "AI/AIStateMachineComponent.h"
-#include "AI/SweetDreamsAIState.h"
-#include "AI/SweetDreamsAIStateBehaviour.h"
+#include "AIStateMachineComponent.h"
+#include "SweetDreamsAIState.h"
+#include "SweetDreamsAIStateBehaviour.h"
 
 UAIStateMachineComponent::UAIStateMachineComponent()
 {

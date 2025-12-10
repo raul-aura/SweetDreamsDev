@@ -36,20 +36,20 @@ public:
 	// SAVE
 	USweetDreamsSaveFile* CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, const FString& Slot, bool& bSuccess, int32 UserIndex = 0);
 	bool Save(const FString& Slot, int32 UserIndex = 0);
-	USweetDreamsSaveFile* LoadSave(const FString& Slot, int32 UserIndex = 0);
+	TObjectPtr<USweetDreamsSaveFile> LoadSave(const FString& Slot, int32 UserIndex = 0);
 	bool DeleteSave(const FString& Slot, int32 UserIndex = 0);
 	//
-	void SaveData(USweetDreamsSaveFile* Save);
+	void SaveData(TObjectPtr<USweetDreamsSaveFile> Save);
 	void LoadCoreSaves();
-	void LoadData(USweetDreamsSaveFile* Save);
+	void LoadData(TObjectPtr<USweetDreamsSaveFile> Save);
 	//
-	void UpdateSaveReference(USweetDreamsSaveFile* Save, FString Slot);
+	void UpdateSaveReference(TObjectPtr<USweetDreamsSaveFile> Save, FString Slot);
 	FString GetCoreSaveSlot(bool bIsPersistent = true) const;
-	USweetDreamsSaveFile* GetSaveObject(const FString& Slot) const;
+	TObjectPtr<USweetDreamsSaveFile> GetSaveObject(const FString& Slot) const;
 
 	// WORLD
-	AActor* FindActorByName(FName Name);
-	TArray<AActor*> GetAllActorsWorld() const;
+	TObjectPtr<AActor> FindActorByName(FName Name);
+	TArray<TObjectPtr<AActor>> GetAllActorsWorld() const;
 
 	// LOADING
 	void LoadLevel(TSoftObjectPtr<UWorld> Level);
@@ -67,9 +67,9 @@ public:
 protected:
 
 	// SAVE
-	TMap<FString, USweetDreamsSaveFile*> CustomSaveFiles;
-	USweetDreamsSaveFile* SavePersistentRef = nullptr;
-	USweetDreamsSaveFile* SaveLocalRef = nullptr;
+	TMap<FString, TObjectPtr<USweetDreamsSaveFile>> CustomSaveFiles;
+	TObjectPtr<USweetDreamsSaveFile> SavePersistentRef = nullptr;
+	TObjectPtr<USweetDreamsSaveFile> SaveLocalRef = nullptr;
 	//
 	TSubclassOf<USweetDreamsSaveFile> SaveClassPersistent = nullptr;
 	TSubclassOf<USweetDreamsSaveFile> SaveClassLocal = nullptr;

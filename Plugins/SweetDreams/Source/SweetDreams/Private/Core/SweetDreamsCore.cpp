@@ -151,7 +151,7 @@ bool USweetDreamsCore::Save(const FString& Slot, int32 UserIndex)
 	return false;
 }
 
-USweetDreamsSaveFile* USweetDreamsCore::LoadSave(const FString& Slot, int32 UserIndex)
+TObjectPtr<USweetDreamsSaveFile> USweetDreamsCore::LoadSave(const FString& Slot, int32 UserIndex)
 {
 	if (USaveGame* SaveObject = UGameplayStatics::LoadGameFromSlot(Slot, UserIndex))
 	{
@@ -196,7 +196,7 @@ bool USweetDreamsCore::DeleteSave(const FString& Slot, int32 UserIndex)
 	return false;
 }
 
-void USweetDreamsCore::UpdateSaveReference(USweetDreamsSaveFile* Save, FString Slot)
+void USweetDreamsCore::UpdateSaveReference(TObjectPtr<USweetDreamsSaveFile> Save, FString Slot)
 {
 	if (Slot == SaveSlotPersistent)
 	{
@@ -217,7 +217,7 @@ FString USweetDreamsCore::GetCoreSaveSlot(bool bIsPersistent) const
 	return bIsPersistent ? SaveSlotPersistent : SaveSlotLocal;
 }
 
-USweetDreamsSaveFile* USweetDreamsCore::GetSaveObject(const FString& Slot) const
+TObjectPtr<USweetDreamsSaveFile> USweetDreamsCore::GetSaveObject(const FString& Slot) const
 {
 	if (Slot == SaveSlotPersistent)
 	{
@@ -233,7 +233,7 @@ USweetDreamsSaveFile* USweetDreamsCore::GetSaveObject(const FString& Slot) const
 	}
 }
 
-void USweetDreamsCore::SaveData(USweetDreamsSaveFile* Save)
+void USweetDreamsCore::SaveData(TObjectPtr<USweetDreamsSaveFile> Save)
 {
 	if (!IsValid(Save)) return;
 
@@ -269,7 +269,7 @@ void USweetDreamsCore::LoadCoreSaves()
 	LoadSave(SaveSlotLocal);
 }
 
-void USweetDreamsCore::LoadData(USweetDreamsSaveFile* Save)
+void USweetDreamsCore::LoadData(TObjectPtr<USweetDreamsSaveFile> Save)
 {
 	if (!IsValid(Save)) return;
 	FName CurrentLevelName = FName(GetWorld()->GetMapName());
@@ -285,7 +285,7 @@ void USweetDreamsCore::LoadData(USweetDreamsSaveFile* Save)
 	}
 }
 
-AActor* USweetDreamsCore::FindActorByName(FName Name)
+TObjectPtr<AActor> USweetDreamsCore::FindActorByName(FName Name)
 {
 	if (!GetWorld()) return nullptr;
 	for (AActor* Actor : GetAllActorsWorld())
@@ -298,12 +298,12 @@ AActor* USweetDreamsCore::FindActorByName(FName Name)
 	return nullptr;
 }
 
-TArray<AActor*> USweetDreamsCore::GetAllActorsWorld() const
+TArray<TObjectPtr<AActor>> USweetDreamsCore::GetAllActorsWorld() const
 {
-	TArray<AActor*> OutActors;
+	TArray<TObjectPtr<AActor>> OutActors;
 	for (TActorIterator<AActor> It(GetWorld()); It; ++It)
 	{
-		if (AActor* Actor = *It)
+		if (TObjectPtr<AActor> Actor = *It)
 		{
 			OutActors.Add(Actor);
 		}

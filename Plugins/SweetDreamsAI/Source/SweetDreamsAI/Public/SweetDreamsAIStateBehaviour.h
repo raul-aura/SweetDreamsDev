@@ -7,7 +7,7 @@
 #include "SweetDreamsAIStateBehaviour.generated.h"
 
 UCLASS(Abstract, Blueprintable, EditInlineNew, DefaultToInstanced)
-class SWEETDREAMS_API USweetDreamsAIStateBehaviour : public UObject
+class SWEETDREAMSAI_API USweetDreamsAIStateBehaviour : public UObject
 {
 	GENERATED_BODY()
 

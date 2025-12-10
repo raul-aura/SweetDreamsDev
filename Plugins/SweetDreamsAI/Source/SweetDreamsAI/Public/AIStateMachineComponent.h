@@ -10,7 +10,7 @@ class USweetDreamsAIState;
 class USweetDreamsAIStateBehaviour;
 
 UCLASS( ClassGroup=("SweetDreams"), meta=(BlueprintSpawnableComponent) )
-class SWEETDREAMS_API UAIStateMachineComponent : public UActorComponent
+class SWEETDREAMSAI_API UAIStateMachineComponent : public UActorComponent
 {
 	GENERATED_BODY()
 

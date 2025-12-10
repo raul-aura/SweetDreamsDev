@@ -9,7 +9,7 @@
 class USweetDreamsAIStateBehaviour;
 
 UCLASS()
-class SWEETDREAMS_API USweetDreamsAIState : public UDataAsset
+class SWEETDREAMSAI_API USweetDreamsAIState : public UDataAsset
 {
 	GENERATED_BODY()
 
