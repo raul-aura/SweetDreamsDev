@@ -35,7 +35,7 @@ public:
 protected:
 
 	UPROPERTY(BlueprintReadOnly)
-	AActor* StateOwner;
+	TObjectPtr<AActor> StateOwner;
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsStateActive = false;

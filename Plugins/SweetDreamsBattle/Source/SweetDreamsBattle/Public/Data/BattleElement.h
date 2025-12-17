@@ -27,15 +27,15 @@ public:
     FText Message;
 
     UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Pre-Setup Events")
-    TArray<UBattleEvent*> PreSetupEvents;
+    TArray<TObjectPtr<UBattleEvent>> PreSetupEvents;
 
     UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Setup Events")
-    TArray<UBattleEvent*> SetupEvents;
+    TArray<TObjectPtr<UBattleEvent>> SetupEvents;
 
     UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Execution Events")
-    TArray<UBattleEvent*> ExecutionEvents;
+    TArray<TObjectPtr<UBattleEvent>> ExecutionEvents;
 
     UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "End Events")
-    TArray<UBattleEvent*> EndEvents;
+    TArray<TObjectPtr<UBattleEvent>> EndEvents;
 };
 

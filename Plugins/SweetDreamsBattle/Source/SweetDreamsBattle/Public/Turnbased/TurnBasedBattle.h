@@ -49,15 +49,15 @@ protected:
 
 	// UI
 	UPROPERTY(BlueprintReadWrite, Category = "UI")
-	UTurnBasedBattleWidget* TurnBattleWidget;
+	TObjectPtr<UTurnBasedBattleWidget> TurnBattleWidget;
 
 	// BATTLERS
 	UPROPERTY(BlueprintReadOnly, Category = "Battlers")
-	TArray<AActor*> AllBattlers;
+	TArray<TObjectPtr<AActor>> AllBattlers;
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
-	USceneComponent* AllyRoot; 
+	TObjectPtr<USceneComponent> AllyRoot; 
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
-	USceneComponent* EnemyRoot;
+	TObjectPtr<USceneComponent> EnemyRoot;
 	//
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battlers", meta = (DisplayName = "Enemies"))
 	TArray<TSoftClassPtr<AActor>> EnemyClasses;
@@ -85,13 +85,13 @@ protected:
 	bool bVictoryWhenMaxTurns = true;
 	// ACTION
 	UPROPERTY(BlueprintReadOnly, Category = "Action")
-	TArray<UBattleElement*> Actions;
+	TArray<TObjectPtr<UBattleElement>> Actions;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Action")
 	TSubclassOf<UBattleInputAction> InputActionClass;
 	UPROPERTY(BlueprintReadWrite, Category = "Action")
 	int32 CurrentAction = 0;
 	UPROPERTY(BlueprintReadWrite, Category = "Action")
-	AActor* CurrentActionBattler = nullptr;
+	TObjectPtr<AActor> CurrentActionBattler = nullptr;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Action", meta = (ClampMin = "0"))
 	float ActionDelay = 0.5f;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Action")

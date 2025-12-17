@@ -40,7 +40,7 @@ public:
 	EDialogueMode Mode = EDialogueMode::DIALOGUE;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::SEQUENCE", EditConditionHides))
-	ULevelSequence* DialogueSequence = nullptr;
+	TObjectPtr<ULevelSequence> DialogueSequence = nullptr;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
 	FText DialogueName;
@@ -52,7 +52,7 @@ public:
 	TArray<FChoice> Choices;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
-	UTexture2D* DialogueImage;
+	TObjectPtr<UTexture2D> DialogueImage;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera", meta = (ClampMin = -1, EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
 	int32 CameraID;
@@ -61,10 +61,10 @@ public:
 	float CameraBlend;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
-	USoundBase* DialogueAudio;
+	TObjectPtr<USoundBase> DialogueAudio;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
-	USoundBase* AnimatedLetterAudio;
+	TObjectPtr<USoundBase> AnimatedLetterAudio;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
 	TArray<FName> FunctionsToCall;

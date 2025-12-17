@@ -85,16 +85,16 @@ protected:
 	void HideWidget();
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UCineCameraComponent* CineCameraComponent;
+	TObjectPtr<UCineCameraComponent> CineCameraComponent;
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UAudioComponent* AudioComponent;
+	TObjectPtr<UAudioComponent> AudioComponent;
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UMulticameraComponent* MulticameraComponent;
+	TObjectPtr<UMulticameraComponent> MulticameraComponent;
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	USceneComponent* CameraGroup;
+	TObjectPtr<USceneComponent> CameraGroup;
 
 	UPROPERTY(BlueprintReadOnly, Replicated, EditAnywhere, Category = "Dialogues")
-	UDialogueData* DialogueData;
+	TObjectPtr<UDialogueData> DialogueData;
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FName DialogueName = NAME_None;
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
@@ -113,9 +113,9 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
 	int32 CurrentDialogueID = -1;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue Sequence")
-	class ALevelSequenceActor* CurrentSequenceActor = nullptr;
+	TObjectPtr<class ALevelSequenceActor> CurrentSequenceActor = nullptr;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue Sequence")
-	class ULevelSequencePlayer* CurrentSequencePlayer = nullptr;
+	TObjectPtr<class ULevelSequencePlayer> CurrentSequencePlayer = nullptr;
 	//
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void AddDialogueToLog(int32 DialogueID);
@@ -146,7 +146,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue UI")
 	TSubclassOf<UDialogueWidget> DialogueWidgetClass;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue UI")
-	UDialogueWidget* DialogueWidget = nullptr;
+	TObjectPtr<UDialogueWidget> DialogueWidget = nullptr;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue UI")
 	bool bUseAnimatedDialogue = true;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue UI")

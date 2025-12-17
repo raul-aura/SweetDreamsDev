@@ -61,7 +61,7 @@ protected:
 	TArray<TSubclassOf<USweetDreamsWidget>> StartingWidgets;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Loading Screen")
-	ULoadingWidget* LoadingWidget = nullptr;
+	TObjectPtr<ULoadingWidget> LoadingWidget = nullptr;
 
 private:
 	TArray<USweetDreamsWidget*> AllWidgets;

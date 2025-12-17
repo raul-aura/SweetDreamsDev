@@ -57,5 +57,5 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
 	FText AnimatedDialogueBody = FText(); 
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
-	ASweetDreamsDialogueManager* DialogueManager = nullptr; 
+	TObjectPtr<ASweetDreamsDialogueManager> DialogueManager = nullptr; 
 };

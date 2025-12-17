@@ -17,5 +17,5 @@ public:
 
 protected:
 	UPROPERTY(BlueprintReadWrite)
-	UUserWidget* InputWidget;
+	TObjectPtr<UUserWidget> InputWidget;
 };

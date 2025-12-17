@@ -45,7 +45,7 @@ protected:
 	UItemParameters* GetExtraParametersOfClass(TSubclassOf<UItemParameters> Class) const;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Item")
-	USweetDreamsItem* ItemData;
+	TObjectPtr<USweetDreamsItem> ItemData;
 
 
 };

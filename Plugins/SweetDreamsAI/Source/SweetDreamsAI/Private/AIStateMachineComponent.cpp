@@ -60,7 +60,7 @@ bool UAIStateMachineComponent::SetState(USweetDreamsAIState* InState, USweetDrea
 	if (IsValid(InState) && IsValid(InState->BehaviourClass))
 	{
 		CurrentState = InState;
-		if (USweetDreamsAIStateBehaviour** Found = Behaviours.Find(InState->StateName))
+		if (TObjectPtr<USweetDreamsAIStateBehaviour>* Found = Behaviours.Find(InState->StateName))
 		{
 			CurrentBehaviour = *Found;
 			Behaviour = CurrentBehaviour;

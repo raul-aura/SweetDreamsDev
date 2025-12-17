@@ -33,9 +33,9 @@ protected:
 
 	// COMPONENTS
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
-	UCameraComponent* BattleCamera;
+	TObjectPtr<UCameraComponent> BattleCamera;
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
-	USceneComponent* BattleRoot;
+	TObjectPtr<USceneComponent> BattleRoot;
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void OnBattleStart();
@@ -55,6 +55,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")
 	bool bBattlePaused = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")
-	TArray<AActor*> Battlers;
+	TArray<TObjectPtr<AActor>> Battlers;
 	
 };

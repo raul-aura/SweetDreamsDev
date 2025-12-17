@@ -44,7 +44,7 @@ public:
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Core")
-	USweetDreamsCore* SweetDreamsCore = nullptr;
+	TObjectPtr<USweetDreamsCore> SweetDreamsCore = nullptr;
 
 	TSubclassOf<ULoadingWidget> LoadingWidgetClass;
 

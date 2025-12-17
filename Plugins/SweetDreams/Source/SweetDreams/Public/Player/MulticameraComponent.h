@@ -63,7 +63,7 @@ protected:
 
 	// COMPONENTS
 	UPROPERTY(BlueprintReadWrite, Category = "Multicamera")
-	UCameraComponent* ActiveCamera = nullptr;
+	TObjectPtr<UCameraComponent> ActiveCamera = nullptr;
 
 	// BLEND
 	UPROPERTY(BlueprintReadOnly, Category = "Multicamera")
@@ -73,7 +73,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Multicamera")
 	float BlendTotalTime = 0.f;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Multicamera")
-	UCurveFloat* AlphaCurve = nullptr;
+	TObjectPtr<UCurveFloat> AlphaCurve = nullptr;
 
 	// CAMERA PARAMS
 	FVector StartLocation = FVector::ZeroVector;

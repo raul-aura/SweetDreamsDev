@@ -33,5 +33,5 @@ public:
 protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Sweet Dreams RPG")
-	ATurnBasedBattle* BattleManager;
+	TObjectPtr<ATurnBasedBattle> BattleManager;
 };

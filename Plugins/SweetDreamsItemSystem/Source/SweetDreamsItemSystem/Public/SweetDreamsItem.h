@@ -24,11 +24,11 @@ public:
     FText Description;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual")
-    UTexture2D* Icon;
+    TObjectPtr<UTexture2D> Icon;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual")
-    UStaticMesh* Mesh;
+    TObjectPtr<UStaticMesh> Mesh;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "Extra")
-    TArray<UItemParameters*> ExtraParameters;
+    TArray<TObjectPtr<UItemParameters>> ExtraParameters;
 };

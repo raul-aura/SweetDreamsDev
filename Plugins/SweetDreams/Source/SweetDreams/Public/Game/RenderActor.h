@@ -71,13 +71,13 @@ class SWEETDREAMS_API ARenderActor : public AActor
 	ARenderActor();
 public:
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Sweet Dreams Render")
-	class UPostProcessComponent* PostProcess;
+	TObjectPtr<class UPostProcessComponent> PostProcess;
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Sweet Dreams Render")
-	class UExponentialHeightFogComponent* Fog;
+	TObjectPtr<class UExponentialHeightFogComponent> Fog;
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Sweet Dreams Render")
-	class UDirectionalLightComponent* SunLight;
+	TObjectPtr<class UDirectionalLightComponent> SunLight;
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Sweet Dreams Render")
-	class USkyLightComponent* SkyLight;
+	TObjectPtr<class USkyLightComponent> SkyLight;
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Render")
 	UPostProcessComponent* GetPostProcess() const { return PostProcess; }

@@ -31,14 +31,14 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "AI")
-	TArray<USweetDreamsAIState*> InitialStates;
+	TArray<TObjectPtr<USweetDreamsAIState>> InitialStates;
 	UPROPERTY(BlueprintReadOnly, Category = "AI")
-	TArray<USweetDreamsAIState*> States;
+	TArray<TObjectPtr<USweetDreamsAIState>> States;
 	UPROPERTY(BlueprintReadOnly, Category = "AI")
-	TMap<FName, USweetDreamsAIStateBehaviour*> Behaviours;
+	TMap<FName, TObjectPtr<USweetDreamsAIStateBehaviour>> Behaviours;
 	UPROPERTY(BlueprintReadOnly, Category = "AI")
-	USweetDreamsAIState* CurrentState = nullptr;
+	TObjectPtr<USweetDreamsAIState> CurrentState = nullptr;
 	UPROPERTY(BlueprintReadOnly, Category = "AI")
-	USweetDreamsAIStateBehaviour* CurrentBehaviour = nullptr;
+	TObjectPtr<USweetDreamsAIStateBehaviour> CurrentBehaviour = nullptr;
 	
 };

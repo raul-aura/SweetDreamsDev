@@ -71,5 +71,5 @@ public:
 protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated, Category = "Inventory")
-    TArray<UInventoryItem*> Items;
+    TArray<TObjectPtr<UInventoryItem>> Items;
 };

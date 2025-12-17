@@ -20,9 +20,9 @@ public:
 	void RemoveThisIndicator();
 
 	UPROPERTY(BlueprintReadOnly)
-	class UWidgetComponent* OwningWidgetComponent;
+	TObjectPtr<class UWidgetComponent> OwningWidgetComponent;
 	UPROPERTY(BlueprintReadOnly)
-	class AActor* OwningActor;
+	TObjectPtr<class AActor> OwningActor;
 
 };
 

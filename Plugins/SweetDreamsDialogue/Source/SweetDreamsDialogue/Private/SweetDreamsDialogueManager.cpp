@@ -488,7 +488,8 @@ void ASweetDreamsDialogueManager::StartSequence(FSweetDreamsDialogue Dialogue)
 		UpdateDialogue();
 		return;
 	}
-	CurrentSequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), Dialogue.DialogueSequence, FMovieSceneSequencePlaybackSettings(), CurrentSequenceActor);
+	ALevelSequenceActor* CurrentSequenceActorCopy = CurrentSequenceActor;
+	CurrentSequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), Dialogue.DialogueSequence, FMovieSceneSequencePlaybackSettings(), CurrentSequenceActorCopy);
 	if (!IsValid(CurrentSequencePlayer)) return;
 	CurrentSequencePlayer->Play();
 	CurrentSequencePlayer->OnFinished.AddDynamic(this, &ASweetDreamsDialogueManager::EndSequence);
