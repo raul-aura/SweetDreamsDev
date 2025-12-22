@@ -11,11 +11,13 @@ UInteractComponent::UInteractComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
+
+
 void UInteractComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	RangeOrigin = GetRangeOriginUpdated();
+	RangeOrigin = GetRangedOrigin();
 
 	if (bAutoFindTrace)
 	{
@@ -64,7 +66,7 @@ TArray<AActor*> UInteractComponent::FindInteractablesInRange()
 	TArray<TObjectPtr<AActor>> PreviousActors = ActorsWithinRange;
 	ActorsWithinRange.Reset();
 
-	RangeOrigin = GetRangeOriginUpdated();
+	RangeOrigin = GetRangedOrigin();
 	FCollisionShape Shape = MakeRangedShape();
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActors(GetIgnoredActors());
@@ -94,16 +96,17 @@ TArray<AActor*> UInteractComponent::FindInteractablesInRange()
 	}
 
 	InvalidateActorsInRange(PreviousActors);
-	OnInteractablesFoundRange(ActorsWithinRange);
+	OnInteractablesInRange.Broadcast(ActorsWithinRange);
 	return ActorsWithinRange;
 }
 
 AActor* UInteractComponent::FindInteractableTraced()
 {
-	FHitResult HitResult;
 	TObjectPtr<UCameraComponent> Camera = GetOwner()->FindComponentByClass<UCameraComponent>();
 	FVector Start = Camera->GetComponentLocation();
 	FVector End = Start + (Camera->GetForwardVector() * InteractTraceDistance);
+
+	FHitResult HitResult;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActors(GetIgnoredActors());
 
@@ -124,7 +127,7 @@ AActor* UInteractComponent::FindInteractableTraced()
 					if (bIsInteractable)
 					{
 						ISweetDreamsInteractInterface::Execute_OnBeginTrace(HitActor, GetOwner());
-						OnInteractableTraced(HitActor);
+						OnInteractableTraced.Broadcast(HitActor);
 					}
 				}
 			}
@@ -160,7 +163,7 @@ bool UInteractComponent::InteractActor(AActor* Interactable)
 	if (IsValid(Interactable) && Interactable->Implements<USweetDreamsInteractInterface>())
 	{
 		ISweetDreamsInteractInterface::Execute_OnInteract(Interactable, GetOwner());
-		OnInteract(Interactable);
+		OnInteract.Broadcast(Interactable);
 
 		return true;
 	}
@@ -200,7 +203,7 @@ FCollisionShape UInteractComponent::MakeRangedShape() const
 	}
 }
 
-FVector UInteractComponent::GetRangeOriginUpdated_Implementation() const
+FVector UInteractComponent::GetRangedOrigin_Implementation() const
 {
 	return GetOwner()->GetActorLocation();
 }

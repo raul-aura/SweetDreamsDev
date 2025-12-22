@@ -8,6 +8,9 @@
 
 struct FOverlapResult;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInteractableSignature, AActor*, Interactable);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRangedInteractablesSignature, const TArray<AActor*>&, Interactables);
+
 UENUM(BlueprintType)
 enum class ERangedTraceShape : uint8
 {
@@ -38,12 +41,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Interact", meta = (DisplayName = "Interact With Actor"))
 	bool InteractActor(AActor* Interactable);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core|Interact")
-	void OnInteract(AActor* Interactable);
-	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core|Interact")
-	void OnInteractableTraced(AActor* Interactable);
-	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core|Interact")
-	void OnInteractablesFoundRange(const TArray<AActor*>& Interactables);
+	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Core|Interact")
+	FInteractableSignature OnInteract;
+	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Core|Interact")
+	FInteractableSignature OnInteractableTraced;
+	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Core|Interact")
+	FRangedInteractablesSignature OnInteractablesInRange;
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Sweet Dreams|Core|Interact")
+	FVector GetRangedOrigin() const;
+	FVector GetRangedOrigin_Implementation() const;
 
 protected:
 
@@ -78,7 +85,7 @@ protected:
 	float InteractRadius = 600.f;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Interact|Ranged", meta = (EditCondition = "RangedShape==ERangedTraceShape::Capsule", EditConditionHides))
 	float InteractHalfHeight = 300.f;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Interact|Ranged", meta = (EditCondition = "bUseRangedInteraction"))
+	UPROPERTY(BlueprintReadOnly, Category = "Interact|Ranged")
 	FVector RangeOrigin = FVector::Zero();
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Interact|Ranged", meta = (EditCondition = "bUseRangedInteraction"))
 	bool bDrawDebugRanged = false;
@@ -86,21 +93,18 @@ protected:
 	TArray<TObjectPtr<AActor>> ActorsWithinRange;
 	void InvalidateActorsInRange(const TArray<TObjectPtr<AActor>>& PreviousActors);
 	FCollisionShape MakeRangedShape() const;
-	UFUNCTION(BlueprintNativeEvent, Category = "Sweet Dreams|Core|Interact")
-	FVector GetRangeOriginUpdated() const;
-	FVector GetRangeOriginUpdated_Implementation() const;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Automatic Find")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Automatic Find")
 	bool bAutoFindTrace = false;
-	UPROPERTY(BlueprintReadWrite, Category = "Automatic Find", meta = (EditCondition = "bAutoFindTrace", EditConditionHides))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Automatic Find", meta = (EditCondition = "bAutoFindTrace", EditConditionHides))
 	float FindTracedInterval = 0.2f;
-	UPROPERTY(BlueprintReadOnly, Category = "Interact")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Interact")
 	FTimerHandle FindTracedTimer;
-	UPROPERTY(BlueprintReadWrite, Category = "Automatic Find")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Automatic Find")
 	bool bAutoFindRange = false;
-	UPROPERTY(BlueprintReadWrite, Category = "Automatic Find", meta = (EditCondition = "bAutoFindRange", EditConditionHides))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Automatic Find", meta = (EditCondition = "bAutoFindRange", EditConditionHides))
 	float FindRangeInterval = 0.2f;
-	UPROPERTY(BlueprintReadOnly, Category = "Interact")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Interact")
 	FTimerHandle FindRangeTimer;
 
 	TArray<TObjectPtr<AActor>> GetIgnoredActors() const;
