@@ -83,11 +83,11 @@ TArray<AActor*> UInteractComponent::FindInteractablesInRange()
 
 			if (!IsValid(HitActor)) continue;
 
-			const bool bIsInteractable = HitActor->Implements<USweetDreamsInteractInterface>();
-			if (!bLimitToInteractableInterface || bIsInteractable)
+			const bool bIsInteractable = (bLimitToInteractableInterface && HitActor->Implements<USweetDreamsInteractInterface>()) || IsClassAccepted(HitActor);
+			if (bIsInteractable)
 			{
 				ActorsWithinRange.Add(HitActor);
-				if (!PreviousActors.Contains(HitActor) && bIsInteractable)
+				if (!PreviousActors.Contains(HitActor) && HitActor->Implements<USweetDreamsInteractInterface>())
 				{
 					ISweetDreamsInteractInterface::Execute_OnEnterInteractRange(HitActor, GetOwner());
 				}
@@ -117,17 +117,17 @@ AActor* UInteractComponent::FindInteractableTraced()
 
 		if (IsValid(HitActor))
 		{
-			const bool bIsInteractable = HitActor->Implements<USweetDreamsInteractInterface>();
-			if (!bLimitToInteractableInterface || bIsInteractable)
+			const bool bIsInteractable = (bLimitToInteractableInterface && HitActor->Implements<USweetDreamsInteractInterface>()) || IsClassAccepted(HitActor);
+			if (bIsInteractable)
 			{
 				if (ActorTraceHit != HitActor)
 				{
 					InvalidateActorTraced();
 					ActorTraceHit = HitActor;
-					if (bIsInteractable)
+					OnInteractableTraced.Broadcast(HitActor);
+					if (HitActor->Implements<USweetDreamsInteractInterface>())
 					{
 						ISweetDreamsInteractInterface::Execute_OnBeginTrace(HitActor, GetOwner());
-						OnInteractableTraced.Broadcast(HitActor);
 					}
 				}
 			}
@@ -225,4 +225,24 @@ TArray<TObjectPtr<AActor>> UInteractComponent::GetIgnoredActors() const
 	}
 
 	return IgnoredActors;
+}
+
+bool UInteractComponent::IsClassAccepted(TObjectPtr<AActor> Actor) const
+{
+	if (!FilteredClasses.IsEmpty())
+	{
+		for (const TSubclassOf<AActor> Class : FilteredClasses)
+		{
+			if (Actor->GetClass()->IsChildOf(Class)) return true;
+		}
+
+		return false;
+	}
+
+	for (const TSubclassOf<AActor> Class : ExcludedClasses)
+	{
+		if (Actor->GetClass()->IsChildOf(Class)) return false;
+	}
+
+	return true;
 }

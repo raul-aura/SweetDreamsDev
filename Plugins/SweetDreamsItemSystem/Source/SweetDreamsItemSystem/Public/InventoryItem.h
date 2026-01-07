@@ -7,7 +7,7 @@
 class UItemParameters;
 class USweetDreamsItem;
 
-UCLASS()
+UCLASS(BlueprintType)
 class SWEETDREAMSITEMSYSTEM_API UInventoryItem : public UObject
 {
 	GENERATED_BODY()
@@ -29,6 +29,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams | Core | Inventory")
 	USweetDreamsItem* GetItemData() const { return ItemData; }
 	void UpdateItemData(USweetDreamsItem* InData) { ItemData = InData; }
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams | Core | Inventory")
+	UItemParameters* GetExtraParameters(int32 Index) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams | Core | Inventory")
+	TArray<UItemParameters*> GetAllExtraParameters() const;
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item", meta = (DeterminesOutputType = "Class"))
+	UItemParameters* GetExtraParametersOfClass(TSubclassOf<UItemParameters> Class) const;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Item")
 	int32 Amount = 0;
@@ -37,16 +43,7 @@ public:
 	bool bIsBeingEquiped = false;
 
 protected:
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams | Core | Inventory")
-	UItemParameters* GetExtraParameters(int32 Index) const;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams | Core | Inventory")
-	TArray<UItemParameters*> GetAllExtraParameters() const;
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item", meta = (DeterminesOutputType = "Class"))
-	UItemParameters* GetExtraParametersOfClass(TSubclassOf<UItemParameters> Class) const;
-
 	UPROPERTY(BlueprintReadOnly, Category = "Item")
 	TObjectPtr<USweetDreamsItem> ItemData;
-
-
 };
 

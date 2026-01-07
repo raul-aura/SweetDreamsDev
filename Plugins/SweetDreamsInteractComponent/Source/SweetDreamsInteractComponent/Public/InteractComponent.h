@@ -66,6 +66,10 @@ protected:
 	bool bIgnoreOwner = true;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Interact")
 	bool bIgnoreChildActors = true;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, AdvancedDisplay, Category = "Interact")
+	TArray<TSubclassOf<AActor>> FilteredClasses;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, AdvancedDisplay, Category = "Interact")
+	TArray<TSubclassOf<AActor>> ExcludedClasses;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Interact|Traced", meta = (EditCondition = "bUseTracedInteraction"))
 	TEnumAsByte<ECollisionChannel> TraceChannel = ECC_Visibility;
@@ -98,15 +102,16 @@ protected:
 	bool bAutoFindTrace = false;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Automatic Find", meta = (EditCondition = "bAutoFindTrace", EditConditionHides))
 	float FindTracedInterval = 0.2f;
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Interact")
+	UPROPERTY(BlueprintReadOnly, Category = "Interact")
 	FTimerHandle FindTracedTimer;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Automatic Find")
 	bool bAutoFindRange = false;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Automatic Find", meta = (EditCondition = "bAutoFindRange", EditConditionHides))
 	float FindRangeInterval = 0.2f;
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Interact")
+	UPROPERTY(BlueprintReadOnly, Category = "Interact")
 	FTimerHandle FindRangeTimer;
 
 	TArray<TObjectPtr<AActor>> GetIgnoredActors() const;
+	bool IsClassAccepted(TObjectPtr<AActor> Actor) const;
 };
 
