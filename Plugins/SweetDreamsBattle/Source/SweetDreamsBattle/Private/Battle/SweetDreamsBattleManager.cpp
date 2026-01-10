@@ -9,48 +9,12 @@ ASweetDreamsBattleManager::ASweetDreamsBattleManager()
 	PrimaryActorTick.bCanEverTick = true;
 	BattleRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Battle Manager"));
 	BattleRoot->SetupAttachment(RootComponent);
-
-	BattleCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Battle Camera"));
-	BattleCamera->SetupAttachment(BattleRoot);
 }
 
-bool ASweetDreamsBattleManager::StartBattleByID(const UObject* WorldContext, FName inID)
-{
-	bool bIsActive = false;
-	ASweetDreamsBattleManager* Battle = FindBattleByID(WorldContext, inID, bIsActive);
-	if (IsValid(Battle))
-	{
-		return Battle->StartBattle();
-	}
-	return false;
-}
-
-ASweetDreamsBattleManager* ASweetDreamsBattleManager::FindBattleByID(const UObject* WorldContext, FName inID, bool& bIsActive)
+ASweetDreamsBattleManager* ASweetDreamsBattleManager::GetBattleManager(const UObject* WorldContext)
 {
 	if (!IsValid(WorldContext)) return nullptr;
-	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull)) 
-	{
-		TArray<AActor*> OutActors;
-		for (TActorIterator<AActor> It(World); It; ++It)
-		{
-			if (AActor* Actor = *It)
-			{
-				ASweetDreamsBattleManager* BattleManager = Cast<ASweetDreamsBattleManager>(Actor);
-				if (BattleManager && BattleManager->BattleID == inID)
-				{
-					bIsActive = BattleManager->bIsBattleActive;
-					return BattleManager;
-				}
-			}
-		}
-	}
-	return nullptr;
-}
 
-ASweetDreamsBattleManager* ASweetDreamsBattleManager::GetActiveBattle(const UObject* WorldContext, FName& inBattleID)
-{
-	inBattleID = TEXT("null");
-	if (!IsValid(WorldContext)) return nullptr;
 	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull))
 	{
 		TArray<AActor*> OutActors;
@@ -58,32 +22,51 @@ ASweetDreamsBattleManager* ASweetDreamsBattleManager::GetActiveBattle(const UObj
 		{
 			if (AActor* Actor = *It)
 			{
-				ASweetDreamsBattleManager* BattleManager = Cast<ASweetDreamsBattleManager>(Actor);
-				if (BattleManager && BattleManager->bIsBattleActive)
-				{
-					inBattleID = BattleManager->BattleID;
-					return BattleManager;
-				}
+				return Cast<ASweetDreamsBattleManager>(Actor);
 			}
 		}
 	}
+
 	return nullptr;
 }
 
-bool ASweetDreamsBattleManager::StartBattle()
+void ASweetDreamsBattleManager::AddActorToBattle(AActor* Battler)
+{
+	RemoveInvalidBattlers();
+
+	if (IsValid(Battler))
+	{
+		Battlers.AddUnique(Battler);
+	}
+}
+
+void ASweetDreamsBattleManager::AddActorsToBattle(TArray<AActor*> InBattlers)
+{
+	RemoveInvalidBattlers();
+
+	for (AActor* Battler : InBattlers)
+	{
+		if (IsValid(Battler))
+		{
+			Battlers.AddUnique(Battler);
+		}
+	}
+}
+
+void ASweetDreamsBattleManager::StartBattle()
 {
 	if (!bIsBattleActive) {
 		bIsBattleActive = true;
 		OnBattleStart();
 	}
-	return false;
 }
 
-bool ASweetDreamsBattleManager::EndBattle()
+void ASweetDreamsBattleManager::EndBattle()
 {
 	if (bIsBattleActive) {
 		bIsBattleActive = false;
 		OnBattleEnd();
+
 		bIsVictorious = EvaluateBattleVictory();
 		if (bIsVictorious)
 		{
@@ -94,11 +77,33 @@ bool ASweetDreamsBattleManager::EndBattle()
 			OnBattleDefeat();
 		}
 	}
+}
+
+bool ASweetDreamsBattleManager::EvaluateBattleVictory_Implementation() const
+{
 	return false;
 }
 
-bool ASweetDreamsBattleManager::EvaluateBattleVictory() const
+void ASweetDreamsBattleManager::RemoveInvalidBattlers()
 {
-	return false;
+	Battlers.RemoveAll([](const TWeakObjectPtr<AActor>& Ptr)
+	{
+		return !Ptr.IsValid();
+	});
+}
+
+TArray<AActor*> ASweetDreamsBattleManager::GetBattlers() const
+{
+	TArray<AActor*> OutBattlers;
+
+	for (const TWeakObjectPtr<AActor>& WeakBattler : Battlers)
+	{
+		if (AActor* Battler = WeakBattler.Get())
+		{
+			OutBattlers.Add(Battler);
+		}
+	}
+
+	return OutBattlers;
 }
 

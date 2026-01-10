@@ -18,22 +18,21 @@ class SWEETDREAMSBATTLE_API ASweetDreamsBattleManager : public AActor
 public:	
 	ASweetDreamsBattleManager();
 
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
-	static bool StartBattleByID(const UObject* WorldContext, FName inID);
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
-	static ASweetDreamsBattleManager* FindBattleByID(const UObject* WorldContext, FName inID, bool& bIsActive);
-	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))
-	static ASweetDreamsBattleManager* GetActiveBattle(const UObject* WorldContext, FName& inBattleID);
+	static ASweetDreamsBattleManager* GetBattleManager(const UObject* WorldContext);
 
-	bool StartBattle();
-	bool EndBattle();
-	bool EvaluateBattleVictory() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	void AddActorToBattle(AActor* Battler);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	void AddActorsToBattle(TArray<AActor*> InBattlers);
+
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	void StartBattle();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	void EndBattle();
 
 protected:
 
-	// COMPONENTS
-	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
-	TObjectPtr<UCameraComponent> BattleCamera;
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
 	TObjectPtr<USceneComponent> BattleRoot;
 
@@ -45,16 +44,22 @@ protected:
 	void OnBattleVictory();
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void OnBattleDefeat();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	bool EvaluateBattleVictory() const;
+	bool EvaluateBattleVictory_Implementation() const;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Battle Manager")
-	FName BattleID = TEXT("Battle-0");
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	void RemoveInvalidBattlers();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	TArray<AActor*> GetBattlers() const;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")
 	bool bIsBattleActive = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")
-	bool bIsVictorious = true;
+	bool bIsVictorious = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")
 	bool bBattlePaused = false;
-	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")
-	TArray<TObjectPtr<AActor>> Battlers;
+
+	TArray<TWeakObjectPtr<AActor>> Battlers;
 	
 };
