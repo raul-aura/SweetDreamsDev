@@ -2,6 +2,7 @@
 #include "Battle/BattleActorComponent.h"
 #include "Battle/SweetDreamsBattleBPLibrary.h"
 #include "Battle/SweetDreamsBattleInterface.h"
+#include "Battle/SweetDreamsBattleManager.h"
 
 UBattleActorComponent::UBattleActorComponent()
 {
@@ -11,6 +12,11 @@ UBattleActorComponent::UBattleActorComponent()
 UBattleActorComponent* UBattleActorComponent::GetBattleActorComponent(const AActor* Actor)
 {
 	return Actor ? Actor->FindComponentByClass<UBattleActorComponent>() : nullptr;
+}
+
+ETeamType UBattleActorComponent::GetTeam() const
+{
+	return Team;
 }
 
 void UBattleActorComponent::BeginPlay()
@@ -28,12 +34,14 @@ void UBattleActorComponent::Damage(AActor* Target, float Amount)
 	if (UBattleActorComponent* Component = GetBattleActorComponent(Target))
 	{
 		Amount = FMath::Abs(Amount) * -1;
-		Component->ReceiveDamage(GetOwner(), Amount);
-		OnDamageDelegate.Broadcast(this, Component, Amount);
 
-		if (USweetDreamsBattleBPLibrary::AreTeamsHostile(this->Team, Component->Team))
+		DamageDealt += FMath::Abs(Amount);
+		Component->ReceiveDamage(GetOwner(), Amount);
+		OnDamage.Broadcast(Target, FMath::Abs(Amount));
+
+		if (bStartCombatOnDamage && USweetDreamsBattleBPLibrary::AreTeamsHostile(this->Team, Component->Team))
 		{
-			SetInCombat(true);
+			// TO DO: call InitiateCombatWith
 		}
 
 		for (UObject* Dependent : GetBattleDependents())
@@ -48,15 +56,7 @@ void UBattleActorComponent::ReceiveDamage(AActor* Instigator, float Amount)
 	Amount = FMath::Abs(Amount) * -1;
 	AddModifierToParameter(Health, EParameterModifierType::Absolute, Amount);
 
-	if (UBattleActorComponent* Component = GetBattleActorComponent(Instigator))
-	{
-		OnReceiveDamageDelegate.Broadcast(Component, this, Amount);
-
-		if (USweetDreamsBattleBPLibrary::AreTeamsHostile(this->Team, Component->Team))
-		{
-			SetInCombat(true);
-		}
-	}
+	OnReceiveDamage.Broadcast(Instigator, FMath::Abs(Amount));
 }
 
 void UBattleActorComponent::Heal(AActor* Target, float Amount)
@@ -64,8 +64,10 @@ void UBattleActorComponent::Heal(AActor* Target, float Amount)
 	if (UBattleActorComponent* Component = GetBattleActorComponent(Target))
 	{
 		Amount = FMath::Abs(Amount);
+
+		HealingDealt += FMath::Abs(Amount);
 		Component->ReceiveHeal(GetOwner(), Amount);
-		OnHealDelegate.Broadcast(this, Component, Amount);
+		OnHeal.Broadcast(Target, Amount);
 	}
 }
 
@@ -76,11 +78,11 @@ void UBattleActorComponent::ReceiveHeal(AActor* Instigator, float Amount)
 
 	if (UBattleActorComponent* Component = GetBattleActorComponent(Instigator))
 	{
-		OnReceiveHealDelegate.Broadcast(Component, this, Amount);
+		OnReceiveHeal.Broadcast(Instigator, Amount);
 	}
 }
 
-void UBattleActorComponent::Kill(AActor* Instigator)
+void UBattleActorComponent::ReceiveKill(AActor* Instigator)
 {
 	if (IsAlive())
 	{
@@ -88,7 +90,7 @@ void UBattleActorComponent::Kill(AActor* Instigator)
 
 		if (UBattleActorComponent* Component = GetBattleActorComponent(Instigator))
 		{
-			OnReceiveKillDelegate.Broadcast(Component, this);
+			OnReceiveKill.Broadcast(Instigator);
 		}
 	}
 }
@@ -97,12 +99,12 @@ void UBattleActorComponent::Kill_Target(AActor* Target)
 {
 	if (UBattleActorComponent* Component = GetBattleActorComponent(Target))
 	{
-		Component->Kill(GetOwner());
-		OnKillDelegate.Broadcast(this, Component);
+		Component->ReceiveKill(GetOwner());
+		OnKill.Broadcast(Target);
 	}
 }
 
-void UBattleActorComponent::Revive(AActor* Instigator)
+void UBattleActorComponent::ReceiveRevive(AActor* Instigator)
 {
 	if (!IsAlive())
 	{
@@ -110,7 +112,7 @@ void UBattleActorComponent::Revive(AActor* Instigator)
 
 		if (UBattleActorComponent* Component = GetBattleActorComponent(Instigator))
 		{
-			OnReceiveReviveDelegate.Broadcast(Component, this);
+			OnReceiveRevive.Broadcast(Instigator);
 		}
 	}
 }
@@ -119,8 +121,8 @@ void UBattleActorComponent::Revive_Target(AActor* Target)
 {
 	if (UBattleActorComponent* Component = GetBattleActorComponent(Target))
 	{
-		Component->Revive(GetOwner());
-		OnReviveDelegate.Broadcast(this, Component);
+		Component->ReceiveRevive(GetOwner());
+		OnRevive.Broadcast(Target);
 	}
 }
 
@@ -131,11 +133,11 @@ void UBattleActorComponent::SetInCombat(bool bInIsInCombat)
 	bIsInCombat = bInIsInCombat;
 	if (bIsInCombat) 
 	{
-		OnEnterCombatDelegate.Broadcast(this);
+		OnEnterCombat.Broadcast();
 	}
 	else
 	{
-		OnExitCombatDelegate.Broadcast(this);
+		OnExitCombat.Broadcast();
 	}
 }
 
@@ -153,13 +155,21 @@ void UBattleActorComponent::AddModifierToParameter(UPARAM(ref) FBattleParamater&
 {
 	FBattleParameterModifier Modifier(ModifierType, ModifierValue);
 	Parameter.AddModifier(Modifier);
-	OnParameterChangeDelegate.Broadcast(Parameter, Modifier);
+	OnParameterChange.Broadcast(Parameter, Modifier);
 }
 
 void UBattleActorComponent::RemoveModifierFromParameter(UPARAM(ref) FBattleParamater& Parameter, FBattleParameterModifier Modifier)
 {
-	OnParameterChangeDelegate.Broadcast(Parameter, Modifier);
+	OnParameterChange.Broadcast(Parameter, Modifier);
 	Parameter.RemoveModifier(Modifier);
+}
+
+void UBattleActorComponent::StartBattle()
+{
+	if (TObjectPtr<ASweetDreamsBattleManager> BattleManager = ASweetDreamsBattleManager::GetBattleManager(GetOwner()))
+	{
+		BattleManager->StartBattle(GetOwner());
+	}
 }
 
 TArray<UObject*> UBattleActorComponent::GetBattleDependents() const

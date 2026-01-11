@@ -6,9 +6,11 @@
 #include "Data/BattleDataTypes.h"
 #include "BattleActorComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBattleActorDelegate, UBattleActorComponent*, Component);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnBattleActorEffect, UBattleActorComponent*, Instigator, UBattleActorComponent*, Target);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnBattleActorValueEffect, UBattleActorComponent*, Instigator, UBattleActorComponent*, Target, float, Value);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBattleActorDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTargetEffect, AActor*, Target);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReceiveEffect, AActor*, Instigator);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnReceiveValueEffect, AActor*, Instigator, float, Value);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTargetValueEffect, AActor*, Target, float, Value);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnBattleActorParameterChange, FBattleParamater, Parameter, FBattleParameterModifier, Modifier);
 
 UCLASS( ClassGroup=("SweetDreams"), meta = (BlueprintSpawnableComponent))
@@ -34,11 +36,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void ReceiveHeal(AActor* Instigator, float Amount);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	void Kill(AActor* Instigator);
+	void ReceiveKill(AActor* Instigator);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void Kill_Target(AActor* Target);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	void Revive(AActor* Instigator);
+	void ReceiveRevive(AActor* Instigator);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void Revive_Target(AActor* Target);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
@@ -48,58 +50,65 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	bool IsInCombat() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	ETeamType GetTeam() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void AddModifierToParameter(UPARAM(ref) FBattleParamater& Parameter, EParameterModifierType ModifierType, float ModifierValue);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void RemoveModifierFromParameter(UPARAM(ref) FBattleParamater& Parameter, FBattleParameterModifier Modifier);
 
 	UPROPERTY(BlueprintAssignable)
-	FOnBattleActorDelegate OnEnterCombatDelegate;
+	FOnBattleActorDelegate OnEnterCombat;
 	UPROPERTY(BlueprintAssignable)
-	FOnBattleActorDelegate OnExitCombatDelegate;
+	FOnBattleActorDelegate OnExitCombat;
 	UPROPERTY(BlueprintAssignable)
-	FOnBattleActorValueEffect OnDamageDelegate;
+	FOnTargetValueEffect OnDamage;
 	UPROPERTY(BlueprintAssignable)
-	FOnBattleActorValueEffect OnReceiveDamageDelegate;
+	FOnReceiveValueEffect OnReceiveDamage;
 	UPROPERTY(BlueprintAssignable)
-	FOnBattleActorValueEffect OnHealDelegate;
+	FOnTargetValueEffect OnHeal;
 	UPROPERTY(BlueprintAssignable)
-	FOnBattleActorValueEffect OnReceiveHealDelegate;
+	FOnReceiveValueEffect OnReceiveHeal;
 	UPROPERTY(BlueprintAssignable)
-	FOnBattleActorEffect OnKillDelegate;
+	FOnTargetEffect OnKill;
 	UPROPERTY(BlueprintAssignable)
-	FOnBattleActorEffect OnReceiveKillDelegate;
+	FOnReceiveEffect OnReceiveKill;
 	UPROPERTY(BlueprintAssignable)
-	FOnBattleActorEffect OnReviveDelegate;
+	FOnTargetEffect OnRevive;
 	UPROPERTY(BlueprintAssignable)
-	FOnBattleActorEffect OnReceiveReviveDelegate;
+	FOnReceiveEffect OnReceiveRevive;
 	UPROPERTY(BlueprintAssignable)
-	FOnBattleActorParameterChange OnParameterChangeDelegate;
+	FOnBattleActorParameterChange OnParameterChange;
 
 protected:
 	virtual void BeginPlay() override;
 
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	void StartBattle();
+
 	TArray<UObject*> GetBattleDependents() const;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters")
-	FBattleParamater Health;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters")
-	FBattleParamater Strength;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters")
-	FBattleParamater Resistence;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters")
-	TMap<FName, FBattleParamater> CustomParameters;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters")
-	TMap<FName, float> CustomSimpleParameters;
-
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Data", meta = (ExposeOnSpawn=true))
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Battle Actor", meta = (ExposeOnSpawn = true))
 	ETeamType Team = ETeamType::None;
-	UPROPERTY(BlueprintReadOnly, Category = "Data")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Battle Actor", meta = (ExposeOnSpawn = true))
+	bool bStartCombatOnDamage = true;
+	UPROPERTY(BlueprintReadOnly, Category = "Battle Actor")
 	float DamageDealt = 0.f;
-	UPROPERTY(BlueprintReadOnly, Category = "Data")
+	UPROPERTY(BlueprintReadOnly, Category = "Battle Actor")
 	float HealingDealt = 0.f;
-	UPROPERTY(BlueprintReadOnly, Category = "Data")
+	UPROPERTY(BlueprintReadOnly, Category = "Battle Actor")
 	bool bIsAlive = true;
-	UPROPERTY(BlueprintReadOnly, Category = "Data")
+	UPROPERTY(BlueprintReadOnly, Category = "Battle Actor")
 	bool bIsInCombat = false;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters", meta = (ExposeOnSpawn = true))
+	FBattleParamater Health;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters", meta = (ExposeOnSpawn = true))
+	FBattleParamater Strength;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters", meta = (ExposeOnSpawn = true))
+	FBattleParamater Resistence;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters", meta = (ExposeOnSpawn = true))
+	TMap<FName, FBattleParamater> CustomParameters;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters", meta = (ExposeOnSpawn = true))
+	TMap<FName, float> CustomSimpleParameters;
 
 };

@@ -22,14 +22,16 @@ public:
 	static ASweetDreamsBattleManager* GetBattleManager(const UObject* WorldContext);
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	void AddActorToBattle(AActor* Battler);
+	void AddActorToBattle(AActor* Battler, bool bRemoveInvalidBattlers = true);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	void AddActorsToBattle(TArray<AActor*> InBattlers);
+	void AddActorsToBattle(TArray<AActor*> InBattlers, bool bRemoveInvalidBattlers = true);
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	void StartBattle();
+	void StartBattle(AActor* Battler);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void EndBattle();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	void EvaluateBattleEnd();
 
 protected:
 
@@ -48,6 +50,9 @@ protected:
 	bool EvaluateBattleVictory() const;
 	bool EvaluateBattleVictory_Implementation() const;
 
+	UFUNCTION()
+	void OnBattlerKilled(AActor* Target);
+
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void RemoveInvalidBattlers();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
@@ -61,5 +66,6 @@ protected:
 	bool bBattlePaused = false;
 
 	TArray<TWeakObjectPtr<AActor>> Battlers;
+	ETeamType VictoriousTeam = ETeamType::None;
 	
 };
