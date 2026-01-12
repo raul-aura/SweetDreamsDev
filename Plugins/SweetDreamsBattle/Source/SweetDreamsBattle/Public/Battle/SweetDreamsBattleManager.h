@@ -27,11 +27,15 @@ public:
 	void AddActorsToBattle(TArray<AActor*> InBattlers, bool bRemoveInvalidBattlers = true);
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	void StartBattle(AActor* Battler);
+	void InitiateCombatBetween(AActor* Actor1, AActor* Actor2);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	void StartBattle();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void EndBattle();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void EvaluateBattleEnd();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	void ClearBattlers(bool bExitFromCombat = true);
 
 protected:
 
@@ -53,10 +57,14 @@ protected:
 	UFUNCTION()
 	void OnBattlerKilled(AActor* Target);
 
+	void BindFunctionsToActor(AActor* Battler);
+	void UnbindFunctionsFromActor(AActor* Battler);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void RemoveInvalidBattlers();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	TArray<AActor*> GetBattlers() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	TArray<AActor*> GetAliveBattlers() const;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")
 	bool bIsBattleActive = false;

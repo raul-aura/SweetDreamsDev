@@ -39,9 +39,9 @@ void UBattleActorComponent::Damage(AActor* Target, float Amount)
 		Component->ReceiveDamage(GetOwner(), Amount);
 		OnDamage.Broadcast(Target, FMath::Abs(Amount));
 
-		if (bStartCombatOnDamage && USweetDreamsBattleBPLibrary::AreTeamsHostile(this->Team, Component->Team))
+		if (bStartCombatOnDamage)
 		{
-			// TO DO: call InitiateCombatWith
+			InitiateCombat(Target);
 		}
 
 		for (UObject* Dependent : GetBattleDependents())
@@ -95,7 +95,7 @@ void UBattleActorComponent::ReceiveKill(AActor* Instigator)
 	}
 }
 
-void UBattleActorComponent::Kill_Target(AActor* Target)
+void UBattleActorComponent::KillTarget(AActor* Target)
 {
 	if (UBattleActorComponent* Component = GetBattleActorComponent(Target))
 	{
@@ -117,7 +117,7 @@ void UBattleActorComponent::ReceiveRevive(AActor* Instigator)
 	}
 }
 
-void UBattleActorComponent::Revive_Target(AActor* Target)
+void UBattleActorComponent::ReviveTarget(AActor* Target)
 {
 	if (UBattleActorComponent* Component = GetBattleActorComponent(Target))
 	{
@@ -164,11 +164,62 @@ void UBattleActorComponent::RemoveModifierFromParameter(UPARAM(ref) FBattleParam
 	Parameter.RemoveModifier(Modifier);
 }
 
-void UBattleActorComponent::StartBattle()
+FBattleParamater UBattleActorComponent::GetHealth() const
 {
+	return Health;
+}
+
+FBattleParamater UBattleActorComponent::GetStrength() const
+{
+	return Strength;
+}
+
+FBattleParamater UBattleActorComponent::GetResistence() const
+{
+	return Resistence;
+}
+
+FBattleParamater UBattleActorComponent::GetCustomParameter(FName Parameter) const
+{
+	if (const FBattleParamater* Param = CustomParameters.Find(Parameter))
+	{
+		return *Param;
+	}
+
+	UE_LOG(LogClass, Error, TEXT("GetCustomParameter: Parameter '%s' not found on %s"),
+		*Parameter.ToString(), *GetOwner()->GetName());
+
+	return FBattleParamater();
+}
+
+float UBattleActorComponent::GetCustomSimpleParameter(FName Parameter, float Percentage) const
+{
+	if (const float* Param = CustomSimpleParameters.Find(Parameter))
+	{
+		return *Param * Percentage;
+	}
+
+	return 0.f;
+}
+
+void UBattleActorComponent::InitiateCombat(AActor* OtherActor, bool bCheckForHostility)
+{
+	if (!OtherActor || OtherActor == GetOwner()) return;
+
+	if (bCheckForHostility)
+	{
+		if (UBattleActorComponent* OtherComponent = GetBattleActorComponent(OtherActor))
+		{
+			if (!USweetDreamsBattleBPLibrary::AreTeamsHostile(this->Team, OtherComponent->Team))
+			{
+				return;
+			}
+		}
+	}
+
 	if (TObjectPtr<ASweetDreamsBattleManager> BattleManager = ASweetDreamsBattleManager::GetBattleManager(GetOwner()))
 	{
-		BattleManager->StartBattle(GetOwner());
+		BattleManager->InitiateCombatBetween(GetOwner(), OtherActor);
 	}
 }
 

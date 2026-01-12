@@ -38,11 +38,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void ReceiveKill(AActor* Instigator);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	void Kill_Target(AActor* Target);
+	void KillTarget(AActor* Target);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void ReceiveRevive(AActor* Instigator);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	void Revive_Target(AActor* Target);
+	void ReviveTarget(AActor* Target);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void SetInCombat(bool bInIsInCombat);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
@@ -51,10 +51,21 @@ public:
 	bool IsInCombat() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	ETeamType GetTeam() const;
+
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void AddModifierToParameter(UPARAM(ref) FBattleParamater& Parameter, EParameterModifierType ModifierType, float ModifierValue);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void RemoveModifierFromParameter(UPARAM(ref) FBattleParamater& Parameter, FBattleParameterModifier Modifier);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	FBattleParamater GetHealth() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	FBattleParamater GetStrength() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	FBattleParamater GetResistence() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	FBattleParamater GetCustomParameter(FName Parameter) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	float GetCustomSimpleParameter(FName Parameter, float Percentage = 1.f) const;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnBattleActorDelegate OnEnterCombat;
@@ -83,7 +94,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	void StartBattle();
+	void InitiateCombat(AActor* OtherActor, bool bCheckForHostility = true);
 
 	TArray<UObject*> GetBattleDependents() const;
 

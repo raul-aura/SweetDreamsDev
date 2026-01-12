@@ -40,10 +40,7 @@ void ASweetDreamsBattleManager::AddActorToBattle(AActor* Battler, bool bRemoveIn
 
 	if (IsValid(Battler) && !Battlers.FindByKey(Battler))
 	{
-		if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Battler))
-		{
-			Component->OnKill.AddUniqueDynamic(this, &ASweetDreamsBattleManager::OnBattlerKilled);
-		}
+		BindFunctionsToActor(Battler);
 
 		Battlers.AddUnique(Battler);
 	}
@@ -62,10 +59,27 @@ void ASweetDreamsBattleManager::AddActorsToBattle(TArray<AActor*> InBattlers, bo
 	}
 }
 
-void ASweetDreamsBattleManager::StartBattle(AActor* Battler)
+void ASweetDreamsBattleManager::InitiateCombatBetween(AActor* Actor1, AActor* Actor2)
 {
-	AddActorToBattle(Battler);
+	if (bIsBattleActive)
+	{
+		AddActorToBattle(Actor1);
+		AddActorToBattle(Actor2);
+		return;
+	}
 
+	AddActorToBattle(Actor1);
+	AddActorToBattle(Actor2);
+
+	TArray<AActor*> ValidBattlers = GetBattlers();
+	if (ValidBattlers.Num() >= 2 && !bIsBattleActive)
+	{
+		StartBattle();
+	}
+}
+
+void ASweetDreamsBattleManager::StartBattle()
+{
 	if (Battlers.IsEmpty())
 	{
 		return;
@@ -82,7 +96,21 @@ void ASweetDreamsBattleManager::EndBattle()
 	if (bIsBattleActive && !Battlers.IsEmpty()) {
 		bIsBattleActive = false;
 
-		// TO DO: unbind delegates from battlers and exit from combat
+		for (const TWeakObjectPtr<AActor>& WeakBattler : Battlers)
+		{
+			if (AActor* Battler = WeakBattler.Get())
+			{
+				UnbindFunctionsFromActor(Battler);
+
+				if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Battler))
+				{
+					if (Component->IsAlive())
+					{
+						Component->SetInCombat(false);
+					}
+				}
+			}
+		}
 
 		OnBattleEnd();
 
@@ -138,6 +166,28 @@ void ASweetDreamsBattleManager::EvaluateBattleEnd()
 	EndBattle();
 }
 
+void ASweetDreamsBattleManager::ClearBattlers(bool bExitFromCombat)
+{
+	if (bExitFromCombat)
+	{
+		for (const TWeakObjectPtr<AActor>& WeakBattler : Battlers)
+		{
+			if (AActor* Battler = WeakBattler.Get())
+			{
+				if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Battler))
+				{
+					if (Component->IsAlive())
+					{
+						Component->SetInCombat(false);
+					}
+				}
+			}
+		}
+	}
+
+	Battlers.Empty();
+}
+
 bool ASweetDreamsBattleManager::EvaluateBattleVictory_Implementation() const
 {
 	return VictoriousTeam == ETeamType::Player;
@@ -150,11 +200,38 @@ void ASweetDreamsBattleManager::OnBattlerKilled(AActor* Target)
 		return;
 	}
 
-	// TO DO: unbind delegates and exit from combat
-
 	if (Battlers.FindByKey(Target))
 	{
+		UnbindFunctionsFromActor(Target);
+
+		if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Target))
+		{
+			Component->SetInCombat(false);
+		}
+
 		EvaluateBattleEnd();
+	}
+}
+
+void ASweetDreamsBattleManager::BindFunctionsToActor(AActor* Battler)
+{
+	if (IsValid(Battler))
+	{
+		if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Battler))
+		{
+			Component->OnKill.AddUniqueDynamic(this, &ASweetDreamsBattleManager::OnBattlerKilled);
+		}
+	}
+}
+
+void ASweetDreamsBattleManager::UnbindFunctionsFromActor(AActor* Battler)
+{
+	if (IsValid(Battler) && Battlers.FindByKey(Battler))
+	{
+		if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Battler))
+		{
+			Component->OnKill.RemoveDynamic(this, &ASweetDreamsBattleManager::OnBattlerKilled);
+		}
 	}
 }
 
@@ -169,12 +246,35 @@ void ASweetDreamsBattleManager::RemoveInvalidBattlers()
 TArray<AActor*> ASweetDreamsBattleManager::GetBattlers() const
 {
 	TArray<AActor*> OutBattlers;
+	OutBattlers.Reserve(Battlers.Num());
 
 	for (const TWeakObjectPtr<AActor>& WeakBattler : Battlers)
 	{
 		if (AActor* Battler = WeakBattler.Get())
 		{
 			OutBattlers.Add(Battler);
+		}
+	}
+
+	return OutBattlers;
+}
+
+TArray<AActor*> ASweetDreamsBattleManager::GetAliveBattlers() const
+{
+	TArray<AActor*> OutBattlers;
+	OutBattlers.Reserve(Battlers.Num());
+
+	for (const TWeakObjectPtr<AActor>& WeakBattler : Battlers)
+	{
+		if (AActor* Battler = WeakBattler.Get())
+		{
+			if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Battler))
+			{
+				if (Component->IsAlive())
+				{
+					OutBattlers.Add(Battler);
+				}
+			}
 		}
 	}
 
