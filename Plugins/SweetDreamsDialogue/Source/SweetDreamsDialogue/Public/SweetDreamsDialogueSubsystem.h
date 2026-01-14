@@ -24,6 +24,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
 	void UpdateDialogue();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
+	void UpdateAnimatedDialogue(float DeltaTime);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
 	void SkipAnimatedDialogue();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
 	void SelectChoiceAndUpdate(FChoice Choice);
@@ -33,10 +35,14 @@ public:
 
 protected:
 	void ProcessDialogue(FSweetDreamsDialogue Dialogue);
-	void ProcessRichTextTags(int32& LetterIndex);
 	void AddDialogueToLog(FSweetDreamsDialogue Dialogue);
 	void ResetDialogueData();
 	void EndDialogue();
+
+	void SkipRichTextTags(int32& LetterIndex);
+	void ProcessAnimatedDialogue();
+	bool CanAdvanceLetters();
+	void BuildAnimatedDialogue();
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogues")
 	TObjectPtr<UDialogueData> DialogueData = nullptr;
@@ -68,7 +74,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FString FullDialogueBody;
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
-	FString ProcessedDialogueBody;
+	FString TaglessDialogueBody;
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	int32 CurrentLetterIndex = 0;
 };

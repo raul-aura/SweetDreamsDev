@@ -7,8 +7,6 @@
 #include "DialogueStructs.h"
 #include "DialogueWidget.generated.h"
 
-class ASweetDreamsDialogueManager;
-
 UCLASS()
 class SWEETDREAMSDIALOGUE_API UDialogueWidget : public USweetDreamsWidget
 {
@@ -18,8 +16,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void SetCurrentDialogue(FSweetDreamsDialogue Dialogue);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
-	void SetDialogueManager(ASweetDreamsDialogueManager* NewManager);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Dialogue")
 	void GoToNextDialogue();
 	void UpdateAnimatedDialogue(FText AnimatedText);
@@ -56,6 +52,4 @@ protected:
 	TArray<FChoice> CurrentChoices;
 	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
 	FText AnimatedDialogueBody = FText(); 
-	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
-	TObjectPtr<ASweetDreamsDialogueManager> DialogueManager = nullptr; 
 };

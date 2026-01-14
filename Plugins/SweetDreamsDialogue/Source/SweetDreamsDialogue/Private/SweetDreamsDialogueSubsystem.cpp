@@ -72,27 +72,32 @@ void USweetDreamsDialogueSubsystem::UpdateDialogue()
 	}
 }
 
+void USweetDreamsDialogueSubsystem::UpdateAnimatedDialogue(float DeltaTime)
+{
+	if (bUseAnimatedDialogue && bIsAnimating)
+	{
+		LetterDisplayElapsed += DeltaTime;
+
+		if (CanAdvanceLetters())
+		{
+			BuildAnimatedDialogue();
+
+			if (CurrentLetterIndex >= TaglessDialogueBody.Len())
+			{
+				bIsAnimating = false;
+
+				//delegate
+			}
+		}
+	}
+}
+
 void USweetDreamsDialogueSubsystem::ProcessDialogue(FSweetDreamsDialogue Dialogue)
 {
 	FullDialogueBody = Dialogue.DialogueBody.ToString();
 	if (bUseAnimatedDialogue)
 	{
-		AnimatedDialogueBody = FText::GetEmpty();
-		ProcessedDialogueBody.Empty();
-		for (int32 i = 0; i < FullDialogueBody.Len();)
-		{
-			if (FullDialogueBody[i] == '<')
-			{
-				ProcessRichTextTags(i);
-			}
-			else
-			{
-				ProcessedDialogueBody.AppendChar(FullDialogueBody[i++]);
-			}
-		}
-		CurrentLetterIndex = 0;
-		LetterDisplayElapsed = 0.f;
-		bIsAnimating = true;
+		ProcessAnimatedDialogue();
 	}
 
 	AddDialogueToLog(Dialogue);
@@ -121,16 +126,10 @@ void USweetDreamsDialogueSubsystem::AddDialogueToLog(FSweetDreamsDialogue Dialog
 	DialogueLog.Add(Log);
 }
 
-
-void USweetDreamsDialogueSubsystem::ProcessRichTextTags(int32& LetterIndex)
-{
-
-}
-
 void USweetDreamsDialogueSubsystem::SkipAnimatedDialogue()
 {
 	bIsAnimating = false;
-	CurrentLetterIndex = ProcessedDialogueBody.Len();
+	CurrentLetterIndex = TaglessDialogueBody.Len();
 }
 
 void USweetDreamsDialogueSubsystem::SelectChoiceAndUpdate(FChoice Choice)
@@ -176,5 +175,82 @@ void USweetDreamsDialogueSubsystem::EndDialogue()
 	ResetDialogueData();
 	bIsDialogueActive = false;
 	// delegate
+}
+
+void USweetDreamsDialogueSubsystem::SkipRichTextTags(int32& LetterIndex)
+{
+	int32 TagEnd = FullDialogueBody.Find(TEXT(">"), ESearchCase::IgnoreCase, ESearchDir::FromStart, LetterIndex);
+	if (TagEnd != INDEX_NONE)
+	{
+		LetterIndex = TagEnd + 1;
+	}
+}
+
+void USweetDreamsDialogueSubsystem::ProcessAnimatedDialogue()
+{
+	AnimatedDialogueBody = FText::GetEmpty();
+	TaglessDialogueBody.Empty();
+	for (int32 i = 0; i < FullDialogueBody.Len();)
+	{
+		if (FullDialogueBody[i] == '<')
+		{
+			SkipRichTextTags(i);
+		}
+		else
+		{
+			TaglessDialogueBody.AppendChar(FullDialogueBody[i++]);
+		}
+	}
+	CurrentLetterIndex = 0;
+	LetterDisplayElapsed = 0.f;
+	bIsAnimating = true;
+}
+
+bool USweetDreamsDialogueSubsystem::CanAdvanceLetters()
+{
+	const int32 LettersToAdvance = FMath::FloorToInt(LetterDisplayElapsed / LetterDisplayRate);
+
+	if (LettersToAdvance <= 0)
+	{
+		return false;
+	}
+
+	CurrentLetterIndex = FMath::Min(CurrentLetterIndex + LettersToAdvance,TaglessDialogueBody.Len());
+
+	LetterDisplayElapsed = 0.f;
+	return true;
+}
+
+void USweetDreamsDialogueSubsystem::BuildAnimatedDialogue()
+{
+	FString DisplayText;
+	DisplayText.Reserve(FullDialogueBody.Len());
+
+	int32 VisibleChars = 0;
+	const int32 MaxVisible = CurrentLetterIndex;
+
+	for (int32 i = 0; i < FullDialogueBody.Len(); ++i)
+	{
+		if (FullDialogueBody[i] == '<')
+		{
+			const int32 TagEnd =
+				FullDialogueBody.Find(TEXT(">"), ESearchCase::IgnoreCase, ESearchDir::FromStart, i);
+
+			if (TagEnd != INDEX_NONE)
+			{
+				DisplayText.Append(FullDialogueBody.Mid(i, TagEnd - i + 1));
+				i = TagEnd;
+				continue;
+			}
+		}
+
+		if (VisibleChars < MaxVisible)
+		{
+			DisplayText.AppendChar(FullDialogueBody[i]);
+			++VisibleChars;
+		}
+	}
+
+	AnimatedDialogueBody = FText::FromString(DisplayText);
 }
 
