@@ -4,10 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "DialogueStructs.h"
+#include "DialogueDelegates.h"
 #include "SweetDreamsDialogueSubsystem.generated.h"
 
 class UDialogueData;
+
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogueEvent);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDialogueUpdated, FSweetDreamsDialogue, Dialogue, int32, Index);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueFunction, FSweetDreamsDialogue, Dialogue, int32, Index, TArray<FDialogueFunction>, Functions);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueAnimation, FSweetDreamsDialogue, Dialogue, int32, Index, FText, AnimatedText);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueChoice, FSweetDreamsDialogue, Dialogue, int32, Index, TArray<FChoice>, Choices);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogueAudio, USoundBase*, Audio);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueSequence, FSweetDreamsDialogue, Dialogue, int32, Index, ULevelSequence*, Sequence);
 
 UCLASS(Category = "SweetDreams|Dialogue")
 class SWEETDREAMSDIALOGUE_API USweetDreamsDialogueSubsystem : public UGameInstanceSubsystem
@@ -29,31 +37,68 @@ public:
 	void SkipAnimatedDialogue();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
 	void SelectChoiceAndUpdate(FChoice Choice);
-
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
 	void InsertDialogue(UDialogueData* Dialogue, int32 Index = -1);
 
+	UPROPERTY(BlueprintAssignable)
+	FOnDialogueEvent OnDialogueStarted;
+	UPROPERTY(BlueprintAssignable)
+	FOnDialogueEvent OnDialogueEnded;
+	UPROPERTY(BlueprintAssignable)
+	FOnDialogueUpdated OnDialogueUpdated;
+	UPROPERTY(BlueprintAssignable)
+	FOnDialogueFunction OnDialogueCustomFunction;
+	UPROPERTY(BlueprintAssignable)
+	FOnDialogueAnimation OnDialogueAnimating;
+	UPROPERTY(BlueprintAssignable)
+	FOnDialogueAnimation OnDialogueAnimationFinished;
+	UPROPERTY(BlueprintAssignable)
+	FOnDialogueChoice OnDialogueChoices;
+	UPROPERTY(BlueprintAssignable)
+	FOnDialogueEvent OnDialogueNoChoices;
+	UPROPERTY(BlueprintAssignable)
+	FOnDialogueAudio OnDialogueAudio;
+	UPROPERTY(BlueprintAssignable)
+	FOnDialogueSequence OnDialogueSequence;
+	UPROPERTY(BlueprintAssignable)
+	FOnDialogueUpdated OnCustomDialogueMode;
+
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
+	UDialogueData* GetDialogueData() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
+	void SetDialogueData(UDialogueData* InData);
+
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
+	TArray<FSweetDreamsDialogue> GetDialogues() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
+	TArray<FSweetDreamsDialogueLog> GetDialogueLog() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
+	FSweetDreamsDialogue GetCurrentDialogue(int32& Index) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
+	int32 GetCurrentDialogueID() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
+	bool IsUsingAnimatedDialogue() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
+	void SetUseAnimatedDialogue(bool bInUseAnimatedDialogue);
+
 protected:
-	void ProcessDialogue(FSweetDreamsDialogue Dialogue);
+	void ProcessDialogue(FSweetDreamsDialogue Dialogue, int32 Index);
 	void AddDialogueToLog(FSweetDreamsDialogue Dialogue);
+	void CallCustomFunctions(FSweetDreamsDialogue Dialogue, int32 Index);
 	void ResetDialogueData();
 	void EndDialogue();
 
 	void SkipRichTextTags(int32& LetterIndex);
-	void ProcessAnimatedDialogue();
+	void ProcessAnimatedDialogue(FSweetDreamsDialogue Dialogue);
 	bool CanAdvanceLetters();
 	void BuildAnimatedDialogue();
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogues")
 	TObjectPtr<UDialogueData> DialogueData = nullptr;
-	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	TArray<FSweetDreamsDialogue> Dialogues;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Dialogue Log")
 	TArray<FSweetDreamsDialogueLog> DialogueLog;
-	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FSweetDreamsDialogue CurrentDialogue;
-	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	int32 CurrentDialogueID = -1;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
@@ -63,18 +108,14 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	bool bIsAnimating = false;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
-	bool bUseAnimatedDialogue = true;
-	UPROPERTY(BlueprintReadWrite, Category = "Dialogue")
-	float LetterDisplayRate = 0.1f;
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
-	float LetterDisplayElapsed = 0.f;
+	bool bUseAnimatedDialogue = true;
+	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
+	FAnimatedDialogueSettings CurrentAnimatedSettings;
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FText AnimatedDialogueBody;
-	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FString FullDialogueBody;
-	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	FString TaglessDialogueBody;
-	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	int32 CurrentLetterIndex = 0;
+	float LetterDisplayElapsed = 0.f;
 };

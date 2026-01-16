@@ -34,7 +34,9 @@ UInventoryComponent* UInventoryComponent::GetInventoryFromActor(const AActor* Ac
 
 USweetDreamsItem* UInventoryComponent::GetItemData(UInventoryItem* Item, bool& ValidData)
 {
-    return Item->GetItemData();
+    USweetDreamsItem* Data = Item->GetItemData();
+    ValidData = IsValid(Data);
+    return Data;
 }
 
 int32 UInventoryComponent::AddItem(UInventoryItem*& ItemAdded, USweetDreamsItem* ItemData, int32 Count, bool bAddAsUnique)

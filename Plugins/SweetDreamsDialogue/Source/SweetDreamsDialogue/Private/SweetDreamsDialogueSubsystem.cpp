@@ -2,6 +2,7 @@
 
 #include "SweetDreamsDialogueSubsystem.h"
 #include "DialogueData.h"
+#include "DialogueComponent.h"
 
 USweetDreamsDialogueSubsystem::USweetDreamsDialogueSubsystem() {}
 
@@ -28,9 +29,9 @@ void USweetDreamsDialogueSubsystem::StartDialogue(UDialogueData* Dialogue)
 		{
 			CurrentDialogue = Dialogues[0];
 			bIsDialogueActive = true;
-			// delegate
+			OnDialogueStarted.Broadcast();
 
-			ProcessDialogue(CurrentDialogue);
+			ProcessDialogue(CurrentDialogue, 0);
 		}
 		else
 		{
@@ -58,14 +59,20 @@ void USweetDreamsDialogueSubsystem::UpdateDialogue()
 
 	CurrentDialogueID = FMath::Clamp(++CurrentDialogueID, 0, Dialogues.Num());
 	CurrentDialogue = Dialogues[CurrentDialogueID];
+	OnDialogueUpdated.Broadcast(CurrentDialogue, CurrentDialogueID);
+	CallCustomFunctions(CurrentDialogue, CurrentDialogueID);
+
 	EDialogueMode CurrentMode = CurrentDialogue.Mode;
 	switch (CurrentMode)
 	{
 	case EDialogueMode::DIALOGUE:
-		ProcessDialogue(CurrentDialogue);
+		ProcessDialogue(CurrentDialogue, CurrentDialogueID);
 		break;
 	case EDialogueMode::SEQUENCE:
-		//start sequence;
+		OnDialogueSequence.Broadcast(CurrentDialogue, CurrentDialogueID, CurrentDialogue.DialogueSequence);
+		break;
+	case EDialogueMode::CUSTOM:
+		OnCustomDialogueMode.Broadcast(CurrentDialogue, CurrentDialogueID);
 		break;
 	default:
 		break;
@@ -86,35 +93,34 @@ void USweetDreamsDialogueSubsystem::UpdateAnimatedDialogue(float DeltaTime)
 			{
 				bIsAnimating = false;
 
-				//delegate
+				OnDialogueAnimationFinished.Broadcast(CurrentDialogue, CurrentDialogueID, AnimatedDialogueBody);
 			}
 		}
 	}
 }
 
-void USweetDreamsDialogueSubsystem::ProcessDialogue(FSweetDreamsDialogue Dialogue)
+void USweetDreamsDialogueSubsystem::ProcessDialogue(FSweetDreamsDialogue Dialogue, int32 Index)
 {
-	FullDialogueBody = Dialogue.DialogueBody.ToString();
 	if (bUseAnimatedDialogue)
 	{
-		ProcessAnimatedDialogue();
+		ProcessAnimatedDialogue(Dialogue);
 	}
 
 	AddDialogueToLog(Dialogue);
 
 	if (Dialogue.DialogueAudio)
 	{
-		// play audio delegate
+		OnDialogueAudio.Broadcast(Dialogue.DialogueAudio);
 	}
 
 	bIsSelectingChoices = Dialogue.Choices.Num() > 0;
 	if (bIsSelectingChoices)
 	{
-		// show choices delegate
+		OnDialogueChoices.Broadcast(Dialogue, Index, Dialogue.Choices);
 	}
 	else
 	{
-		// not showing choices delegate
+		OnDialogueNoChoices.Broadcast();
 	}
 }
 
@@ -126,10 +132,18 @@ void USweetDreamsDialogueSubsystem::AddDialogueToLog(FSweetDreamsDialogue Dialog
 	DialogueLog.Add(Log);
 }
 
+void USweetDreamsDialogueSubsystem::CallCustomFunctions(FSweetDreamsDialogue Dialogue, int32 Index)
+{
+	if (!Dialogue.FunctionsToCall.IsEmpty())
+	{
+		OnDialogueCustomFunction.Broadcast(Dialogue, Index, Dialogue.FunctionsToCall);
+	}
+}
+
 void USweetDreamsDialogueSubsystem::SkipAnimatedDialogue()
 {
-	bIsAnimating = false;
 	CurrentLetterIndex = TaglessDialogueBody.Len();
+	bIsAnimating = false;
 }
 
 void USweetDreamsDialogueSubsystem::SelectChoiceAndUpdate(FChoice Choice)
@@ -174,7 +188,7 @@ void USweetDreamsDialogueSubsystem::EndDialogue()
 {
 	ResetDialogueData();
 	bIsDialogueActive = false;
-	// delegate
+	OnDialogueEnded.Broadcast();
 }
 
 void USweetDreamsDialogueSubsystem::SkipRichTextTags(int32& LetterIndex)
@@ -186,10 +200,13 @@ void USweetDreamsDialogueSubsystem::SkipRichTextTags(int32& LetterIndex)
 	}
 }
 
-void USweetDreamsDialogueSubsystem::ProcessAnimatedDialogue()
+void USweetDreamsDialogueSubsystem::ProcessAnimatedDialogue(FSweetDreamsDialogue Dialogue)
 {
+	FullDialogueBody = Dialogue.DialogueBody.ToString();
+	CurrentAnimatedSettings = CurrentDialogue.AnimatedSettings;
 	AnimatedDialogueBody = FText::GetEmpty();
 	TaglessDialogueBody.Empty();
+
 	for (int32 i = 0; i < FullDialogueBody.Len();)
 	{
 		if (FullDialogueBody[i] == '<')
@@ -208,7 +225,7 @@ void USweetDreamsDialogueSubsystem::ProcessAnimatedDialogue()
 
 bool USweetDreamsDialogueSubsystem::CanAdvanceLetters()
 {
-	const int32 LettersToAdvance = FMath::FloorToInt(LetterDisplayElapsed / LetterDisplayRate);
+	const int32 LettersToAdvance = FMath::FloorToInt(LetterDisplayElapsed / CurrentAnimatedSettings.LetterDisplayRate);
 
 	if (LettersToAdvance <= 0)
 	{
@@ -252,5 +269,47 @@ void USweetDreamsDialogueSubsystem::BuildAnimatedDialogue()
 	}
 
 	AnimatedDialogueBody = FText::FromString(DisplayText);
+	OnDialogueAnimating.Broadcast(CurrentDialogue, CurrentDialogueID, AnimatedDialogueBody);
 }
 
+UDialogueData* USweetDreamsDialogueSubsystem::GetDialogueData() const
+{
+	return DialogueData;
+}
+
+void USweetDreamsDialogueSubsystem::SetDialogueData(UDialogueData* InData)
+{
+	ResetDialogueData();
+	DialogueData = InData;
+}
+
+TArray<FSweetDreamsDialogue> USweetDreamsDialogueSubsystem::GetDialogues() const
+{
+	return Dialogues;
+}
+
+TArray<FSweetDreamsDialogueLog> USweetDreamsDialogueSubsystem::GetDialogueLog() const
+{
+	return DialogueLog;
+}
+
+FSweetDreamsDialogue USweetDreamsDialogueSubsystem::GetCurrentDialogue(int32& Index) const
+{
+	Index = CurrentDialogueID;
+	return CurrentDialogue;
+}
+
+int32 USweetDreamsDialogueSubsystem::GetCurrentDialogueID() const
+{
+	return CurrentDialogueID;
+}
+
+bool USweetDreamsDialogueSubsystem::IsUsingAnimatedDialogue() const
+{
+	return bUseAnimatedDialogue;
+}
+
+void USweetDreamsDialogueSubsystem::SetUseAnimatedDialogue(bool bInUseAnimatedDialogue)
+{
+	bUseAnimatedDialogue = bInUseAnimatedDialogue;
+}

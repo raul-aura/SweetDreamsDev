@@ -11,8 +11,42 @@ UENUM(BlueprintType)
 enum class EDialogueMode : uint8
 {
 	DIALOGUE,
-	SEQUENCE
+	SEQUENCE,
+	CUSTOM
 };
+
+USTRUCT(BlueprintType)
+struct SWEETDREAMSDIALOGUE_API FDialogueFunction
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue Function")
+	FName FunctionName;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue Function")
+	TArray<FString> FunctionParameters;
+
+	FDialogueFunction() {}
+};
+
+USTRUCT(BlueprintType)
+struct SWEETDREAMSDIALOGUE_API FAnimatedDialogueSettings
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animated Dialogue")
+	float LetterDisplayRate = 0.1f;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animated Dialogue")
+	TObjectPtr<USoundBase> AnimatedLetterAudio;
+
+	FAnimatedDialogueSettings() {}
+};
+
 
 USTRUCT(BlueprintType)
 struct SWEETDREAMSDIALOGUE_API FChoice
@@ -63,11 +97,18 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
 	TObjectPtr<USoundBase> DialogueAudio;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
-	TObjectPtr<USoundBase> AnimatedLetterAudio;
-
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
-	TArray<FName> FunctionsToCall;
+	TArray<FDialogueFunction> FunctionsToCall;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animated Dialogue")
+	FAnimatedDialogueSettings AnimatedSettings;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Custom Parameters")
+	TArray<float> CustomFloats;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Custom Parameters")
+	TArray<bool> CustomBools;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Custom Parameters")
+	TArray<FName> CustomNames;
 
 	FSweetDreamsDialogue()
 		: Mode(EDialogueMode::DIALOGUE),
@@ -77,8 +118,7 @@ public:
 		DialogueImage(nullptr),
 		CameraID(-1),
 		CameraBlend(0.f),
-		DialogueAudio(nullptr),
-		AnimatedLetterAudio(nullptr)
+		DialogueAudio(nullptr)
 	{}
 };
 
@@ -125,4 +165,3 @@ public:
 		SelectedChoice = NewChoice;
 	}
 };
-

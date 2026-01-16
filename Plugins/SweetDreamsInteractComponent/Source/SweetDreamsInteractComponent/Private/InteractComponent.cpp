@@ -11,8 +11,6 @@ UInteractComponent::UInteractComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-
-
 void UInteractComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -75,6 +73,8 @@ TArray<AActor*> UInteractComponent::FindInteractablesInRange()
 		Overlaps, RangeOrigin, FQuat::Identity, RangedChannel, Shape, QueryParams
 	);
 
+	TSet<TObjectPtr<AActor>> UniqueOverlaps;
+
 	if (bHasOverlaps)
 	{
 		for (const FOverlapResult& Result : Overlaps)
@@ -86,7 +86,7 @@ TArray<AActor*> UInteractComponent::FindInteractablesInRange()
 			const bool bIsInteractable = (bLimitToInteractableInterface && HitActor->Implements<USweetDreamsInteractInterface>()) || IsClassAccepted(HitActor);
 			if (bIsInteractable)
 			{
-				ActorsWithinRange.Add(HitActor);
+				UniqueOverlaps.Add(HitActor);
 				if (!PreviousActors.Contains(HitActor) && HitActor->Implements<USweetDreamsInteractInterface>())
 				{
 					ISweetDreamsInteractInterface::Execute_OnEnterInteractRange(HitActor, GetOwner());
@@ -95,6 +95,7 @@ TArray<AActor*> UInteractComponent::FindInteractablesInRange()
 		}
 	}
 
+	ActorsWithinRange = UniqueOverlaps.Array();
 	InvalidateActorsInRange(PreviousActors);
 	OnInteractablesInRange.Broadcast(ActorsWithinRange);
 	return ActorsWithinRange;
