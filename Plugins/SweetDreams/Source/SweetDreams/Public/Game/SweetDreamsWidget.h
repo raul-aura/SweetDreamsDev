@@ -7,6 +7,7 @@
 #include "SweetDreamsWidget.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWidgetDelegate, USweetDreamsWidget*, WidgetReference);
+DECLARE_DELEGATE_OneParam(FOnRequestSignature, USweetDreamsWidget* /* WidgetReference */);
 
 UENUM(BlueprintType)
 enum class EInputMode : uint8
@@ -37,6 +38,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnWidgetDelegate OnWidgetHide;
 
+	FOnRequestSignature OnShowRequested;
+	FOnRequestSignature OnHideRequested;
+
 	// Implementable event called when this widget changes visibility to Self Hit-Test Invisible by ShowWidget() function.
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|Core|Widget")
 	void OnShow();
@@ -55,5 +59,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Widget")
 	int32 GetInitialZOrder() const { return InitialZOrder; }
 
+	void ShowWidget_Internal();
+	void HideWidget_Internal();
 };
 

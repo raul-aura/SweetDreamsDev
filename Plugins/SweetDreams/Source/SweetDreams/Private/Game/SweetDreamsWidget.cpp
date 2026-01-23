@@ -4,14 +4,28 @@
 
 void USweetDreamsWidget::ShowWidget()
 {
+	OnShowRequested.ExecuteIfBound(this);
+}
+
+void USweetDreamsWidget::HideWidget()
+{
+	OnHideRequested.ExecuteIfBound(this);
+}
+
+void USweetDreamsWidget::ShowWidget_Internal()
+{
+	if (GetVisibility() == ESlateVisibility::SelfHitTestInvisible) return;
+
 	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
 	OnShow();
 	OnWidgetShow.Broadcast(this);
 }
 
-void USweetDreamsWidget::HideWidget()
+void USweetDreamsWidget::HideWidget_Internal()
 {
+	if (GetVisibility() == ESlateVisibility::Collapsed) return;
+
 	SetVisibility(ESlateVisibility::Collapsed);
 
 	OnHide();

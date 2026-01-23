@@ -24,8 +24,8 @@ void ASweetDreamsHUD::CreateStartingWidgets()
 			NewWidget->SetVisibility(ESlateVisibility::Collapsed);
 			NewWidget->AddToViewport(NewWidget->GetInitialZOrder());
 
-			NewWidget->OnWidgetShow.AddUniqueDynamic(this, &ASweetDreamsHUD::ShowWidget);
-			NewWidget->OnWidgetHide.AddUniqueDynamic(this, &ASweetDreamsHUD::HideWidget);
+			NewWidget->OnShowRequested.BindUObject(this, &ASweetDreamsHUD::ShowWidget);
+			NewWidget->OnHideRequested.BindUObject(this, &ASweetDreamsHUD::HideWidget);
 
 			AllWidgets.Add(NewWidget);
 		}
@@ -41,8 +41,8 @@ USweetDreamsWidget* ASweetDreamsHUD::CreateAndStoreWidget(TSubclassOf<USweetDrea
 		NewWidget->SetVisibility(ESlateVisibility::Collapsed);
 		NewWidget->AddToViewport(NewWidget->GetInitialZOrder());
 
-		NewWidget->OnWidgetShow.AddUniqueDynamic(this, &ASweetDreamsHUD::ShowWidget);
-		NewWidget->OnWidgetHide.AddUniqueDynamic(this, &ASweetDreamsHUD::HideWidget);
+		NewWidget->OnShowRequested.BindUObject(this, &ASweetDreamsHUD::ShowWidget);
+		NewWidget->OnHideRequested.BindUObject(this, &ASweetDreamsHUD::HideWidget);
 
 		AllWidgets.Add(NewWidget);
 	}
@@ -53,14 +53,14 @@ void ASweetDreamsHUD::ShowWidget(USweetDreamsWidget* Widget)
 {
 	if (!IsValid(Widget)) return;
 	UpdatePlayerInputMode();
-	Widget->ShowWidget();
+	Widget->ShowWidget_Internal();
 }
 
 void ASweetDreamsHUD::HideWidget(USweetDreamsWidget* Widget)
 {
 	if (!IsValid(Widget)) return;
 	UpdatePlayerInputMode();
-	Widget->HideWidget();
+	Widget->HideWidget_Internal();
 }
 
 void ASweetDreamsHUD::OverridePlayerInputMode(USweetDreamsWidget* WidgetToFocus)
