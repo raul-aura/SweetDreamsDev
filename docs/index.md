@@ -1,29 +1,24 @@
-# Table of Contents
-1. [Example](#example)
-2. [Example2](#example2)
-3. [Third Example](#third-example)
-4. [Fourth Example](#fourth-examplehttpwwwfourthexamplecom)
 
+# Sweet Dreams Core
+Sweet Dreams Core is a fully C++-based framework plugin for Unreal Engine, designed to help build games faster and more efficient.
+<br>Every system is designed to be scalable and 100% data-driven, making it suitable for any type of project.
 
-## Example
-## Example2
-## Third Example
-## [Fourth Example](http://www.fourthexample.com) 
+The name ==Sweet Dreams== comes from a goal: let you sleep peacefully instead of staying up fixing bugs.
 
-# Table of contents
-1. [Introduction](#introduction)
-2. [Some paragraph](#paragraph1)
-    1. [Sub paragraph](#subparagraph1)
-3. [Another paragraph](#paragraph2)
+## Documentation
+1. [Key Features](#key)
+2. [Classes](#classes)
+    1. [Blueprint Function Library](#subparagraph1)
+3. [Support](#support)
 
-## This is the introduction <a name="introduction"></a>
+## Key Features {#key}
 Some introduction text, formatted in heading 2 style
 
-## Some paragraph <a name="paragraph1"></a>
+## Classes
 The first paragraph text
 
 ### Sub paragraph <a name="subparagraph1"></a>
 This is a sub paragraph, formatted in heading 3 style
 
-## Another paragraph <a name="paragraph2"></a>
-The second paragraph text
+## Support
+Support me on Patreon, check my other projects and etc.
