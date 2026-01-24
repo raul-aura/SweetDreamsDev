@@ -13,9 +13,7 @@
 #include "GameFramework/PlayerState.h"
 
 USweetDreamsBPLibrary::USweetDreamsBPLibrary(const FObjectInitializer& ObjectInitializer)
-: Super(ObjectInitializer)
-{
-}
+: Super(ObjectInitializer) {}
 
 USweetDreamsCore* USweetDreamsBPLibrary::GetSweetDreamsCore(const UObject* WorldContext)
 {
@@ -45,6 +43,16 @@ FString USweetDreamsBPLibrary::GetGameVersion(const UObject* WorldContext)
 		return Core->CoreSettings->GameVersion;
 	}
 	return TEXT("No Sweet Dreams Core or Sweet Dreams Core Settings found.");
+}
+
+float USweetDreamsBPLibrary::GetFPS(const UObject* WorldContext)
+{
+	if (UWorld* World = GetValidWorld(WorldContext))
+	{
+		return 1.f / World->GetDeltaSeconds();
+	}
+
+	return 0.0f;
 }
 
 USweetDreamsSaveFile* USweetDreamsBPLibrary::CreateCustomSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, FString CustomSlot, bool& bSuccessful)
@@ -449,12 +457,12 @@ FString USweetDreamsBPLibrary::GetPlayerUniqueId(APlayerController* PlayerContro
 
 void USweetDreamsBPLibrary::ShouldNotHappen(const UObject* WorldContext)
 {
-	PrintDream(WorldContext, "Should NOT happen called.", EPrintType::ERROR, 10.f);
+	LogDream(WorldContext, "Should NOT happen called.", EPrintType::Error, 10.f);
 }
 
 void USweetDreamsBPLibrary::DoSomething(const UObject* WorldContext)
 {
-	PrintDream(WorldContext, "Something has been done.", EPrintType::WARNING, 10.f);
+	LogDream(WorldContext, "Something has been done.", EPrintType::Warning, 10.f);
 }
 
 bool USweetDreamsBPLibrary::IsRunningInEditor()
@@ -471,10 +479,10 @@ bool USweetDreamsBPLibrary::IsRunningInStandaloneGame()
 	return !IsRunningInEditor();
 }
 
-void USweetDreamsBPLibrary::PrintDream(const UObject* DreamOrigin, FString Dream, EPrintType Severity, float Duration)
+void USweetDreamsBPLibrary::LogDream(const UObject* WorldContext, FString Log, EPrintType Severity, float Duration, bool bLogToScreen)
 {
-	if (USweetDreamsCore* Core = GetSweetDreamsCore(DreamOrigin))
+	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		Core->PrintDream(DreamOrigin, Dream, Severity, Duration);
+		Core->Log(WorldContext, Log, Severity, Duration, bLogToScreen);
 	}
 }

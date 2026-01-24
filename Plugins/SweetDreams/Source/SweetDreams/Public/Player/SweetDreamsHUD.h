@@ -17,7 +17,7 @@ class SWEETDREAMS_API ASweetDreamsHUD : public AHUD
 public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	void CreateStartingWidgets();
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player", meta = (DeterminesOutputType = "WidgetClass"))
 	USweetDreamsWidget* CreateAndStoreWidget(TSubclassOf<USweetDreamsWidget> WidgetClass);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	virtual void ShowWidget(USweetDreamsWidget* Widget);

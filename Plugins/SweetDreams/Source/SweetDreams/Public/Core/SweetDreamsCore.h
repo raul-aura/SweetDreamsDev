@@ -10,12 +10,14 @@
 class USweetDreamsSaveFile;
 class USweetDreamsSettings;
 
+DECLARE_LOG_CATEGORY_EXTERN(LogSweetDreams, Log, All);
+
 UENUM(BlueprintType)
 enum class EPrintType : uint8
 {
-	INFO,
-	WARNING,
-	ERROR
+	Info,
+	Warning,
+	Error
 };
 
 UCLASS(Category = "SweetDreams|Core")
@@ -31,7 +33,7 @@ public:
 	const USweetDreamsSettings* CoreSettings;
 
 	// DEBUG
-	void PrintDream(const UObject* DreamOrigin, FString Dream, EPrintType Severity = EPrintType::INFO, float duration = 4.0f);
+	void Log(const UObject* WorldContext, FString Text, EPrintType Severity = EPrintType::Info, float Duration = 4.0f, bool bLogToScreen = true);
 
 	// SAVE
 	USweetDreamsSaveFile* CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, const FString& Slot, bool& bSuccess, int32 UserIndex = 0);
@@ -65,6 +67,8 @@ public:
 	TMap<FName, bool> GlobalBools;
 
 protected:
+
+	void Log_Internal(FString Text, EPrintType Severity = EPrintType::Info);
 
 	// SAVE
 	TMap<FString, TObjectPtr<USweetDreamsSaveFile>> CustomSaveFiles;

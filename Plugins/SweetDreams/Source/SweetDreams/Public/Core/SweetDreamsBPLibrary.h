@@ -20,8 +20,8 @@ public:
 	// DEBUG
 
 	// Prints a string to the Output Log and screen, the string color is based on the print severity.
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "DreamOrigin", CallableWithoutWorldContext, DevelopmentOnly), Category = "Sweet Dreams|Core")
-	static void PrintDream(const UObject* DreamOrigin, FString Dream = "Hello dream.", EPrintType Severity = EPrintType::INFO, float duration = 4.0f);
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext, DevelopmentOnly), Category = "Sweet Dreams|Core")
+	static void LogDream(const UObject* WorldContext, FString Log = "Hello dream.", EPrintType Severity = EPrintType::Info, float duration = 4.0f, bool bLogToScreen = true);
 
 	// GETTERS
 
@@ -34,17 +34,19 @@ public:
 	// Gets the Game Version set on Project Settings > Sweet Dreams Core > Game Version.
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core")
 	static FString GetGameVersion(const UObject* WorldContext);
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core")
+	static float GetFPS(const UObject* WorldContext);
 
 	// SAVE
 	
 	// Creates a custom Save Object using the specified class and stores in the CustomSaves array of the SweetDreamsCore Subsystem.
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext, DeterminesOutputType = "SaveClass"), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* CreateCustomSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, FString CustomSlot, bool& bSuccessful);
 	// Manually creates a Persistent Save Object using the specified class. Persistent Saves are not destroyed upon game shutdown.
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext, DeterminesOutputType = "SaveClass"), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* CreatePersistentSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, bool& bSuccessful); 
 	// Manually creates a Local Save Object using the specified class. Local Saves are destroyed upon game shutdown.
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext, DeterminesOutputType = "SaveClass"), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* CreateLocalSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, bool& bSuccessful); 
 	// Saves a custom Game Object to disk if found on the SweetDreamsCore Subsystem using the custom slot.
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")

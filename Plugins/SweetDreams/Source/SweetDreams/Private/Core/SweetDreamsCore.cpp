@@ -12,6 +12,8 @@
 #include "Engine/AssetManager.h"
 #include "EngineUtils.h"
 
+DEFINE_LOG_CATEGORY(LogSweetDreams);
+
 USweetDreamsCore::USweetDreamsCore() {}
 
 void USweetDreamsCore::LoadSettings()
@@ -36,7 +38,7 @@ void USweetDreamsCore::LoadSettings()
 void USweetDreamsCore::Initialize(FSubsystemCollectionBase& Collection)
 {
 	LoadSettings();
-	PrintDream(nullptr, "Initializing Sweet Dreams Core subsystem.");
+	Log_Internal("Initializing Sweet Dreams Core subsystem.");
 	if (CoreSettings->bEnableAutoCreateSave)
 	{
 		bool bSuccess = false;
@@ -49,46 +51,51 @@ void USweetDreamsCore::Initialize(FSubsystemCollectionBase& Collection)
 void USweetDreamsCore::Deinitialize()
 {
 	DeleteSave(SaveSlotLocal);
-	PrintDream(nullptr, "Deinitializing Sweet Dreams Core subsystem.");
+	Log_Internal("Deinitializing Sweet Dreams Core subsystem.");
 	Super::Deinitialize();
 }
 
 // Debug
-void USweetDreamsCore::PrintDream(const UObject* DreamOrigin, FString Dream, EPrintType Severity, float Duration)
+void USweetDreamsCore::Log(const UObject* WorldContext, FString Text, EPrintType Severity, float Duration, bool bLogToScreen)
 {
-	if (!CoreSettings || !(CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintEnabled))) return;
-
-	const FString Origin = IsValid(DreamOrigin)
-		? FString::Printf(TEXT("[%s]"), *DreamOrigin->GetName())
-		: TEXT("[SweetDreams]");
-
-	Dream = Origin + TEXT(" ") + Dream;
+	if (!CoreSettings || !CoreSettings->bLogEnabled) return;
 
 	FColor Color = FColor::White;
 
+	const FString Origin = IsValid(WorldContext)
+		? FString::Printf(TEXT("[%s]"), *WorldContext->GetName())
+		: TEXT("[SweetDreams]");
+
+	Text = Origin + TEXT(" ") + Text;
+
 	switch (Severity)
 	{
-	case EPrintType::WARNING:
+	case EPrintType::Warning:
 		Color = CoreSettings->WarningColor;
-		UE_LOG(LogCore, Warning, TEXT("%s"), *Dream);
+		UE_LOG(LogSweetDreams, Warning, TEXT("%s"), *Text);
 		break;
 
-	case EPrintType::ERROR:
+	case EPrintType::Error:
 		Color = CoreSettings->ErrorColor;
-		UE_LOG(LogCore, Error, TEXT("%s"), *Dream);
+		UE_LOG(LogSweetDreams, Error, TEXT("%s"), *Text);
 		break;
 
-	case EPrintType::INFO:
+	case EPrintType::Info:
 	default:
 		Color = CoreSettings->InfoColor;
-		UE_LOG(LogCore, Display, TEXT("%s"), *Dream);
+		UE_LOG(LogSweetDreams, Display, TEXT("%s"), *Text);
 		break;
 	}
 
-	if (GEngine)
+	if (GEngine && bLogToScreen)
 	{
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, Duration, Color, Dream);
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, Duration, Color, Text);
 	}
+}
+
+void USweetDreamsCore::Log_Internal(FString Text, EPrintType Severity)
+{
+	Log(nullptr, Text, Severity, 0.f, false);
 }
 
 // SAVE
@@ -98,18 +105,18 @@ USweetDreamsSaveFile* USweetDreamsCore::CreateSave(TSubclassOf<USweetDreamsSaveF
 	bSuccess = false;
 	if (UGameplayStatics::DoesSaveGameExist(Slot, UserIndex))
 	{
-		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+		if (CoreSettings->bSaveOperations)
 		{
-			PrintDream(nullptr, FString::Printf(TEXT("%s EXISTS and WILL NOT be created. Returning NULL"), *Slot), EPrintType::WARNING);
+			Log_Internal(FString::Printf(TEXT("%s EXISTS and WILL NOT be created. Returning NULL"), *Slot), EPrintType::Warning);
 		}
 		return nullptr;
 	}
 	USaveGame* SaveObj = UGameplayStatics::CreateSaveGameObject(SaveClass);
 	if (IsValid(SaveObj))
 	{
-		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+		if (CoreSettings->bSaveOperations)
 		{
-			PrintDream(nullptr, FString::Printf(TEXT("%s CREATED with SUCCESS."), *Slot));
+			Log_Internal(FString::Printf(TEXT("%s CREATED with SUCCESS."), *Slot));
 		}
 		bSuccess = true;
 		USweetDreamsSaveFile* SweetSave = Cast<USweetDreamsSaveFile>(SaveObj);
@@ -117,9 +124,9 @@ USweetDreamsSaveFile* USweetDreamsCore::CreateSave(TSubclassOf<USweetDreamsSaveF
 		Save(Slot);
 		return SweetSave;
 	}
-	if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+	if (CoreSettings->bSaveOperations)
 	{
-		PrintDream(nullptr, FString::Printf(TEXT("%s NOT CREATED. Returning NULL."), *Slot), EPrintType::ERROR);
+		Log_Internal(FString::Printf(TEXT("%s NOT CREATED. Returning NULL."), *Slot), EPrintType::Error);
 	}
 	return nullptr;
 }
@@ -131,9 +138,9 @@ bool USweetDreamsCore::Save(const FString& Slot, int32 UserIndex)
 	SaveData(Save);
 	if (UGameplayStatics::SaveGameToSlot(Save, Slot, UserIndex))
 	{
-		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+		if (CoreSettings->bSaveOperations)
 		{
-			PrintDream(nullptr, FString::Printf(TEXT("%s SAVED with SUCCESS."), *Slot));
+			Log_Internal(FString::Printf(TEXT("%s SAVED with SUCCESS."), *Slot));
 		}
 		TArray<AActor*> Actors;
 		UGameplayStatics::GetAllActorsWithInterface(GetWorld(), USweetDreamsSaveInterface::StaticClass(), Actors);
@@ -144,9 +151,9 @@ bool USweetDreamsCore::Save(const FString& Slot, int32 UserIndex)
 		}
 		return true;
 	}
-	if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+	if (CoreSettings->bSaveOperations)
 	{
-		PrintDream(nullptr, FString::Printf(TEXT("%s FAILED to SAVE."), *Slot), EPrintType::ERROR);
+		Log_Internal(FString::Printf(TEXT("%s FAILED to SAVE."), *Slot), EPrintType::Error);
 	}
 	return false;
 }
@@ -155,9 +162,9 @@ TObjectPtr<USweetDreamsSaveFile> USweetDreamsCore::LoadSave(const FString& Slot,
 {
 	if (USaveGame* SaveObject = UGameplayStatics::LoadGameFromSlot(Slot, UserIndex))
 	{
-		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+		if (CoreSettings->bSaveOperations)
 		{
-			PrintDream(nullptr, FString::Printf(TEXT("%s LOADED and returned with SUCCESS."), *Slot));
+			Log_Internal(FString::Printf(TEXT("%s LOADED and returned with SUCCESS."), *Slot));
 		}
 		USweetDreamsSaveFile* SweetSave = Cast<USweetDreamsSaveFile>(SaveObject);
 		UpdateSaveReference(SweetSave, Slot);
@@ -171,9 +178,9 @@ TObjectPtr<USweetDreamsSaveFile> USweetDreamsCore::LoadSave(const FString& Slot,
 		}
 		return SweetSave;
 	}
-	if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+	if (CoreSettings->bSaveOperations)
 	{
-		PrintDream(nullptr, FString::Printf(TEXT("%s FAILED to LOAD."), *Slot), EPrintType::ERROR);
+		Log_Internal(FString::Printf(TEXT("%s FAILED to LOAD."), *Slot), EPrintType::Error);
 	}
 	return nullptr;
 }
@@ -182,16 +189,16 @@ bool USweetDreamsCore::DeleteSave(const FString& Slot, int32 UserIndex)
 {
 	if (UGameplayStatics::DeleteGameInSlot(Slot, UserIndex))
 	{
-		if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+		if (CoreSettings->bSaveOperations)
 		{
-			PrintDream(nullptr, FString::Printf(TEXT("%s DELETED."), *Slot));
+			Log_Internal(FString::Printf(TEXT("%s DELETED."), *Slot));
 		}
 		UpdateSaveReference(nullptr, Slot);
 		return true;
 	}
-	if (CoreSettings->DebugFlags & static_cast<uint8>(EDebugFlags::PrintSaveOperations))
+	if (CoreSettings->bSaveOperations)
 	{
-		PrintDream(nullptr, FString::Printf(TEXT("%s FAILED to be DELETED."), *Slot), EPrintType::ERROR);
+		Log_Internal(FString::Printf(TEXT("%s FAILED to be DELETED."), *Slot), EPrintType::Error);
 	}
 	return false;
 }

@@ -6,8 +6,6 @@
 
 USweetDreamsSettings::USweetDreamsSettings()
 {
-	DebugFlags |= static_cast<uint8>(EDebugFlags::PrintEnabled);
-	DebugFlags |= static_cast<uint8>(EDebugFlags::PrintSaveOperations);
 	PersistentClass = USweetDreamsSaveFile::StaticClass();
 	LocalClass = USweetDreamsSaveFile::StaticClass();
 }

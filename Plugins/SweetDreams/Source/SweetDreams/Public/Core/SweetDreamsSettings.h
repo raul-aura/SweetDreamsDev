@@ -8,15 +8,6 @@
 
 class USweetDreamsSaveFile;
 
-UENUM(BlueprintType)
-enum class EDebugFlags : uint8
-{
-	NONE = 0 UMETA(Hidden),
-	PrintEnabled = 1 << 0,
-	PrintSaveOperations = 1 << 1,
-};
-ENUM_CLASS_FLAGS(EDebugFlags)
-
 UCLASS(Config = Game, defaultconfig, meta = (DisplayName = "Sweet Dreams Core"))
 class SWEETDREAMS_API USweetDreamsSettings : public UDeveloperSettings
 {
@@ -28,14 +19,17 @@ public:
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Game")
 	FString GameVersion = TEXT("1.0");
 
-	// DEBUG
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (Bitmask, BitmaskEnum = "/Script/SweetDreamsFree.EDebugFlags"))
-	int32 DebugFlags;
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (DisplayName = "Info Print Color"))
+	// LOG
+	UPROPERTY(Config, EditAnywhere, Category = "Log")
+	bool bLogEnabled = true;
+	UPROPERTY(Config, EditAnywhere, Category = "Log|Toggle Specific Logging")
+	bool bSaveOperations = true;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Log", meta = (DisplayName = "Info Print Color"))
 	FColor InfoColor = FColor(195, 150, 255);
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (DisplayName = "Warning Print Color"))
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Log", meta = (DisplayName = "Warning Print Color"))
 	FColor WarningColor = FColor(255, 191, 64);
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (DisplayName = "Error Print Color"))
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Log", meta = (DisplayName = "Error Print Color"))
 	FColor ErrorColor = FColor(216, 29, 29);
 
 	// SAVE
