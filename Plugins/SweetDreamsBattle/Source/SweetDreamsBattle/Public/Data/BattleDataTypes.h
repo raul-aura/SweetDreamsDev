@@ -5,6 +5,32 @@
 #include "CoreMinimal.h"
 #include "BattleDataTypes.generated.h"
 
+class UBattleEvent;
+
+USTRUCT(BlueprintType)
+struct SWEETDREAMSBATTLE_API FBattleElementEventPhase
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Battle Element Event")
+	TArray<TObjectPtr<UBattleEvent>> Events;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Battle Element Event")
+	bool bSkipEventsCompletion = false;
+
+	FBattleElementEventPhase() {}
+};
+
+UENUM(BlueprintType)
+enum class EBattleElementPhases : uint8
+{
+	Setup,
+	Execution,
+	End
+};
+
 UENUM(BlueprintType)
 enum class ETeamType : uint8
 {

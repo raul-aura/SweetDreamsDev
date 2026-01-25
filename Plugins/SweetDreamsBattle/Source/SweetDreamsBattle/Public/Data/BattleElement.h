@@ -1,41 +1,39 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/DataAsset.h"
+#include "UObject/Object.h"
+#include "Data/BattleDataTypes.h"
 #include "BattleElement.generated.h"
 
 class UBattleEvent;
+class UBattleElementData;
 
-UCLASS(Blueprintable, BlueprintType)
-class SWEETDREAMSBATTLE_API UBattleElement : public UDataAsset
+UCLASS(BlueprintType)
+class SWEETDREAMSBATTLE_API UBattleElement : public UObject
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Element")
-    FName ElementUniqueName;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Element")
-    FText ElementName;
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Element", meta = (WorldContext = "WorldContextObject", DeterminesOutputType = "DataClass"))
+    static UBattleElement* CreateBattleElement(const UObject* WorldContext, TSubclassOf<UBattleElementData> DataClass);
+    
+    void Start(/*UBattleContext* Context*/);
+    void Tick(float DeltaTime);
+    void End();
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Element", meta = (MultiLine = true))
-    FText Description;
+protected:
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Element", meta = (MultiLine = true))
-    FText Message;
+    UPROPERTY(BlueprintReadOnly, Category = "Events")
+    FBattleElementEventPhase SetupEvents;
 
-    UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Pre-Setup Events")
-    TArray<TObjectPtr<UBattleEvent>> PreSetupEvents;
+    UPROPERTY(BlueprintReadOnly, Category = "Events")
+    FBattleElementEventPhase ExecutionEvents;
 
-    UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Setup Events")
-    TArray<TObjectPtr<UBattleEvent>> SetupEvents;
+    UPROPERTY(BlueprintReadOnly, Category = "Events")
+    FBattleElementEventPhase EndEvents;
 
-    UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Execution Events")
-    TArray<TObjectPtr<UBattleEvent>> ExecutionEvents;
-
-    UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "End Events")
-    TArray<TObjectPtr<UBattleEvent>> EndEvents;
+    UPROPERTY(BlueprintReadOnly, Category = "Events")
+    EBattleElementPhases CurrentPhase = EBattleElementPhases::Setup;
 };
 
