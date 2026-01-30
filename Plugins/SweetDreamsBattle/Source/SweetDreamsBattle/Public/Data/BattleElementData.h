@@ -27,7 +27,6 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Element", meta = (MultiLine = true))
     FText Message;
 
-    // TO DO: move these 3 events to a struct 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Events")
     TArray<FBattleElementEventPhase> Phases;
 };

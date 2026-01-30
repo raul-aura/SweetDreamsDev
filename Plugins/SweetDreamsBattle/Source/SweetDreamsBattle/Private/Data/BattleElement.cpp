@@ -1,8 +1,8 @@
 
 #include "Data/BattleElement.h"
 #include "Data/BattleElementData.h"
+#include "Data/BattleEvent.h"
 #include "Battle/BattleActorComponent.h"
-#include "BattleElement.h"
 
 UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* BattleComponent, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass)
 {
@@ -12,9 +12,8 @@ UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* Battl
 
 		if (IsValid(Element))
 		{
-			// TODO: populate this class with variables from data
 			Element->BattleElementData = Data;
-			Element->Phases = Data->Phases; //check if it needs to duplicate
+			Element->DuplicateEvents();
 			Element->Owner = BattleComponent;
 
 			BattleComponent->RegisterBattleElement(Element);
@@ -32,20 +31,9 @@ UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* Battl
 
 void UBattleElement::Tick(float DeltaTime)
 {
-	//if (Index >= Events.Num()) return;
+	EvaluatePhases(DeltaTime);
 
-	//if (!CurrentEvent)
-	//{
-	//	CurrentEvent = Events[Index];
-	//	CurrentEvent->Start(Context);
-	//	return;
-	//}
-
-	//if (CurrentEvent->IsFinished())
-	//{
-	//	CurrentEvent = nullptr;
-	//	Index++;
-	//}
+	//TO DO: if current event from current phase finished, AdvanceCurrentPhaseEvent()
 }
 
 void UBattleElement::End()
@@ -55,20 +43,59 @@ void UBattleElement::End()
 
 void UBattleElement::DuplicateEvents()
 {
-	FBattleElementEventPhase& RuntimePhase = Element->Phases.AddDefaulted_GetRef();
+	Phases.Reset();
+	Phases.Reserve(BattleElementData->Phases.Num());
 
-	// Copy phase-level data
-	RuntimePhase.bSkipEventsCompletion = PhaseTemplate.bSkipEventsCompletion;
-
-	// Duplicate events
-	RuntimePhase.Events.Reserve(PhaseTemplate.Events.Num());
-	for (UBattleEvent* EventTemplate : PhaseTemplate.Events)
+	for (const FBattleElementEventPhase& PhaseTemplate : BattleElementData->Phases)
 	{
-		if (!EventTemplate) continue;
+		FBattleElementEventPhase& RuntimePhase = Phases.AddDefaulted_GetRef();
 
-		UBattleEvent* RuntimeEvent =
-			DuplicateObject<UBattleEvent>(EventTemplate, Element);
+		RuntimePhase.Events.Reserve(PhaseTemplate.Events.Num());
+		for (UBattleEvent* EventTemplate : PhaseTemplate.Events)
+		{
+			if (!EventTemplate) continue;
 
-		RuntimePhase.Events.Add(RuntimeEvent);
+			UBattleEvent* RuntimeEvent = DuplicateObject<UBattleEvent>(EventTemplate, this);
+
+			RuntimePhase.Events.Add(RuntimeEvent);
+		}
+	}
+}
+
+void UBattleElement::EvaluatePhases(float DeltaTime)
+{
+	if (CurrentPhaseIndex < Phases.Num())
+	{
+		if (CurrentPhase.HasEvents() && !CurrentPhase.IsRunning())
+		{
+			CurrentPhase = Phases[CurrentPhaseIndex];
+			StartCurrentPhase();
+		}
+	}
+}
+
+void UBattleElement::StartCurrentPhase()
+{
+	CurrentPhase.CurrentEventIndex = 0;
+	// TODO: start event, if complete, advance current phase
+}
+
+void UBattleElement::AdvanceCurrentPhaseEvent()
+{
+	CurrentPhase.CurrentEventIndex++;
+
+	if (CurrentPhase.IsComplete())
+	{
+		CompleteCurrentPhase();
+	}
+}
+
+void UBattleElement::CompleteCurrentPhase()
+{
+	CurrentPhaseIndex++;
+
+	if (CurrentPhaseIndex >= Phases.Num())
+	{
+		End();
 	}
 }

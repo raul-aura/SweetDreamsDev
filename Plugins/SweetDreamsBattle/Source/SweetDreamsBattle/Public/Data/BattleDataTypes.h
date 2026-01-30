@@ -14,13 +14,31 @@ struct SWEETDREAMSBATTLE_API FBattleElementEventPhase
 
 public:
 
-	UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Battle Element Event")
+	UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Battle Element Phase")
 	TArray<TObjectPtr<UBattleEvent>> Events;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Battle Element Event")
-	bool bSkipEventsCompletion = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Battle Element Phase")
+	int32 CurrentEventIndex = INDEX_NONE;
 
-	FBattleElementEventPhase() {}
+	bool HasEvents() const
+	{
+		return Events.Num() > 0;
+	}
+
+	bool IsRunning() const
+	{
+		return CurrentEventIndex >= 0 && CurrentEventIndex < Events.Num();
+	}
+
+	bool IsComplete() const
+	{
+		return CurrentEventIndex >= Events.Num();
+	}
+
+	FBattleElementEventPhase()
+		: Events(TArray<TObjectPtr<UBattleEvent>>()),
+		CurrentEventIndex(INDEX_NONE)
+	{}
 };
 
 UENUM(BlueprintType)

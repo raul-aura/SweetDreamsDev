@@ -5,13 +5,13 @@
 #include "Data/BattleDataTypes.h"
 #include "BattleElement.generated.h"
 
-DECLARE_DELEGATE_OneParam(FOnBattleElementEnd, UBattleElement* /* BattleElement */);
+DECLARE_DELEGATE_OneParam(FOnBattleElementDelegate, UBattleElement* /* BattleElement */);
 
 class UBattleEvent;
 class UBattleElementData;
 class UBattleActorComponent;
 
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, Blueprintable)
 class SWEETDREAMSBATTLE_API UBattleElement : public UObject
 {
 	GENERATED_BODY()
@@ -21,24 +21,32 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Element", meta = (WorldContext = "BattleComponent", CallableWithoutWorldContext, DeterminesOutputType = "CustomClass"))
     static UBattleElement* CreateBattleElement(UBattleActorComponent* BattleComponent, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass);
     
-    void Start(/*UBattleContext* Context*/);
+    void Execute(/*UBattleContext* Context*/);
     void Tick(float DeltaTime);
     void End();
 
-    FOnBattleElementEnd OnBattleElementEnd;
+    FOnBattleElementDelegate OnBattleElementEnd;
 
 protected:
 
     void DuplicateEvents();
 
+    void EvaluatePhases(float DeltaTime);
+    void StartCurrentPhase();
+    void AdvanceCurrentPhaseEvent();
+    void CompleteCurrentPhase();
 
     UPROPERTY(BlueprintReadOnly, Category = "Data")
     TObjectPtr<UBattleElementData> BattleElementData = nullptr;
     UPROPERTY(BlueprintReadOnly, Category = "Data")
     TObjectPtr<UBattleActorComponent> Owner = nullptr;
 
-    // TO DO: move these 3 events to a struct 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Events")
+    UPROPERTY(BlueprintReadOnly, Category = "Events")
     TArray<FBattleElementEventPhase> Phases;
+    UPROPERTY(BlueprintReadOnly, Category = "Events")
+    FBattleElementEventPhase CurrentPhase;
+    UPROPERTY(BlueprintReadOnly, Category = "Events")
+    int32 CurrentPhaseIndex = 0;
+
 };
 
