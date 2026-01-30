@@ -27,13 +27,8 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Element", meta = (MultiLine = true))
     FText Message;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Pre-Setup Events")
-    FBattleElementEventPhase SetupEvents;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Execution Events")
-    FBattleElementEventPhase ExecutionEvents;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "End Events")
-    FBattleElementEventPhase EndEvents;
+    // TO DO: move these 3 events to a struct 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Events")
+    TArray<FBattleElementEventPhase> Phases;
 };
 

@@ -5,8 +5,11 @@
 #include "Data/BattleDataTypes.h"
 #include "BattleElement.generated.h"
 
+DECLARE_DELEGATE_OneParam(FOnBattleElementEnd, UBattleElement* /* BattleElement */);
+
 class UBattleEvent;
 class UBattleElementData;
+class UBattleActorComponent;
 
 UCLASS(BlueprintType)
 class SWEETDREAMSBATTLE_API UBattleElement : public UObject
@@ -15,25 +18,27 @@ class SWEETDREAMSBATTLE_API UBattleElement : public UObject
 
 public:
 
-    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Element", meta = (WorldContext = "WorldContextObject", DeterminesOutputType = "DataClass"))
-    static UBattleElement* CreateBattleElement(const UObject* WorldContext, TSubclassOf<UBattleElementData> DataClass);
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Element", meta = (WorldContext = "BattleComponent", CallableWithoutWorldContext, DeterminesOutputType = "CustomClass"))
+    static UBattleElement* CreateBattleElement(UBattleActorComponent* BattleComponent, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass);
     
     void Start(/*UBattleContext* Context*/);
     void Tick(float DeltaTime);
     void End();
 
+    FOnBattleElementEnd OnBattleElementEnd;
+
 protected:
 
-    UPROPERTY(BlueprintReadOnly, Category = "Events")
-    FBattleElementEventPhase SetupEvents;
+    void DuplicateEvents();
 
-    UPROPERTY(BlueprintReadOnly, Category = "Events")
-    FBattleElementEventPhase ExecutionEvents;
 
-    UPROPERTY(BlueprintReadOnly, Category = "Events")
-    FBattleElementEventPhase EndEvents;
+    UPROPERTY(BlueprintReadOnly, Category = "Data")
+    TObjectPtr<UBattleElementData> BattleElementData = nullptr;
+    UPROPERTY(BlueprintReadOnly, Category = "Data")
+    TObjectPtr<UBattleActorComponent> Owner = nullptr;
 
-    UPROPERTY(BlueprintReadOnly, Category = "Events")
-    EBattleElementPhases CurrentPhase = EBattleElementPhases::Setup;
+    // TO DO: move these 3 events to a struct 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Events")
+    TArray<FBattleElementEventPhase> Phases;
 };
 

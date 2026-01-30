@@ -13,6 +13,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnReceiveValueEffect, AActor*, Ins
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTargetValueEffect, AActor*, Target, float, Value);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnBattleActorParameterChange, FBattleParamater, Parameter, FBattleParameterModifier, Modifier);
 
+class UBattleElement;
+
 UCLASS( ClassGroup=("SweetDreams"), meta = (BlueprintSpawnableComponent))
 class SWEETDREAMSBATTLE_API UBattleActorComponent : public UActorComponent
 {
@@ -26,6 +28,11 @@ public:
 	static UBattleActorComponent* GetBattleActorComponent(const AActor* Actor);
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	bool RegisterBattleElement(UBattleElement* BattleElement);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	void UnregisterBattleElement(UBattleElement* BattleElement);
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void Damage(AActor* Target, float Amount);
@@ -121,5 +128,8 @@ protected:
 	TMap<FName, FBattleParamater> CustomParameters;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters", meta = (ExposeOnSpawn = true))
 	TMap<FName, float> CustomSimpleParameters;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Battle Elements")
+	TArray<TObjectPtr<UBattleElement>> BattleElements;
 
 };

@@ -3,6 +3,7 @@
 #include "Battle/SweetDreamsBattleBPLibrary.h"
 #include "Battle/SweetDreamsBattleInterface.h"
 #include "Battle/SweetDreamsBattleManager.h"
+#include "Data/BattleElement.h"
 
 UBattleActorComponent::UBattleActorComponent()
 {
@@ -27,6 +28,28 @@ void UBattleActorComponent::BeginPlay()
 void UBattleActorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
+bool UBattleActorComponent::RegisterBattleElement(UBattleElement* BattleElement)
+{
+	if (IsValid(BattleElement))
+	{
+		BattleElements.AddUnique(BattleElement);
+		BattleElement->OnBattleElementEnd.BindUObject(this, &UBattleActorComponent::UnregisterBattleElement);
+	}
+
+	return false;
+}
+
+void UBattleActorComponent::UnregisterBattleElement(UBattleElement* BattleElement)
+{
+	if (IsValid(BattleElement))
+	{
+		if (BattleElements.Contains(BattleElement))
+		{
+			BattleElements.Remove(BattleElement);
+		}
+	}
 }
 
 void UBattleActorComponent::Damage(AActor* Target, float Amount)

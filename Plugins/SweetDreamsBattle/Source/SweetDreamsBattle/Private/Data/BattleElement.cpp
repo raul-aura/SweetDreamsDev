@@ -1,14 +1,26 @@
 
 #include "Data/BattleElement.h"
+#include "Data/BattleElementData.h"
 #include "Battle/BattleActorComponent.h"
+#include "BattleElement.h"
 
-UBattleElement* UBattleElement::CreateBattleElement(const UObject* WorldContext, TSubclassOf<UBattleElementData> DataClass)
+UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* BattleComponent, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass)
 {
-	const UBattleActorComponent* BattleActor = Cast<UBattleActorComponent>(WorldContext);
-
-	if (IsValid(BattleActor))
+	if (IsValid(BattleComponent))
 	{
-		//add to battle component array
+		UBattleElement* Element = NewObject<UBattleElement>(BattleComponent, CustomClass, Data->ElementUniqueName, RF_Transient);
+
+		if (IsValid(Element))
+		{
+			// TODO: populate this class with variables from data
+			Element->BattleElementData = Data;
+			Element->Phases = Data->Phases; //check if it needs to duplicate
+			Element->Owner = BattleComponent;
+
+			BattleComponent->RegisterBattleElement(Element);
+
+			return Element;
+		}
 	}
 	else
 	{
@@ -38,5 +50,25 @@ void UBattleElement::Tick(float DeltaTime)
 
 void UBattleElement::End()
 {
-	//broadcast that finished element and may be destroyed
+	OnBattleElementEnd.ExecuteIfBound(this);
+}
+
+void UBattleElement::DuplicateEvents()
+{
+	FBattleElementEventPhase& RuntimePhase = Element->Phases.AddDefaulted_GetRef();
+
+	// Copy phase-level data
+	RuntimePhase.bSkipEventsCompletion = PhaseTemplate.bSkipEventsCompletion;
+
+	// Duplicate events
+	RuntimePhase.Events.Reserve(PhaseTemplate.Events.Num());
+	for (UBattleEvent* EventTemplate : PhaseTemplate.Events)
+	{
+		if (!EventTemplate) continue;
+
+		UBattleEvent* RuntimeEvent =
+			DuplicateObject<UBattleEvent>(EventTemplate, Element);
+
+		RuntimePhase.Events.Add(RuntimeEvent);
+	}
 }

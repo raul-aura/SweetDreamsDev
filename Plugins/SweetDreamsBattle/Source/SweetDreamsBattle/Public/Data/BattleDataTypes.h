@@ -24,14 +24,6 @@ public:
 };
 
 UENUM(BlueprintType)
-enum class EBattleElementPhases : uint8
-{
-	Setup,
-	Execution,
-	End
-};
-
-UENUM(BlueprintType)
 enum class ETeamType : uint8
 {
 	None,
