@@ -27,7 +27,7 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Element", meta = (MultiLine = true))
     FText Message;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Events")
-    TArray<FBattleElementEventPhase> Phases;
+    UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Events")
+    TArray<TObjectPtr<UBattleEvent>> Events;
 };
 

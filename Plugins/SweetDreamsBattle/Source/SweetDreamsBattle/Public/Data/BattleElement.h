@@ -10,6 +10,7 @@ DECLARE_DELEGATE_OneParam(FOnBattleElementDelegate, UBattleElement* /* BattleEle
 class UBattleEvent;
 class UBattleElementData;
 class UBattleActorComponent;
+class UBattleContext;
 
 UCLASS(BlueprintType, Blueprintable)
 class SWEETDREAMSBATTLE_API UBattleElement : public UObject
@@ -19,9 +20,9 @@ class SWEETDREAMSBATTLE_API UBattleElement : public UObject
 public:
 
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Element", meta = (WorldContext = "BattleComponent", CallableWithoutWorldContext, DeterminesOutputType = "CustomClass"))
-    static UBattleElement* CreateBattleElement(UBattleActorComponent* BattleComponent, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass);
+    static UBattleElement* CreateBattleElement(UBattleActorComponent* BattleComponent, TArray<UBattleActorComponent*> Targets, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass);
     
-    void Execute(/*UBattleContext* Context*/);
+    void Execute();
     void Tick(float DeltaTime);
     void End();
 
@@ -29,24 +30,28 @@ public:
 
 protected:
 
+    void CreateBattleContext(TArray<UBattleActorComponent*> InTargets);
     void DuplicateEvents();
 
-    void EvaluatePhases(float DeltaTime);
-    void StartCurrentPhase();
-    void AdvanceCurrentPhaseEvent();
-    void CompleteCurrentPhase();
+    void EvaluateEvents(float DeltaTime);
+    void StartCurrentEvent();
+    void AdvanceEvent();
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    EBattleElementEndMode EndMode = EBattleElementEndMode::Auto;
     UPROPERTY(BlueprintReadOnly, Category = "Data")
     TObjectPtr<UBattleElementData> BattleElementData = nullptr;
     UPROPERTY(BlueprintReadOnly, Category = "Data")
     TObjectPtr<UBattleActorComponent> Owner = nullptr;
+    UPROPERTY(BlueprintReadOnly, Category = "Data")
+    TObjectPtr<UBattleContext> BattleContext = nullptr;
 
     UPROPERTY(BlueprintReadOnly, Category = "Events")
-    TArray<FBattleElementEventPhase> Phases;
+    TArray<TObjectPtr<UBattleEvent>> Events;
     UPROPERTY(BlueprintReadOnly, Category = "Events")
-    FBattleElementEventPhase CurrentPhase;
+    TObjectPtr<UBattleEvent> CurrentEvent;
     UPROPERTY(BlueprintReadOnly, Category = "Events")
-    int32 CurrentPhaseIndex = 0;
+    int32 CurrentEventIndex = 0;
 
 };
 

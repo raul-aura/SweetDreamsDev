@@ -7,38 +7,11 @@
 
 class UBattleEvent;
 
-USTRUCT(BlueprintType)
-struct SWEETDREAMSBATTLE_API FBattleElementEventPhase
+UENUM(BlueprintType)
+enum class EBattleElementEndMode : uint8
 {
-	GENERATED_BODY()
-
-public:
-
-	UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Battle Element Phase")
-	TArray<TObjectPtr<UBattleEvent>> Events;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Battle Element Phase")
-	int32 CurrentEventIndex = INDEX_NONE;
-
-	bool HasEvents() const
-	{
-		return Events.Num() > 0;
-	}
-
-	bool IsRunning() const
-	{
-		return CurrentEventIndex >= 0 && CurrentEventIndex < Events.Num();
-	}
-
-	bool IsComplete() const
-	{
-		return CurrentEventIndex >= Events.Num();
-	}
-
-	FBattleElementEventPhase()
-		: Events(TArray<TObjectPtr<UBattleEvent>>()),
-		CurrentEventIndex(INDEX_NONE)
-	{}
+	Auto,      // end when all events finish
+	Manual    // never auto-end, must be requested
 };
 
 UENUM(BlueprintType)
