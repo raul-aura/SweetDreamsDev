@@ -219,7 +219,7 @@ void ASweetDreamsBattleManager::BindFunctionsToActor(AActor* Battler)
 	{
 		if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Battler))
 		{
-			Component->OnKill.AddUniqueDynamic(this, &ASweetDreamsBattleManager::OnBattlerKilled);
+			//Component->OnKill.AddUniqueDynamic(this, &ASweetDreamsBattleManager::OnBattlerKilled);
 		}
 	}
 }
@@ -230,7 +230,7 @@ void ASweetDreamsBattleManager::UnbindFunctionsFromActor(AActor* Battler)
 	{
 		if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Battler))
 		{
-			Component->OnKill.RemoveDynamic(this, &ASweetDreamsBattleManager::OnBattlerKilled);
+			//Component->OnKill.RemoveDynamic(this, &ASweetDreamsBattleManager::OnBattlerKilled);
 		}
 	}
 }

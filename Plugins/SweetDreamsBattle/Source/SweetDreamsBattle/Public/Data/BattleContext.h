@@ -14,18 +14,40 @@ class SWEETDREAMSBATTLE_API UBattleContext : public UObject
 
 public:
 
-    UPROPERTY()
+    void Initialize(UBattleElement* Owner, TObjectPtr<UBattleActorComponent> InInstigator, TArray<UBattleActorComponent*> InTargets);
+
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    UBattleElement* GetOwnerElement() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    void Damage(float Value);
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    void Heal(float Value);
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    void Kill();
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    void Ressurect();
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    void RequestBattleElementEnd();
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    float GetDeltaTime() const;
+
+    // start animation, start sequence, create particle
+    // play sound, trigger another event, start dialogue
+
+protected:
+
+    UPROPERTY(BlueprintReadOnly, Category = "Battle Context")
     TObjectPtr<UBattleActorComponent> Instigator;
-
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly, Category = "Battle Context")
     TArray<TObjectPtr<UBattleActorComponent>> Targets;
-
     UPROPERTY()
     TWeakObjectPtr<UBattleElement> OwnerElement;
 
-    // damage, heal, add state, remove state, restore mana, remove mana, kill, revive, set ability to act, start animation, start sequence, create particle
-    // play sound, trigger another event, start dialogue
-    // get delta time from element
-    // request end battle element
+    FORCEINLINE UBattleElement* GetOwner() const
+    {
+        return OwnerElement.Get();
+    }
+
 };
 

@@ -20,7 +20,7 @@ class SWEETDREAMSBATTLE_API UBattleElement : public UObject
 public:
 
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Element", meta = (WorldContext = "BattleComponent", CallableWithoutWorldContext, DeterminesOutputType = "CustomClass"))
-    static UBattleElement* CreateBattleElement(UBattleActorComponent* BattleComponent, TArray<UBattleActorComponent*> Targets, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass);
+    static UBattleElement* CreateBattleElement(UBattleActorComponent* BattleComponent, TArray<UBattleActorComponent*> Targets, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass, TSubclassOf<UBattleContext> CustomContextClass);
     
     void Execute();
     void Tick(float DeltaTime);
@@ -28,9 +28,11 @@ public:
 
     FOnBattleElementDelegate OnBattleElementEnd;
 
+    float CachedDeltaTime = 0.f;
+
 protected:
 
-    void CreateBattleContext(TArray<UBattleActorComponent*> InTargets);
+    void CreateBattleContext(TArray<UBattleActorComponent*> InTargets, TSubclassOf<UBattleContext> CustomContextClass);
     void DuplicateEvents();
 
     void EvaluateEvents(float DeltaTime);
@@ -45,6 +47,8 @@ protected:
     TObjectPtr<UBattleActorComponent> Owner = nullptr;
     UPROPERTY(BlueprintReadOnly, Category = "Data")
     TObjectPtr<UBattleContext> BattleContext = nullptr;
+    UPROPERTY(BlueprintReadOnly, Category = "Data")
+    bool bElementInExecution = false;
 
     UPROPERTY(BlueprintReadOnly, Category = "Events")
     TArray<TObjectPtr<UBattleEvent>> Events;
@@ -52,6 +56,5 @@ protected:
     TObjectPtr<UBattleEvent> CurrentEvent;
     UPROPERTY(BlueprintReadOnly, Category = "Events")
     int32 CurrentEventIndex = 0;
-
 };
 

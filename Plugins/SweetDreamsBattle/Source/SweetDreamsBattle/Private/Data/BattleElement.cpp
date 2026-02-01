@@ -5,7 +5,7 @@
 #include "Data/BattleContext.h"
 #include "Battle/BattleActorComponent.h"
 
-UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* BattleComponent, TArray<UBattleActorComponent*> Targets, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass)
+UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* BattleComponent, TArray<UBattleActorComponent*> Targets, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass, TSubclassOf<UBattleContext> CustomContextClass)
 {
 	if (IsValid(BattleComponent) && IsValid(Data))
 	{
@@ -16,10 +16,10 @@ UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* Battl
 			Element->BattleElementData = Data;
 			Element->Owner = BattleComponent;
 
-			BattleComponent->RegisterBattleElement(Element);
-
-			Element->CreateBattleContext(Targets);
+			Element->CreateBattleContext(Targets, CustomContextClass);
 			Element->DuplicateEvents();
+
+			BattleComponent->RegisterBattleElement(Element);
 
 			Element->Execute();
 
@@ -36,13 +36,17 @@ UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* Battl
 
 void UBattleElement::Execute()
 {
-	// TODO: get owner and targets and create battle context
-	// enable tick
+	bElementInExecution = true;
 }
 
 void UBattleElement::Tick(float DeltaTime)
 {
-	EvaluateEvents(DeltaTime);
+	CachedDeltaTime = DeltaTime;
+
+	if (bElementInExecution)
+	{
+		EvaluateEvents(DeltaTime);
+	}
 }
 
 void UBattleElement::End()
@@ -50,12 +54,10 @@ void UBattleElement::End()
 	OnBattleElementEnd.ExecuteIfBound(this);
 }
 
-void UBattleElement::CreateBattleContext(TArray<UBattleActorComponent*> InTargets)
+void UBattleElement::CreateBattleContext(TArray<UBattleActorComponent*> InTargets, TSubclassOf<UBattleContext> CustomContextClass)
 {
-	BattleContext = NewObject<UBattleContext>(this);
-	BattleContext->Instigator = Owner;
-	BattleContext->Targets = InTargets;
-	BattleContext->OwnerElement = this;
+	BattleContext = NewObject<UBattleContext>(this, CustomContextClass);
+	BattleContext->Initialize(this, Owner, InTargets);
 }
 
 void UBattleElement::DuplicateEvents()

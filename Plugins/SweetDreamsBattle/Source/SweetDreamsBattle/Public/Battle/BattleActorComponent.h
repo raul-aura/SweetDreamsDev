@@ -7,10 +7,6 @@
 #include "BattleActorComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBattleActorDelegate);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTargetEffect, AActor*, Target);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReceiveEffect, AActor*, Instigator);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnReceiveValueEffect, AActor*, Instigator, float, Value);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTargetValueEffect, AActor*, Target, float, Value);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnBattleActorParameterChange, FBattleParamater, Parameter, FBattleParameterModifier, Modifier);
 
 class UBattleElement;
@@ -33,23 +29,11 @@ public:
 	bool RegisterBattleElement(UBattleElement* BattleElement);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void UnregisterBattleElement(UBattleElement* BattleElement);
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	void Damage(AActor* Target, float Amount);
+	void ModifyHealth(float Value);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	void ReceiveDamage(AActor* Instigator, float Amount);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	void Heal(AActor* Target, float Amount);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	void ReceiveHeal(AActor* Instigator, float Amount);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	void ReceiveKill(AActor* Instigator);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	void KillTarget(AActor* Target);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	void ReceiveRevive(AActor* Instigator);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	void ReviveTarget(AActor* Target);
+	void SetIsAlive(bool bInIsAlive);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void SetInCombat(bool bInIsInCombat);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
@@ -78,22 +62,6 @@ public:
 	FOnBattleActorDelegate OnEnterCombat;
 	UPROPERTY(BlueprintAssignable)
 	FOnBattleActorDelegate OnExitCombat;
-	UPROPERTY(BlueprintAssignable)
-	FOnTargetValueEffect OnDamage;
-	UPROPERTY(BlueprintAssignable)
-	FOnReceiveValueEffect OnReceiveDamage;
-	UPROPERTY(BlueprintAssignable)
-	FOnTargetValueEffect OnHeal;
-	UPROPERTY(BlueprintAssignable)
-	FOnReceiveValueEffect OnReceiveHeal;
-	UPROPERTY(BlueprintAssignable)
-	FOnTargetEffect OnKill;
-	UPROPERTY(BlueprintAssignable)
-	FOnReceiveEffect OnReceiveKill;
-	UPROPERTY(BlueprintAssignable)
-	FOnTargetEffect OnRevive;
-	UPROPERTY(BlueprintAssignable)
-	FOnReceiveEffect OnReceiveRevive;
 	UPROPERTY(BlueprintAssignable)
 	FOnBattleActorParameterChange OnParameterChange;
 

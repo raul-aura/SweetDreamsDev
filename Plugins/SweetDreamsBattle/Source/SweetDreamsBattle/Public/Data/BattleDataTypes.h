@@ -10,8 +10,8 @@ class UBattleEvent;
 UENUM(BlueprintType)
 enum class EBattleElementEndMode : uint8
 {
-	Auto,      // end when all events finish
-	Manual    // never auto-end, must be requested
+	Auto,      
+	Manual  
 };
 
 UENUM(BlueprintType)
