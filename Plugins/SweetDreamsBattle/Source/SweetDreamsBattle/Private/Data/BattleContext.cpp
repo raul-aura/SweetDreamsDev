@@ -17,27 +17,38 @@ UBattleElement* UBattleContext::GetOwnerElement() const
 
 void UBattleContext::Damage(float Value)
 {
-	Value = FMath::Abs(Value) * -1;
+	Value = FMath::Abs(Value);
 
 	for (TObjectPtr<UBattleActorComponent> Target : Targets)
 	{
-		Target->ModifyHealth(Value);
+		Target->Damage(Value);
 	}
 }
 
 void UBattleContext::Heal(float Value)
 {
+	Value = FMath::Abs(Value);
 
+	for (TObjectPtr<UBattleActorComponent> Target : Targets)
+	{
+		Target->Heal(Value);
+	}
 }
 
 void UBattleContext::Kill()
 {
-
+	for (TObjectPtr<UBattleActorComponent> Target : Targets)
+	{
+		Target->SetIsAlive(false);
+	}
 }
 
 void UBattleContext::Ressurect()
 {
-
+	for (TObjectPtr<UBattleActorComponent> Target : Targets)
+	{
+		Target->SetIsAlive(true);
+	}
 }
 
 void UBattleContext::RequestBattleElementEnd()

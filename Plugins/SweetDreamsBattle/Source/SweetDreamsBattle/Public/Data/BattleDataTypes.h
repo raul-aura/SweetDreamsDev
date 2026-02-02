@@ -108,18 +108,26 @@ public:
 			{
 			case EParameterModifierType::Absolute:   Additive += Mod.Value; break;
 			case EParameterModifierType::Percentage: Percentage += Mod.Value; break;
-			case EParameterModifierType::Multiplier: Multiplier += Mod.Value; break;
+			case EParameterModifierType::Multiplier: Multiplier *= Mod.Value; break;
 			}
 		}
 		CurrentValue = (BaseValue + Additive + (BaseValue * (Percentage / 100.0f))) * Multiplier;
-		CurrentValue = FMath::Clamp(CurrentValue, MinValue, MaxValue);
+
+		if (MaxValue >= 0)
+		{
+			CurrentValue = FMath::Clamp(CurrentValue, MinValue, MaxValue);
+		}
+		else
+		{
+			CurrentValue = FMath::Max(CurrentValue, MinValue);
+		}
 	}
 
 	FBattleParamater()
 		: BaseValue(0.f),
 		MinValue(0.f),
-		MaxValue(0.f),
-		CurrentValue(BaseValue),
+		MaxValue(-1.f),
+		CurrentValue(0.f),
 		Modifiers(TArray<FBattleParameterModifier>())
 	{}
 
@@ -132,4 +140,71 @@ public:
 	{}
 };
 
+USTRUCT(BlueprintType)
+struct SWEETDREAMSBATTLE_API FBattleHealth
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Health")
+	FBattleParamater MaxHealth;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Health")
+	float CurrentHealth;
+
+	void Initialize()
+	{
+		MaxHealth.EvaluateModifiers();
+		CurrentHealth = MaxHealth.CurrentValue;
+	}
+
+	void Damage(float Value)
+	{
+		if (Value <= 0.f) return;
+
+		CurrentHealth = FMath::Clamp(CurrentHealth - Value, 0.f, MaxHealth.CurrentValue);
+	}
+
+	void Heal(float Value)
+	{
+		if (Value <= 0.f) return;
+
+		CurrentHealth = FMath::Clamp(CurrentHealth + Value, 0.f, MaxHealth.CurrentValue);
+	}
+
+	void OnMaxHealthChanged()
+	{
+		CurrentHealth = FMath::Clamp(CurrentHealth, 0.f, MaxHealth.CurrentValue);
+	}
+
+	void OnMaxHealthChangedPreserveRatio(float OldMaxHealth)
+	{
+		if (OldMaxHealth <= 0.f)
+		{
+			CurrentHealth = MaxHealth.CurrentValue;
+			return;
+		}
+
+		const float Ratio = CurrentHealth / OldMaxHealth;
+
+		CurrentHealth = FMath::Clamp(Ratio * MaxHealth.CurrentValue,0.f,MaxHealth.CurrentValue);
+	}
+
+	float GetHealthPercent() const
+	{
+		return MaxHealth.CurrentValue > 0.f ? CurrentHealth / MaxHealth.CurrentValue : 0.f;
+	}
+
+	FBattleHealth()
+		: CurrentHealth(0.f)
+	{}
+
+	FBattleHealth(float InBaseHealth)
+		: MaxHealth(InBaseHealth),
+		CurrentHealth(InBaseHealth)
+	{
+		MaxHealth.EvaluateModifiers();
+	}
+};
 

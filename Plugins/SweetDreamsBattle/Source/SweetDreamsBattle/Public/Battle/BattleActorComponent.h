@@ -31,7 +31,13 @@ public:
 	void UnregisterBattleElement(UBattleElement* BattleElement);
 	
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	void ModifyHealth(float Value);
+	void Damage(float Value);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	void Heal(float Value);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	void AddModifierToMaxHealth(EParameterModifierType ModifierType, float ModifierValue);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	void RemoveModifierFromMaxHealth(FBattleParameterModifier Modifier);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void SetIsAlive(bool bInIsAlive);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
@@ -48,7 +54,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void RemoveModifierFromParameter(UPARAM(ref) FBattleParamater& Parameter, FBattleParameterModifier Modifier);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	FBattleParamater GetHealth() const;
+	FBattleHealth GetHealth() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	FBattleParamater GetStrength() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
@@ -62,6 +68,10 @@ public:
 	FOnBattleActorDelegate OnEnterCombat;
 	UPROPERTY(BlueprintAssignable)
 	FOnBattleActorDelegate OnExitCombat;
+	UPROPERTY(BlueprintAssignable)
+	FOnBattleActorDelegate OnKilled;
+	UPROPERTY(BlueprintAssignable)
+	FOnBattleActorDelegate OnRessurected;
 	UPROPERTY(BlueprintAssignable)
 	FOnBattleActorParameterChange OnParameterChange;
 
@@ -87,7 +97,7 @@ protected:
 	bool bIsInCombat = false;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters", meta = (ExposeOnSpawn = true))
-	FBattleParamater Health;
+	FBattleHealth Health;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters", meta = (ExposeOnSpawn = true))
 	FBattleParamater Strength;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters", meta = (ExposeOnSpawn = true))

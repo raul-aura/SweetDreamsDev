@@ -24,6 +24,8 @@ public:
 	bool bLogEnabled = true;
 	UPROPERTY(Config, EditAnywhere, Category = "Log|Toggle Specific Logging")
 	bool bSaveOperations = true;
+	UPROPERTY(Config, EditAnywhere, Category = "Log|Toggle Specific Logging")
+	bool bSettingGlobalVariable = true;
 
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Log", meta = (DisplayName = "Info Print Color"))
 	FColor InfoColor = FColor(195, 150, 255);

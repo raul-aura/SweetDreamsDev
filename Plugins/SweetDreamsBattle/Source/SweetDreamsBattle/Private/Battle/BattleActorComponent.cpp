@@ -49,9 +49,43 @@ void UBattleActorComponent::UnregisterBattleElement(UBattleElement* BattleElemen
 	}
 }
 
-void UBattleActorComponent::ModifyHealth(float Value)
+void UBattleActorComponent::Damage(float Value)
 {
-	AddModifierToParameter(Health, EParameterModifierType::Absolute, Value);
+	GetHealth().Damage(Value);
+
+	if (GetHealth().CurrentHealth <= 0)
+	{
+		SetIsAlive(false);
+	}
+}
+
+void UBattleActorComponent::Heal(float Value)
+{
+	if (!IsAlive()) return;
+
+	GetHealth().Heal(Value);
+}
+
+void UBattleActorComponent::AddModifierToMaxHealth(EParameterModifierType ModifierType, float ModifierValue)
+{
+	FBattleParameterModifier Modifier(ModifierType, ModifierValue);
+	float OldMaxHealth = GetHealth().MaxHealth.CurrentValue;
+
+	GetHealth().MaxHealth.AddModifier(Modifier);
+	GetHealth().OnMaxHealthChangedPreserveRatio(OldMaxHealth);
+
+	OnParameterChange.Broadcast(GetHealth().MaxHealth, Modifier);
+
+}
+
+void UBattleActorComponent::RemoveModifierFromMaxHealth(FBattleParameterModifier Modifier)
+{
+	float OldMaxHealth = GetHealth().MaxHealth.CurrentValue;
+
+	GetHealth().MaxHealth.RemoveModifier(Modifier);
+	GetHealth().OnMaxHealthChangedPreserveRatio(OldMaxHealth);
+
+	OnParameterChange.Broadcast(GetHealth().MaxHealth, Modifier);
 }
 
 void UBattleActorComponent::SetIsAlive(bool bInIsAlive)
@@ -59,7 +93,14 @@ void UBattleActorComponent::SetIsAlive(bool bInIsAlive)
 	if (bIsAlive == bInIsAlive) return;
 
 	bIsAlive = bInIsAlive;
-	// TO DO: broadcast change
+	if (bIsAlive)
+	{
+		OnRessurected.Broadcast();
+	}
+	else
+	{
+		OnKilled.Broadcast();
+	}
 }
 
 void UBattleActorComponent::SetInCombat(bool bInIsInCombat)
@@ -105,7 +146,7 @@ void UBattleActorComponent::RemoveModifierFromParameter(UPARAM(ref) FBattleParam
 	Parameter.RemoveModifier(Modifier);
 }
 
-FBattleParamater UBattleActorComponent::GetHealth() const
+FBattleHealth UBattleActorComponent::GetHealth() const
 {
 	return Health;
 }
