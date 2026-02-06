@@ -18,6 +18,15 @@ UBattleActorComponent* UBattleActorComponent::GetBattleActorComponent(const AAct
 void UBattleActorComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	Health.Initialize();
+	Strength.EvaluateModifiers();
+	Resistence.EvaluateModifiers();
+
+	for (TPair<FName, FBattleParamater>& Pair : CustomParameters)
+	{
+		Pair.Value.EvaluateModifiers();
+	}
 }
 
 void UBattleActorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -51,7 +60,7 @@ void UBattleActorComponent::UnregisterBattleElement(UBattleElement* BattleElemen
 
 void UBattleActorComponent::Damage(float Value)
 {
-	GetHealth().Damage(Value);
+	Health.Damage(Value);
 
 	if (GetHealth().CurrentHealth <= 0)
 	{
@@ -63,29 +72,26 @@ void UBattleActorComponent::Heal(float Value)
 {
 	if (!IsAlive()) return;
 
-	GetHealth().Heal(Value);
+	Health.Heal(Value);
 }
 
 void UBattleActorComponent::AddModifierToMaxHealth(EParameterModifierType ModifierType, float ModifierValue)
 {
 	FBattleParameterModifier Modifier(ModifierType, ModifierValue);
-	float OldMaxHealth = GetHealth().MaxHealth.CurrentValue;
 
-	GetHealth().MaxHealth.AddModifier(Modifier);
-	GetHealth().OnMaxHealthChangedPreserveRatio(OldMaxHealth);
+	Health.MaxHealth.AddModifier(Modifier);
+	Health.OnMaxHealthChanged(true);
 
-	OnParameterChange.Broadcast(GetHealth().MaxHealth, Modifier);
+	OnParameterChange.Broadcast(Health.MaxHealth, Modifier);
 
 }
 
 void UBattleActorComponent::RemoveModifierFromMaxHealth(FBattleParameterModifier Modifier)
 {
-	float OldMaxHealth = GetHealth().MaxHealth.CurrentValue;
+	Health.MaxHealth.RemoveModifier(Modifier);
+	Health.OnMaxHealthChanged(true);
 
-	GetHealth().MaxHealth.RemoveModifier(Modifier);
-	GetHealth().OnMaxHealthChangedPreserveRatio(OldMaxHealth);
-
-	OnParameterChange.Broadcast(GetHealth().MaxHealth, Modifier);
+	OnParameterChange.Broadcast(Health.MaxHealth, Modifier);
 }
 
 void UBattleActorComponent::SetIsAlive(bool bInIsAlive)
@@ -146,32 +152,30 @@ void UBattleActorComponent::RemoveModifierFromParameter(UPARAM(ref) FBattleParam
 	Parameter.RemoveModifier(Modifier);
 }
 
-FBattleHealth UBattleActorComponent::GetHealth() const
+const FHealthParameter& UBattleActorComponent::GetHealth() const
 {
 	return Health;
 }
 
-FBattleParamater UBattleActorComponent::GetStrength() const
+const FBattleParamater& UBattleActorComponent::GetStrength() const
 {
 	return Strength;
 }
 
-FBattleParamater UBattleActorComponent::GetResistence() const
+const FBattleParamater& UBattleActorComponent::GetResistence() const
 {
 	return Resistence;
 }
 
-FBattleParamater UBattleActorComponent::GetCustomParameter(FName Parameter) const
+bool UBattleActorComponent::GetCustomParameter(FName Parameter, FBattleParamater& OutParam) const
 {
 	if (const FBattleParamater* Param = CustomParameters.Find(Parameter))
 	{
-		return *Param;
+		OutParam = *Param;
+		return true;
 	}
 
-	UE_LOG(LogClass, Error, TEXT("GetCustomParameter: Parameter '%s' not found on %s"),
-		*Parameter.ToString(), *GetOwner()->GetName()); // TO DO: change log to battle subsystem log
-
-	return FBattleParamater();
+	return false;
 }
 
 float UBattleActorComponent::GetCustomSimpleParameter(FName Parameter, float Percentage) const

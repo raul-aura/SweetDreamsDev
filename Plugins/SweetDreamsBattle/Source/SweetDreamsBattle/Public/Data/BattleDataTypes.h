@@ -67,19 +67,19 @@ struct SWEETDREAMSBATTLE_API FBattleParamater
 
 public:
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle Parameter")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Battle Parameter")
 	float BaseValue;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle Parameter")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Battle Parameter")
 	float MinValue;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle Parameter")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Battle Parameter")
 	float MaxValue;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle Parameter")
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Battle Parameter")
 	float CurrentValue;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle Parameter")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Battle Parameter")
 	TArray<FBattleParameterModifier> Modifiers;
 
 	void AddModifier(const FBattleParameterModifier& Modifier)
@@ -99,6 +99,12 @@ public:
 	
 	void EvaluateModifiers() 
 	{
+		if (Modifiers.IsEmpty())
+		{
+			CurrentValue = BaseValue;
+			return;
+		}
+
 		float Additive = 0.f;
 		float Percentage = 0.f;
 		float Multiplier = 1.f;
@@ -141,7 +147,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct SWEETDREAMSBATTLE_API FBattleHealth
+struct SWEETDREAMSBATTLE_API FHealthParameter
 {
 	GENERATED_BODY()
 
@@ -173,22 +179,24 @@ public:
 		CurrentHealth = FMath::Clamp(CurrentHealth + Value, 0.f, MaxHealth.CurrentValue);
 	}
 
-	void OnMaxHealthChanged()
+	void OnMaxHealthChanged(bool bPreserveRatio = true)
 	{
-		CurrentHealth = FMath::Clamp(CurrentHealth, 0.f, MaxHealth.CurrentValue);
-	}
-
-	void OnMaxHealthChangedPreserveRatio(float OldMaxHealth)
-	{
-		if (OldMaxHealth <= 0.f)
+		if (bPreserveRatio)
 		{
-			CurrentHealth = MaxHealth.CurrentValue;
-			return;
+			const float PreviousHealth = MaxHealth.CurrentValue;
+			if (PreviousHealth <= 0.f)
+			{
+				CurrentHealth = 0.f;
+			}
+
+			const float Ratio = CurrentHealth / PreviousHealth;
+
+			CurrentHealth = FMath::Clamp(Ratio * MaxHealth.CurrentValue, 0.f, MaxHealth.CurrentValue);
 		}
-
-		const float Ratio = CurrentHealth / OldMaxHealth;
-
-		CurrentHealth = FMath::Clamp(Ratio * MaxHealth.CurrentValue,0.f,MaxHealth.CurrentValue);
+		else
+		{
+			CurrentHealth = FMath::Clamp(CurrentHealth, 0.f, MaxHealth.CurrentValue);
+		}
 	}
 
 	float GetHealthPercent() const
@@ -196,11 +204,11 @@ public:
 		return MaxHealth.CurrentValue > 0.f ? CurrentHealth / MaxHealth.CurrentValue : 0.f;
 	}
 
-	FBattleHealth()
+	FHealthParameter()
 		: CurrentHealth(0.f)
 	{}
 
-	FBattleHealth(float InBaseHealth)
+	FHealthParameter(float InBaseHealth)
 		: MaxHealth(InBaseHealth),
 		CurrentHealth(InBaseHealth)
 	{

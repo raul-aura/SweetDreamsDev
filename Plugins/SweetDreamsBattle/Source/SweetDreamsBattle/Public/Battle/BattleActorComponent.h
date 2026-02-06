@@ -54,13 +54,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void RemoveModifierFromParameter(UPARAM(ref) FBattleParamater& Parameter, FBattleParameterModifier Modifier);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	FBattleHealth GetHealth() const;
+	const FHealthParameter& GetHealth() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	FBattleParamater GetStrength() const;
+	const FBattleParamater& GetStrength() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	FBattleParamater GetResistence() const;
+	const FBattleParamater& GetResistence() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	FBattleParamater GetCustomParameter(FName Parameter) const;
+	bool GetCustomParameter(FName Parameter, FBattleParamater& OutParam) const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	float GetCustomSimpleParameter(FName Parameter, float Percentage = 1.f) const;
 
@@ -97,7 +97,7 @@ protected:
 	bool bIsInCombat = false;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters", meta = (ExposeOnSpawn = true))
-	FBattleHealth Health;
+	FHealthParameter Health;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters", meta = (ExposeOnSpawn = true))
 	FBattleParamater Strength;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters", meta = (ExposeOnSpawn = true))
