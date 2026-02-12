@@ -9,11 +9,12 @@
 
 class USweetDreamsSaveFile;
 class USweetDreamsSettings;
+
 namespace ELogVerbosity { enum Type : uint8; }
-
 DECLARE_LOG_CATEGORY_EXTERN(LogSweetDreams, Log, All);
-
 using FNativeLogFn = TFunction<void(ELogVerbosity::Type, const TCHAR*)>;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelLoadOperation, UWorld*, Level);
 
 UENUM(BlueprintType)
 enum class EPrintType : uint8
@@ -87,6 +88,11 @@ public:
 	bool GetGlobalBool(FName Key);
 	TMap<FName, int32> GlobalInts;
 	TMap<FName, bool> GlobalBools;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnLevelLoadOperation OnLevelLoadStarted;
+	UPROPERTY(BlueprintAssignable)
+	FOnLevelLoadOperation OnLevelLoadFinished;
 
 protected:
 

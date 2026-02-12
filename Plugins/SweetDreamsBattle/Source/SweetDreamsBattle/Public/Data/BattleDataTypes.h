@@ -6,6 +6,7 @@
 #include "BattleDataTypes.generated.h"
 
 class UBattleEvent;
+class UBattleActorComponent;
 
 UENUM(BlueprintType)
 enum class EBattleElementEndMode : uint8
@@ -28,6 +29,31 @@ enum class EParameterModifierType : uint8
 	Absolute,
 	Percentage,
 	Multiplier
+};
+
+USTRUCT(BlueprintType)
+struct SWEETDREAMSBATTLE_API FBattleContextWrapper
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadOnly, Category = "Battle Context Wrapper")
+	TObjectPtr<UBattleActorComponent> Instigator = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Battle Context Wrapper")
+	TArray<TObjectPtr<UBattleActorComponent>> Targets;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Battle Context Wrapper")
+	float EffectValue = 0.f;
+
+	FBattleContextWrapper() {}
+
+	FBattleContextWrapper(UBattleActorComponent* InInstigator, TArray<UBattleActorComponent*> InTargets, float Value)
+		:Instigator(InInstigator),
+		Targets(InTargets),
+		EffectValue(Value)
+	{}
 };
 
 USTRUCT(BlueprintType)

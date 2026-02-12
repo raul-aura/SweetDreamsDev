@@ -15,7 +15,9 @@ class SWEETDREAMSBATTLE_API UBattleEvent : public UObject
 
 public: 
 	virtual void Start() PURE_VIRTUAL(UBattleEvent::Start, );
+	virtual void Update(float DeltaTime) {}
 	virtual bool IsFinished() const { return true; }
+	virtual void Reset() {}
 
 	UPROPERTY(BlueprintReadOnly, Category = "Event")
 	TObjectPtr<UBattleContext> BattleContext = nullptr;

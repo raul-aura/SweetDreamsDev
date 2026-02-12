@@ -20,16 +20,22 @@ ASweetDreamsGameMode::ASweetDreamsGameMode()
 void ASweetDreamsGameMode::StartPlay()
 {
 	SweetDreamsCore = USweetDreamsBPLibrary::GetSweetDreamsCore(this);
+
 	if (IsValid(SweetDreamsCore) && SweetDreamsCore->CoreSettings->bEnableAutoLoadSave)
 	{
 		SweetDreamsCore->LoadCoreSaves();
+
+		SweetDreamsCore->OnLevelLoadStarted.AddUniqueDynamic(this, &ASweetDreamsGameMode::StartLoadingLevel);
+		SweetDreamsCore->OnLevelLoadFinished.AddUniqueDynamic(this, &ASweetDreamsGameMode::FinishLoadingLevel);
 	}
+
 	Super::StartPlay();
 }
 
 void ASweetDreamsGameMode::BeginPlay()
 {
-	if (IsValid(SweetDreamsCore) && SweetDreamsCore->bIsLoadingLevel) {
+	if (IsValid(SweetDreamsCore) && SweetDreamsCore->bIsLoadingLevel)
+	{
 		BeginPlayNewLevel(SweetDreamsCore->CurrentLoadingLevel.Get());
 	}
 
@@ -45,17 +51,17 @@ void ASweetDreamsGameMode::PostLogin(APlayerController* NewPlayer)
 void ASweetDreamsGameMode::Logout(AController* Exiting)
 {
 	APlayerController* ExitingPlayer = Cast<APlayerController>(Exiting);
+
 	if (ConnectedPlayers.Num() > 0 && IsValid(ExitingPlayer) && ConnectedPlayers.Contains(ExitingPlayer))
 	{
 		ConnectedPlayers.Remove(ExitingPlayer);
 	}
+
 	Super::Logout(Exiting);
 }
 
-void ASweetDreamsGameMode::StartLoadingLevel(TObjectPtr<UWorld> LoadingLevel)
+void ASweetDreamsGameMode::StartLoadingLevel(UWorld* LoadingLevel)
 {
-	OnLevelLoadStarted(LoadingLevel.Get());
-
 	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
 	{
 		if (ASweetDreamsHUD* HUD = Cast<ASweetDreamsHUD>(PC->GetHUD()))
@@ -65,12 +71,12 @@ void ASweetDreamsGameMode::StartLoadingLevel(TObjectPtr<UWorld> LoadingLevel)
 			HUD->StartLoadingWidget();
 		}
 	}
+
+	OnLevelLoadStarted(LoadingLevel);
 }
 
-void ASweetDreamsGameMode::FinishLoadingLevel(TObjectPtr<UWorld> LoadingLevel)
+void ASweetDreamsGameMode::FinishLoadingLevel(UWorld* LoadingLevel)
 {
-	OnLevelLoadFinished(LoadingLevel.Get());
-
 	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
 	{
 		if (ASweetDreamsHUD* HUD = Cast<ASweetDreamsHUD>(PC->GetHUD()))
@@ -78,9 +84,11 @@ void ASweetDreamsGameMode::FinishLoadingLevel(TObjectPtr<UWorld> LoadingLevel)
 			HUD->FinishLoadingWidget();
 		}
 	}
+
+	OnLevelLoadFinished(LoadingLevel);
 }
 
-void ASweetDreamsGameMode::BeginPlayNewLevel(TObjectPtr<UWorld> LoadingLevel)
+void ASweetDreamsGameMode::BeginPlayNewLevel(UWorld* LoadingLevel)
 {
 	if (IsValid(SweetDreamsCore)) {
 
@@ -105,6 +113,7 @@ bool ASweetDreamsGameMode::KickPlayer(APlayerController* KickedPlayer, const FTe
 	{
 		return GameSession->KickPlayer(KickedPlayer, KickReason);
 	}
+
 	return false;
 }
 
@@ -122,9 +131,11 @@ TArray<APlayerController*> ASweetDreamsGameMode::GetConnectedPlayers(bool bExclu
 				break;
 			}
 		}
+
 		if (IsValid(LocalPlayerC)) PlayersNoLocal.Remove(LocalPlayerC);
 		return PlayersNoLocal;
 	}
+
 	return ConnectedPlayers;
 }
 

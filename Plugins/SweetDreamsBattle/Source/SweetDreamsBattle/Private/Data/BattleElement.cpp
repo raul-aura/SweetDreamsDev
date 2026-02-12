@@ -5,7 +5,7 @@
 #include "Data/BattleContext.h"
 #include "Battle/BattleActorComponent.h"
 
-UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* BattleComponent, TArray<UBattleActorComponent*> Targets, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass, TSubclassOf<UBattleContext> CustomContextClass)
+UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* BattleComponent, TArray<UBattleActorComponent*> Targets, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass, TSubclassOf<UBattleContext> CustomContextClass, bool bAutoExecute)
 {
 	if (IsValid(BattleComponent) && IsValid(Data))
 	{
@@ -21,7 +21,10 @@ UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* Battl
 
 			BattleComponent->RegisterBattleElement(Element);
 
-			Element->Execute();
+			if (bAutoExecute)
+			{
+				Element->Execute();
+			}
 
 			return Element;
 		}
@@ -51,6 +54,8 @@ void UBattleElement::Tick(float DeltaTime)
 
 void UBattleElement::End()
 {
+	bElementInExecution = false;
+
 	OnBattleElementEnd.ExecuteIfBound(this);
 }
 

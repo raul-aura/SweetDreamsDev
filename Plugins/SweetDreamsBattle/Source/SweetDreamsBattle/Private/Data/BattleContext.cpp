@@ -15,24 +15,28 @@ UBattleElement* UBattleContext::GetOwnerElement() const
 	return OwnerElement.Get();
 }
 
-void UBattleContext::Damage(float Value)
+void UBattleContext::Damage(const FBattleParamater& Value, float FlatValue)
 {
-	Value = FMath::Abs(Value);
+	const float Damage = Value.CurrentValue + FMath::Abs(FlatValue);
 
 	for (TObjectPtr<UBattleActorComponent> Target : Targets)
 	{
-		Target->Damage(Value);
+		Target->Damage(Damage);
 	}
+
+	OnDamageDealt.Broadcast(FBattleContextWrapper(Instigator, Targets, Damage));
 }
 
-void UBattleContext::Heal(float Value)
+void UBattleContext::Heal(const FBattleParamater& Value, float FlatValue)
 {
-	Value = FMath::Abs(Value);
+	const float Heal = Value.CurrentValue + FMath::Abs(FlatValue);
 
 	for (TObjectPtr<UBattleActorComponent> Target : Targets)
 	{
-		Target->Heal(Value);
+		Target->Heal(Heal);
 	}
+
+	OnHealingDealt.Broadcast(FBattleContextWrapper(Instigator, Targets, Heal));
 }
 
 void UBattleContext::Kill()
@@ -41,6 +45,8 @@ void UBattleContext::Kill()
 	{
 		Target->SetIsAlive(false);
 	}
+
+	OnKill.Broadcast(FBattleContextWrapper(Instigator, Targets, 0.f));
 }
 
 void UBattleContext::Ressurect()
@@ -49,6 +55,8 @@ void UBattleContext::Ressurect()
 	{
 		Target->SetIsAlive(true);
 	}
+
+	OnRessurect.Broadcast(FBattleContextWrapper(Instigator, Targets, 0.f));
 }
 
 void UBattleContext::RequestBattleElementEnd()

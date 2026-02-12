@@ -3,7 +3,6 @@
 #include "Core/SweetDreamsCore.h"
 #include "Save/SweetDreamsSaveInterface.h"
 #include "Save/SweetDreamsSaveFile.h"
-#include "Game/SweetDreamsGameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/StreamableManager.h"
 #include "Core/SweetDreamsSettings.h"
@@ -131,6 +130,7 @@ void USweetDreamsCore::Log_Internal(FString Text, EPrintType Severity)
 USweetDreamsSaveFile* USweetDreamsCore::CreateSave(TSubclassOf<USweetDreamsSaveFile> SaveClass, const FString& Slot, bool& bSuccess, int32 UserIndex)
 {
 	bSuccess = false;
+
 	if (UGameplayStatics::DoesSaveGameExist(Slot, UserIndex))
 	{
 		if (CoreSettings && CoreSettings->bSaveOperations)
@@ -139,6 +139,7 @@ USweetDreamsSaveFile* USweetDreamsCore::CreateSave(TSubclassOf<USweetDreamsSaveF
 		}
 		return nullptr;
 	}
+
 	USaveGame* SaveObj = UGameplayStatics::CreateSaveGameObject(SaveClass);
 	if (IsValid(SaveObj))
 	{
@@ -152,10 +153,12 @@ USweetDreamsSaveFile* USweetDreamsCore::CreateSave(TSubclassOf<USweetDreamsSaveF
 		Save(Slot);
 		return SweetSave;
 	}
+
 	if (CoreSettings && CoreSettings->bSaveOperations)
 	{
 		Log_Internal(FString::Printf(TEXT("%s NOT CREATED. Returning NULL."), *Slot), EPrintType::Error);
 	}
+
 	return nullptr;
 }
 
@@ -163,13 +166,16 @@ bool USweetDreamsCore::Save(const FString& Slot, int32 UserIndex)
 {
 	USweetDreamsSaveFile* Save = GetSaveObject(Slot);
 	if (!IsValid(Save)) return false;
+
 	SaveData(Save);
+
 	if (UGameplayStatics::SaveGameToSlot(Save, Slot, UserIndex))
 	{
 		if (CoreSettings && CoreSettings->bSaveOperations)
 		{
 			Log_Internal(FString::Printf(TEXT("%s SAVED with SUCCESS."), *Slot));
 		}
+
 		TArray<AActor*> Actors;
 		UGameplayStatics::GetAllActorsWithInterface(GetWorld(), USweetDreamsSaveInterface::StaticClass(), Actors);
 		for (AActor* Actor : Actors)
@@ -177,12 +183,15 @@ bool USweetDreamsCore::Save(const FString& Slot, int32 UserIndex)
 			if (!IsValid(Actor)) continue;
 			ISweetDreamsSaveInterface::Execute_OnGameSaved(Actor, Save, Slot);
 		}
+
 		return true;
 	}
+
 	if (CoreSettings && CoreSettings->bSaveOperations)
 	{
 		Log_Internal(FString::Printf(TEXT("%s FAILED to SAVE."), *Slot), EPrintType::Error);
 	}
+
 	return false;
 }
 
@@ -194,9 +203,11 @@ TObjectPtr<USweetDreamsSaveFile> USweetDreamsCore::LoadSave(const FString& Slot,
 		{
 			Log_Internal(FString::Printf(TEXT("%s LOADED and returned with SUCCESS."), *Slot));
 		}
+
 		USweetDreamsSaveFile* SweetSave = Cast<USweetDreamsSaveFile>(SaveObject);
 		UpdateSaveReference(SweetSave, Slot);
 		LoadData(SweetSave);
+
 		TArray<AActor*> Actors;
 		UGameplayStatics::GetAllActorsWithInterface(GetWorld(), USweetDreamsSaveInterface::StaticClass(), Actors);
 		for (AActor* Actor : Actors)
@@ -204,12 +215,15 @@ TObjectPtr<USweetDreamsSaveFile> USweetDreamsCore::LoadSave(const FString& Slot,
 			if (!IsValid(Actor)) continue;
 			ISweetDreamsSaveInterface::Execute_OnGameSaved(Actor, SweetSave, Slot);
 		}
+
 		return SweetSave;
 	}
+
 	if (CoreSettings && CoreSettings->bSaveOperations)
 	{
 		Log_Internal(FString::Printf(TEXT("%s FAILED to LOAD."), *Slot), EPrintType::Error);
 	}
+
 	return nullptr;
 }
 
@@ -221,13 +235,17 @@ bool USweetDreamsCore::DeleteSave(const FString& Slot, int32 UserIndex)
 		{
 			Log_Internal(FString::Printf(TEXT("%s DELETED."), *Slot));
 		}
+
 		UpdateSaveReference(nullptr, Slot);
+
 		return true;
 	}
+
 	if (CoreSettings && CoreSettings->bSaveOperations)
 	{
 		Log_Internal(FString::Printf(TEXT("%s FAILED to be DELETED."), *Slot), EPrintType::Error);
 	}
+
 	return false;
 }
 
@@ -274,7 +292,8 @@ void USweetDreamsCore::SaveData(TObjectPtr<USweetDreamsSaveFile> Save)
 
 	FName CurrentLevelName = FName(GetWorld()->GetMapName());
 
-	Save->SavedData.RemoveAll([&CurrentLevelName](const FSaveData& Data) {
+	Save->SavedData.RemoveAll([&CurrentLevelName](const FSaveData& Data)
+	{
 		return Data.LevelName == CurrentLevelName;
 	});
 
@@ -294,6 +313,7 @@ void USweetDreamsCore::SaveData(TObjectPtr<USweetDreamsSaveFile> Save)
 
 		Save->SavedData.Add(Data);
 	}
+
 	Save->LastTimeSaved = FDateTime::Now();
 	Save->AmountOfSaves++;
 }
@@ -307,15 +327,19 @@ void USweetDreamsCore::LoadCoreSaves()
 void USweetDreamsCore::LoadData(TObjectPtr<USweetDreamsSaveFile> Save)
 {
 	if (!IsValid(Save)) return;
+
 	FName CurrentLevelName = FName(GetWorld()->GetMapName());
+
 	for (const FSaveData& Data : Save->SavedData)
 	{
 		AActor* Actor = FindActorByName(Data.ActorName);
 		if (!IsValid(Actor) || !Actor->Implements<USweetDreamsSaveInterface>()) continue;
+
 		FMemoryReader MemoryReader(Data.ByteData);
 		FObjectAndNameAsStringProxyArchive Archive(MemoryReader, true);
 		Archive.ArIsSaveGame = true;
 		Actor->Serialize(Archive);
+
 		ISweetDreamsSaveInterface::Execute_LoadCustomData(Actor, Data.CustomData);
 	}
 }
@@ -323,6 +347,7 @@ void USweetDreamsCore::LoadData(TObjectPtr<USweetDreamsSaveFile> Save)
 TObjectPtr<AActor> USweetDreamsCore::FindActorByName(FName Name)
 {
 	if (!GetWorld()) return nullptr;
+
 	for (AActor* Actor : GetAllActorsWorld())
 	{
 		if (IsValid(Actor) && Actor->GetFName().IsEqual(Name))
@@ -330,12 +355,14 @@ TObjectPtr<AActor> USweetDreamsCore::FindActorByName(FName Name)
 			return Actor;
 		}
 	}
+
 	return nullptr;
 }
 
 TArray<TObjectPtr<AActor>> USweetDreamsCore::GetAllActorsWorld() const
 {
 	TArray<TObjectPtr<AActor>> OutActors;
+
 	for (TActorIterator<AActor> It(GetWorld()); It; ++It)
 	{
 		if (TObjectPtr<AActor> Actor = *It)
@@ -343,6 +370,7 @@ TArray<TObjectPtr<AActor>> USweetDreamsCore::GetAllActorsWorld() const
 			OutActors.Add(Actor);
 		}
 	}
+
 	return OutActors;
 }
 
@@ -352,25 +380,18 @@ void USweetDreamsCore::LoadLevel(TSoftObjectPtr<UWorld> Level)
 
 	bIsLoadingLevel = true;
 	CurrentLoadingLevel = Level;
+	OnLevelLoadStarted.Broadcast(Level.Get());
 
 	TArray<FSoftObjectPath> AssetList;
 	AssetList.Add(Level.ToSoftObjectPath());
-
-	ASweetDreamsGameMode* DreamGameMode = Cast<ASweetDreamsGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
-	if (IsValid(DreamGameMode))
-	{
-		DreamGameMode->StartLoadingLevel(Level.Get());
-	}
-
 	FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
-	FStreamableDelegate StreamableDelegate;
-	StreamableDelegate.BindLambda([this, DreamGameMode, Level]() {
-		if (IsValid(DreamGameMode))
+	StreamableManager.RequestAsyncLoad(
+		AssetList, 
+		FStreamableDelegate::CreateLambda([this, Level]()
 		{
-			DreamGameMode->FinishLoadingLevel(Level.Get());
-		}
-	});
-	StreamableManager.RequestAsyncLoad(AssetList, StreamableDelegate);
+			OnLevelLoadFinished.Broadcast(Level.Get());
+		})
+	);
 }
 
 void USweetDreamsCore::SetGlobalInt(FName Key, int32 Value)

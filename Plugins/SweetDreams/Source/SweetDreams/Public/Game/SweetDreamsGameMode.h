@@ -24,9 +24,9 @@ public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Logout(AController* Exiting) override;
 	
-	void StartLoadingLevel(TObjectPtr<UWorld> LoadingLevel);
-	void FinishLoadingLevel(TObjectPtr<UWorld> LoadingLevel);
-	void BeginPlayNewLevel(TObjectPtr<UWorld> LoadingLevel);
+	void StartLoadingLevel(UWorld* LoadingLevel);
+	void FinishLoadingLevel(UWorld* LoadingLevel);
+	void BeginPlayNewLevel(UWorld* LoadingLevel);
 
 	// Implementable event called by the SweetDreamsCore subsystem when a new level started loading.
 	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core")
@@ -46,6 +46,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Core")
 	TObjectPtr<USweetDreamsCore> SweetDreamsCore = nullptr;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Level Loading")
 	TSubclassOf<ULoadingWidget> LoadingWidgetClass;
 
 	TArray<APlayerController*> ConnectedPlayers;

@@ -20,10 +20,12 @@ class SWEETDREAMSBATTLE_API UBattleElement : public UObject
 public:
 
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Element", meta = (WorldContext = "BattleComponent", CallableWithoutWorldContext, DeterminesOutputType = "CustomClass"))
-    static UBattleElement* CreateBattleElement(UBattleActorComponent* BattleComponent, TArray<UBattleActorComponent*> Targets, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass, TSubclassOf<UBattleContext> CustomContextClass);
+    static UBattleElement* CreateBattleElement(UBattleActorComponent* BattleComponent, TArray<UBattleActorComponent*> Targets, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass, TSubclassOf<UBattleContext> CustomContextClass, bool bAutoExecute = false);
     
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Element")
     void Execute();
     void Tick(float DeltaTime);
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Element")
     void End();
 
     FOnBattleElementDelegate OnBattleElementEnd;
