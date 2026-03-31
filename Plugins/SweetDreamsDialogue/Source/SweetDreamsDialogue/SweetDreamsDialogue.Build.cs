@@ -43,6 +43,7 @@ public class SweetDreamsDialogue : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"GameplayTags"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

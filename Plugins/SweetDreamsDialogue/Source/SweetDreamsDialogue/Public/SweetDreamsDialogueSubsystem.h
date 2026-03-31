@@ -19,95 +19,18 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
+	// Converts a dialogue struct, and selected choice, if present, to a dialogue log struct.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	void StartDialogue(UDialogueData* Dialogue);
+	FSweetDreamsDialogueLog ConvertDialogueToLog(const FSweetDreamsDialogue& Dialogue, const FChoice SelectedChoice) const;
+	// Inserts the dialogue from specified data to the current dialogue. The index is relative to the current dialogue index to prevent inserting text that won't be shown to the player.
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	void UpdateDialogue();
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	void UpdateAnimatedDialogue(float DeltaTime);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	void SkipAnimatedDialogue();
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	void SelectChoiceAndUpdate(FChoice Choice);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	void InsertDialogue(UDialogueData* Dialogue, int32 Index = -1);
-
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueEvent OnDialogueStarted;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueEvent OnDialogueEnded;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueUpdated OnDialogueUpdated;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueFunction OnDialogueCustomFunction;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueAnimation OnDialogueAnimating;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueAnimation OnDialogueAnimationFinished;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueChoice OnDialogueChoices;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueEvent OnDialogueNoChoices;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueAudio OnDialogueAudio;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueSequence OnDialogueSequence;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueUpdated OnCustomDialogueMode;
+	void InsertDialogue(TArray<FSweetDreamsDialogue>& CurrentDialogue, const UDialogueData* ToInsert, int32 Index = -1);
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	UDialogueData* GetDialogueData() const;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	void SetDialogueData(UDialogueData* InData);
+	void SelectChoice(const FChoice& Choice);
 
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	TArray<FSweetDreamsDialogue> GetDialogues() const;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	TArray<FSweetDreamsDialogueLog> GetDialogueLog() const;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	FSweetDreamsDialogue GetCurrentDialogue(int32& Index) const;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	int32 GetCurrentDialogueID() const;
-
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	bool IsUsingAnimatedDialogue() const;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	void SetUseAnimatedDialogue(bool bInUseAnimatedDialogue);
-
-protected:
-	void ProcessDialogue(FSweetDreamsDialogue Dialogue, int32 Index);
-	void AddDialogueToLog(FSweetDreamsDialogue Dialogue);
-	void CallCustomFunctions(FSweetDreamsDialogue Dialogue, int32 Index);
-	void ResetDialogueData();
-	void EndDialogue();
-
-	void SkipRichTextTags(int32& LetterIndex);
-	void ProcessAnimatedDialogue(FSweetDreamsDialogue Dialogue);
-	bool CanAdvanceLetters();
-	void BuildAnimatedDialogue();
-
-	TObjectPtr<UDialogueData> DialogueData = nullptr;
-	TArray<FSweetDreamsDialogue> Dialogues;
-
-	TArray<FSweetDreamsDialogueLog> DialogueLog;
-	FSweetDreamsDialogue CurrentDialogue;
-	int32 CurrentDialogueID = -1;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
-	bool bIsDialogueActive = false;
-	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
-	bool bIsSelectingChoices = false;
-	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
-	bool bIsAnimating = false;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
-	bool bUseAnimatedDialogue = true;
-	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
-	FAnimatedDialogueSettings CurrentAnimatedSettings;
-	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
-	FText AnimatedDialogueBody;
-	FString FullDialogueBody;
-	FString TaglessDialogueBody;
-	int32 CurrentLetterIndex = 0;
-	float LetterDisplayElapsed = 0.f;
+	// Converts the body of the received dialogue into a string without tags.
+	FString GetTaglessAnimatedDialogue(const FSweetDreamsDialogue& Dialogue) const;
+	// Converts the body of the received dialogue into a proper animated text, ignoring tags and respecting the letter index.
+	FText GetAnimatedDialogue(const FSweetDreamsDialogue& Dialogue, const int32& LetterIndex) const;
 };

@@ -41,8 +41,6 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnDialogueUpdated OnDialogueUpdated;
 	UPROPERTY(BlueprintAssignable)
-	FOnDialogueFunction OnDialogueCustomFunction;
-	UPROPERTY(BlueprintAssignable)
 	FOnDialogueAnimation OnDialogueAnimating;
 	UPROPERTY(BlueprintAssignable)
 	FOnDialogueAnimation OnDialogueAnimationFinished;
@@ -58,17 +56,38 @@ public:
 	FOnDialogueUpdated OnCustomDialogueMode;
 
 protected:
-	virtual void BeginPlay() override;
-
-	void BindDelegates();
-
-	UFUNCTION()
-	void BroadcastDialogueStarted();
-	UFUNCTION()
-	void BroadcastDialogueEnded();
-	UFUNCTION()
-	void BroadcastDialogueUpdated(FSweetDreamsDialogue Dialogue, int32 Index);
 
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue Component")
 	bool bDialogueInExecution = false;
+
+	UPROPERTY()
+	TObjectPtr<UDialogueData> DialogueData;
+
+	TArray<FSweetDreamsDialogue> Dialogues;
+	TArray<FSweetDreamsDialogueLog> DialogueLog;
+
+	FSweetDreamsDialogue CurrentDialogue;
+	int32 CurrentDialogueID = 0;
+
+	bool bIsSelectingChoices = false;
+
+	// Animation
+	bool bIsAnimating = false;
+
+	float LetterDisplayElapsed = 0.f;
+	int32 CurrentLetterIndex = 0;
+
+	FString TaglessDialogueBody;
+
+	FText AnimatedDialogueBody;
+	FAnimatedDialogueSettings CurrentAnimatedSettings;
+
+private:
+
+	void ProcessDialogue();
+	void EndDialogue();
+
+	// Animation
+	void StartAnimatedDialogue(const FSweetDreamsDialogue& Dialogue);
+	void BuildAnimatedDialogue();
 };

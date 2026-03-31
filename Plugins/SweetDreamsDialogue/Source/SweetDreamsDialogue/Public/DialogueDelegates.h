@@ -12,8 +12,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogueEvent);
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDialogueUpdated, FSweetDreamsDialogue, Dialogue, int32, Index);
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueFunction, FSweetDreamsDialogue, Dialogue, int32, Index, const TArray<FDialogueFunction>&, Functions);
-UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueAnimation, FSweetDreamsDialogue, Dialogue, int32, Index, FText, AnimatedText);
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueChoice, FSweetDreamsDialogue, Dialogue, int32, Index, const TArray<FChoice>&, Choices);

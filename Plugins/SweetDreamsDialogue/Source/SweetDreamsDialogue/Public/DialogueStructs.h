@@ -3,6 +3,7 @@
 #pragma once 
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "DialogueStructs.generated.h"
 
 class ULevelSequence;
@@ -16,32 +17,16 @@ enum class EDialogueMode : uint8
 };
 
 USTRUCT(BlueprintType)
-struct SWEETDREAMSDIALOGUE_API FDialogueFunction
-{
-	GENERATED_BODY()
-
-public:
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue Function")
-	FName FunctionName;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue Function")
-	TArray<FString> FunctionParameters;
-
-	FDialogueFunction() {}
-};
-
-USTRUCT(BlueprintType)
 struct SWEETDREAMSDIALOGUE_API FAnimatedDialogueSettings
 {
 	GENERATED_BODY()
 
 public:
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animated Dialogue")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Animated Dialogue")
 	float LetterDisplayRate = 0.1f;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animated Dialogue")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Animated Dialogue")
 	TObjectPtr<USoundBase> AnimatedLetterAudio;
 
 	FAnimatedDialogueSettings() {}
@@ -54,11 +39,11 @@ struct SWEETDREAMSDIALOGUE_API FChoice
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
-	FText ChoiceBody;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue")
+	FText Body;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
-	FName ChoiceResult;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue")
+	FName Result;
 
 	FChoice() {}
 };
@@ -70,55 +55,48 @@ struct SWEETDREAMSDIALOGUE_API FSweetDreamsDialogue
 
 public:
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue")
 	EDialogueMode Mode = EDialogueMode::DIALOGUE;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::SEQUENCE", EditConditionHides))
-	TObjectPtr<ULevelSequence> DialogueSequence = nullptr;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::SEQUENCE", EditConditionHides))
+	TObjectPtr<ULevelSequence> Sequence = nullptr;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
-	FText DialogueName;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
+	FText SpeakerName;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (MultiLine = "true", EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
-	FText DialogueBody;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue", meta = (MultiLine = "true", EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
+	FText Body;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (MultiLine = "true", ForceInlineRow, EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue", meta = (MultiLine = "true", ForceInlineRow, EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
 	TArray<FChoice> Choices;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
-	TObjectPtr<UTexture2D> DialogueImage;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
+	TObjectPtr<UTexture2D> SpeakerImage;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera", meta = (ClampMin = -1, EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Camera", meta = (ClampMin = -1, EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
 	int32 CameraID;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera", meta = (ClampMin = 0, UIMin = 0, EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Camera", meta = (ClampMin = 0, UIMin = 0, EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
 	float CameraBlend;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
-	TObjectPtr<USoundBase> DialogueAudio;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
+	TObjectPtr<USoundBase> Audio;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
-	TArray<FDialogueFunction> FunctionsToCall;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animated Dialogue")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Animated Dialogue")
 	FAnimatedDialogueSettings AnimatedSettings;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Custom Parameters")
-	TArray<float> CustomFloats;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Custom Parameters")
-	TArray<bool> CustomBools;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Custom Parameters")
-	TArray<FName> CustomNames;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Extra")
+	FGameplayTagContainer Tags;
 
 	FSweetDreamsDialogue()
 		: Mode(EDialogueMode::DIALOGUE),
-		DialogueSequence(nullptr),
-		DialogueName(NSLOCTEXT("Dialogue", "DialogueName", "Name")),
-		DialogueBody(NSLOCTEXT("Dialogue", "DialogueBody", "Hello, I'm Name.")),
-		DialogueImage(nullptr),
+		Sequence(nullptr),
+		SpeakerName(NSLOCTEXT("Dialogue", "DialogueName", "Name")),
+		Body(NSLOCTEXT("Dialogue", "DialogueBody", "Hello, I'm Name.")),
+		SpeakerImage(nullptr),
 		CameraID(-1),
 		CameraBlend(0.f),
-		DialogueAudio(nullptr)
+		Audio(nullptr)
 	{}
 };
 
@@ -128,8 +106,15 @@ struct SWEETDREAMSDIALOGUE_API FChoiceDialogue
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
+
+	// Which index, relative to the current dialogue index, should the dialogues of this choice result be inserted.
+	// If -1, the dialogues will be appended to the end of the current dialogue.
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue")
+	int32 IndexToInsert = -1;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue")
 	TArray<FSweetDreamsDialogue> Dialogues;
+
 	FChoiceDialogue() {}
 };
 
@@ -140,28 +125,23 @@ struct SWEETDREAMSDIALOGUE_API FSweetDreamsDialogueLog
 
 public:
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
-	FText DialogueName;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue")
+	FText SpeakerName;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue", meta = (MultiLine = "true"))
-	FText DialogueBody;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue", meta = (MultiLine = "true"))
+	FText Body;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Dialogue")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue")
 	FText SelectedChoice;
 
 	FSweetDreamsDialogueLog()
-		: DialogueName(NSLOCTEXT("Dialogue", "DialogueName", "Name")),
-		DialogueBody(NSLOCTEXT("Dialogue", "DialogueBody", "Hello, I'm Name.")),
+		: SpeakerName(NSLOCTEXT("Dialogue", "DialogueName", "Name")),
+		Body(NSLOCTEXT("Dialogue", "DialogueBody", "Hello, I'm Name.")),
 		SelectedChoice(NSLOCTEXT("Dialogue", "DialogueChoice", "This is my choice."))
 	{}
 	FSweetDreamsDialogueLog(FText NameValue, FText BodyValue, FText ChoiceValue)
-		: DialogueName(NameValue),
-		DialogueBody(BodyValue),
+		: SpeakerName(NameValue),
+		Body(BodyValue),
 		SelectedChoice(ChoiceValue)
 	{}
-
-	void UpdateChoice(FText NewChoice)
-	{
-		SelectedChoice = NewChoice;
-	}
 };

@@ -6,7 +6,7 @@ void UDialogueData::GetNameAndBody(int32 DialogueID, FText& DialogueName, FText&
 {
 	if (Dialogues.IsValidIndex(DialogueID))
 	{
-		DialogueName = Dialogues[DialogueID].DialogueName;
-		DialogueBody = Dialogues[DialogueID].DialogueBody;
+		DialogueName = Dialogues[DialogueID].SpeakerName;
+		DialogueBody = Dialogues[DialogueID].Body;
 	}
 }
