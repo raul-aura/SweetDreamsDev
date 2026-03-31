@@ -39,6 +39,7 @@ public class SweetDreamsAI : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+                "GameplayTags"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

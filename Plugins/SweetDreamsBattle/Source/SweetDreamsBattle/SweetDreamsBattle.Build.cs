@@ -30,6 +30,7 @@ public class SweetDreamsBattle : ModuleRules
 				"LevelSequence",
 				"MovieScene",
 				"AIModule",
+				"GameplayTags"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

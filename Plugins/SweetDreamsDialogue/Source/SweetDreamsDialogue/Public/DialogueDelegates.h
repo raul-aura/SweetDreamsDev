@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-//#include "UObject/Object.h"
 #include "DialogueStructs.h"
 #include "DialogueDelegates.generated.h"
 
@@ -22,9 +21,3 @@ UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogueAudio, USoundBase*, Audio);
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueSequence, FSweetDreamsDialogue, Dialogue, int32, Index, ULevelSequence*, Sequence);
-
-//UCLASS()
-//class SWEETDREAMSDIALOGUE_API UDialogueDelegates : public UObject
-//{
-//    GENERATED_BODY()
-//};

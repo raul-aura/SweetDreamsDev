@@ -3,8 +3,11 @@
 
 #include "Player/MulticameraComponent.h"
 #include "Engine/World.h"
-#include "Editor.h"
 #include "TimerManager.h"
+
+#if WITH_EDITOR
+#include "Editor.h"
+#endif
 
 UMulticameraComponent::UMulticameraComponent()
 {

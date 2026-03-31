@@ -10,6 +10,8 @@
 class USceneComponent;
 class UCameraComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBattleDelegate);
+
 UCLASS()
 class SWEETDREAMSBATTLE_API ASweetDreamsBattleManager : public AActor
 {
@@ -22,49 +24,60 @@ public:
 	static ASweetDreamsBattleManager* GetBattleManager(const UObject* WorldContext);
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	void AddActorToBattle(AActor* Battler, bool bRemoveInvalidBattlers = true);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	void AddActorsToBattle(TArray<AActor*> InBattlers, bool bRemoveInvalidBattlers = true);
+	void InitiateCombat(UBattleActorComponent* Battler);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager", meta = (DisplayName = "Initiate Combat (Multiple)"))
+	void InitiateCombatMultiple(TArray<UBattleActorComponent*> InBattlers);
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	void InitiateCombatBetween(AActor* Actor1, AActor* Actor2);
+	void AddBattler(UBattleActorComponent* Battler);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	void AddMultipleBattlers(TArray<UBattleActorComponent*> InBattlers);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	void RemoveBattler(UBattleActorComponent* Battler, bool bExitFromCombat = true);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	void RemoveMultipleBattlers(TArray<UBattleActorComponent*> InBattlers, bool bExitFromCombat = true);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	void ClearBattlers(bool bExitFromCombat = true);
+
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void StartBattle();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void EndBattle();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void EvaluateBattleEnd();
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	void ClearBattlers(bool bExitFromCombat = true);
+
+	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|RPG|Battle Manager")
+	FOnBattleDelegate OnBattleStarted;
+	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|RPG|Battle Manager")
+	FOnBattleDelegate OnBattleEnded;
 
 protected:
 
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
 	TObjectPtr<USceneComponent> BattleRoot;
 
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|RPG|Battle Manager")
 	void OnBattleStart();
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|RPG|Battle Manager")
 	void OnBattleEnd();
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	UFUNCTION(BlueprintImplementableEvent,Category = "Sweet Dreams|RPG|Battle Manager")
 	void OnBattleVictory();
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|RPG|Battle Manager")
 	void OnBattleDefeat();
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|RPG|Battle Manager")
+	void OnBattlerKilled(UBattleActorComponent* Battler);
+	UFUNCTION(BlueprintNativeEvent, Category = "Sweet Dreams|RPG|Battle Manager")
 	bool EvaluateBattleVictory() const;
 	bool EvaluateBattleVictory_Implementation() const;
-
-	UFUNCTION()
-	void OnBattlerKilled(AActor* Target);
-
-	void BindFunctionsToActor(AActor* Battler);
-	void UnbindFunctionsFromActor(AActor* Battler);
+	
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void RemoveInvalidBattlers();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	TArray<AActor*> GetBattlers() const;
+	void GetBattlers(TArray<UBattleActorComponent*>& OutBattlers, ETeamType TeamFilter) const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	TArray<AActor*> GetAliveBattlers() const;
+	void GetAliveBattlers(TArray<UBattleActorComponent*>& OutBattlers, ETeamType TeamFilter) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	void GetLastBattleBattlers(TArray<UBattleActorComponent*>& OutBattlers, ETeamType TeamFilter) const;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")
 	bool bIsBattleActive = false;
@@ -72,8 +85,17 @@ protected:
 	bool bIsVictorious = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")
 	bool bBattlePaused = false;
-
-	TArray<TWeakObjectPtr<AActor>> Battlers;
+	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")
 	ETeamType VictoriousTeam = ETeamType::None;
+
+	TArray<TWeakObjectPtr<UBattleActorComponent>> Battlers;
+	TArray<TWeakObjectPtr<UBattleActorComponent>> LastBattleBattlers;
 	
+private:
+
+	UFUNCTION()
+	void OnBattlerKilled_Internal(UBattleActorComponent* Battler);
+
+	void BindFunctionsToBattler(UBattleActorComponent* Battler);
+	void UnbindFunctionsFromBattler(UBattleActorComponent* Battler);
 };

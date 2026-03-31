@@ -21,6 +21,8 @@ public:
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
+	void SetDialogueData(UDialogueData* InData);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
 	void StartDialogue(UDialogueData* Dialogue);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
 	void UpdateDialogue();
@@ -66,4 +68,7 @@ protected:
 	void BroadcastDialogueEnded();
 	UFUNCTION()
 	void BroadcastDialogueUpdated(FSweetDreamsDialogue Dialogue, int32 Index);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Dialogue Component")
+	bool bDialogueInExecution = false;
 };

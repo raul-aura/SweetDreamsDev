@@ -18,64 +18,98 @@ ASweetDreamsBattleManager* ASweetDreamsBattleManager::GetBattleManager(const UOb
 
 	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull))
 	{
-		TArray<AActor*> OutActors;
-		for (TActorIterator<AActor> It(World); It; ++It)
+		for (TActorIterator<ASweetDreamsBattleManager> It(World); It; ++It)
 		{
-			if (AActor* Actor = *It)
-			{
-				return Cast<ASweetDreamsBattleManager>(Actor);
-			}
+			return *It;
 		}
 	}
 
 	return nullptr;
 }
 
-void ASweetDreamsBattleManager::AddActorToBattle(AActor* Battler, bool bRemoveInvalidBattlers)
+void ASweetDreamsBattleManager::InitiateCombat(UBattleActorComponent* Battler)
 {
-	if (bRemoveInvalidBattlers)
-	{
-		RemoveInvalidBattlers();
-	}
+	AddBattler(Battler);
 
-	if (IsValid(Battler) && !Battlers.FindByKey(Battler))
+	if (!bIsBattleActive && Battlers.Num() > 1)
 	{
-		BindFunctionsToActor(Battler);
+		StartBattle();
+	}
+}
+
+void ASweetDreamsBattleManager::InitiateCombatMultiple(TArray<UBattleActorComponent*> InBattlers)
+{
+	AddMultipleBattlers(InBattlers);
+
+	if (!bIsBattleActive && Battlers.Num() > 1)
+	{
+		StartBattle();
+	}
+}
+
+void ASweetDreamsBattleManager::AddBattler(UBattleActorComponent* Battler)
+{
+	RemoveInvalidBattlers();
+
+	if (IsValid(Battler) && !Battlers.FindByKey(Battler) && Battler->IsAlive())
+	{
+		BindFunctionsToBattler(Battler);
 
 		Battlers.AddUnique(Battler);
 	}
 }
 
-void ASweetDreamsBattleManager::AddActorsToBattle(TArray<AActor*> InBattlers, bool bRemoveInvalidBattlers)
+void ASweetDreamsBattleManager::AddMultipleBattlers(TArray<UBattleActorComponent*> InBattlers)
 {
-	if (bRemoveInvalidBattlers)
+	for (UBattleActorComponent* Battler : InBattlers)
 	{
-		RemoveInvalidBattlers();
+		AddBattler(Battler);
 	}
 
-	for (AActor* Battler : InBattlers)
+	RemoveInvalidBattlers();
+}
+
+void ASweetDreamsBattleManager::RemoveBattler(UBattleActorComponent* Battler, bool bExitFromCombat)
+{
+	if (IsValid(Battler) && Battlers.FindByKey(Battler))
 	{
-		AddActorToBattle(Battler, false);
+		UnbindFunctionsFromBattler(Battler);
+
+		if (bExitFromCombat)
+		{
+			Battler->SetInCombat(false);
+		}
+
+		Battlers.Remove(Battler);
 	}
 }
 
-void ASweetDreamsBattleManager::InitiateCombatBetween(AActor* Actor1, AActor* Actor2)
+void ASweetDreamsBattleManager::RemoveMultipleBattlers(TArray<UBattleActorComponent*> InBattlers, bool bExitFromCombat)
 {
-	if (bIsBattleActive)
+	for (UBattleActorComponent* Battler : InBattlers)
 	{
-		AddActorToBattle(Actor1);
-		AddActorToBattle(Actor2);
-		return;
+		RemoveBattler(Battler, bExitFromCombat);
+	}
+}
+
+void ASweetDreamsBattleManager::ClearBattlers(bool bExitFromCombat)
+{
+	LastBattleBattlers = Battlers;
+
+	for (const TWeakObjectPtr<UBattleActorComponent>& WeakBattler : Battlers)
+	{
+		if (UBattleActorComponent* Battler = WeakBattler.Get())
+		{
+			UnbindFunctionsFromBattler(Battler);
+
+			if (bExitFromCombat)
+			{
+				Battler->SetInCombat(false);
+			}
+		}
 	}
 
-	AddActorToBattle(Actor1);
-	AddActorToBattle(Actor2);
-
-	TArray<AActor*> ValidBattlers = GetBattlers();
-	if (ValidBattlers.Num() >= 2 && !bIsBattleActive)
-	{
-		StartBattle();
-	}
+	Battlers.Empty();
 }
 
 void ASweetDreamsBattleManager::StartBattle()
@@ -88,6 +122,7 @@ void ASweetDreamsBattleManager::StartBattle()
 	if (!bIsBattleActive) {
 		bIsBattleActive = true;
 		OnBattleStart();
+		OnBattleStarted.Broadcast();
 	}
 }
 
@@ -96,23 +131,15 @@ void ASweetDreamsBattleManager::EndBattle()
 	if (bIsBattleActive && !Battlers.IsEmpty()) {
 		bIsBattleActive = false;
 
-		for (const TWeakObjectPtr<AActor>& WeakBattler : Battlers)
+		for (const TWeakObjectPtr<UBattleActorComponent>& WeakBattler : Battlers)
 		{
-			if (AActor* Battler = WeakBattler.Get())
+			if (UBattleActorComponent* Component = WeakBattler.Get())
 			{
-				UnbindFunctionsFromActor(Battler);
+				UnbindFunctionsFromBattler(Component);
 
-				if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Battler))
-				{
-					if (Component->IsAlive())
-					{
-						Component->SetInCombat(false);
-					}
-				}
+				Component->SetInCombat(false);
 			}
 		}
-
-		OnBattleEnd();
 
 		bIsVictorious = EvaluateBattleVictory();
 		if (bIsVictorious)
@@ -123,6 +150,10 @@ void ASweetDreamsBattleManager::EndBattle()
 		{
 			OnBattleDefeat();
 		}
+
+		ClearBattlers(true);
+		OnBattleEnd();
+		OnBattleEnded.Broadcast();
 	}
 }
 
@@ -135,20 +166,17 @@ void ASweetDreamsBattleManager::EvaluateBattleEnd()
 		return;
 	}
 
-	for (const TWeakObjectPtr<AActor>& WeakBattler : Battlers)
+	for (const TWeakObjectPtr<UBattleActorComponent>& WeakBattler : Battlers)
 	{
-		if (AActor* Battler = WeakBattler.Get())
+		if (UBattleActorComponent* Component = WeakBattler.Get())
 		{
-			if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Battler))
+			if (Component->IsAlive())
 			{
-				if (Component->IsAlive())
-				{
-					AliveTeams.Add(Component->GetTeam());
+				AliveTeams.Add(Component->GetTeam());
 
-					if (AliveTeams.Num() > 1)
-					{
-						return;
-					}
+				if (AliveTeams.Num() > 1)
+				{
+					return;
 				}
 			}
 		}
@@ -166,118 +194,109 @@ void ASweetDreamsBattleManager::EvaluateBattleEnd()
 	EndBattle();
 }
 
-void ASweetDreamsBattleManager::ClearBattlers(bool bExitFromCombat)
-{
-	if (bExitFromCombat)
-	{
-		for (const TWeakObjectPtr<AActor>& WeakBattler : Battlers)
-		{
-			if (AActor* Battler = WeakBattler.Get())
-			{
-				if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Battler))
-				{
-					if (Component->IsAlive())
-					{
-						Component->SetInCombat(false);
-					}
-				}
-			}
-		}
-	}
-
-	Battlers.Empty();
-}
-
 bool ASweetDreamsBattleManager::EvaluateBattleVictory_Implementation() const
 {
 	return VictoriousTeam == ETeamType::Player;
 }
 
-void ASweetDreamsBattleManager::OnBattlerKilled(AActor* Target)
+void ASweetDreamsBattleManager::OnBattlerKilled_Internal(UBattleActorComponent* Battler)
 {
-	if (Battlers.IsEmpty())
+	UnbindFunctionsFromBattler(Battler);
+
+	if (!IsValid(Battler) || Battlers.IsEmpty())
 	{
 		return;
 	}
 
-	if (Battlers.FindByKey(Target))
+	if (Battlers.FindByKey(Battler))
 	{
-		UnbindFunctionsFromActor(Target);
-
-		if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Target))
-		{
-			Component->SetInCombat(false);
-		}
+		Battler->SetInCombat(false);
 
 		EvaluateBattleEnd();
 	}
+
+	OnBattlerKilled(Battler);
 }
 
-void ASweetDreamsBattleManager::BindFunctionsToActor(AActor* Battler)
+void ASweetDreamsBattleManager::BindFunctionsToBattler(UBattleActorComponent* Battler)
 {
 	if (IsValid(Battler))
 	{
-		if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Battler))
-		{
-			//Component->OnKill.AddUniqueDynamic(this, &ASweetDreamsBattleManager::OnBattlerKilled);
-		}
+		Battler->OnKilled.AddUniqueDynamic(this, &ASweetDreamsBattleManager::OnBattlerKilled_Internal);
+
 	}
 }
 
-void ASweetDreamsBattleManager::UnbindFunctionsFromActor(AActor* Battler)
+void ASweetDreamsBattleManager::UnbindFunctionsFromBattler(UBattleActorComponent* Battler)
 {
 	if (IsValid(Battler) && Battlers.FindByKey(Battler))
 	{
-		if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Battler))
-		{
-			//Component->OnKill.RemoveDynamic(this, &ASweetDreamsBattleManager::OnBattlerKilled);
-		}
+		Battler->OnKilled.RemoveDynamic(this, &ASweetDreamsBattleManager::OnBattlerKilled_Internal);
 	}
 }
 
 void ASweetDreamsBattleManager::RemoveInvalidBattlers()
 {
-	Battlers.RemoveAll([](const TWeakObjectPtr<AActor>& Ptr)
+	Battlers.RemoveAll([](const TWeakObjectPtr<UBattleActorComponent>& Ptr)
 	{
 		return !Ptr.IsValid();
 	});
 }
 
-TArray<AActor*> ASweetDreamsBattleManager::GetBattlers() const
+void ASweetDreamsBattleManager::GetBattlers(TArray<UBattleActorComponent*>& OutBattlers, ETeamType TeamFilter) const
 {
-	TArray<AActor*> OutBattlers;
+	OutBattlers.Reset();
 	OutBattlers.Reserve(Battlers.Num());
 
-	for (const TWeakObjectPtr<AActor>& WeakBattler : Battlers)
+	for (const TWeakObjectPtr<UBattleActorComponent>& WeakBattler : Battlers)
 	{
-		if (AActor* Battler = WeakBattler.Get())
+		if (UBattleActorComponent* Battler = WeakBattler.Get())
 		{
-			OutBattlers.Add(Battler);
-		}
-	}
+			bool bIsValidTeam = TeamFilter == ETeamType::None || Battler->GetTeam() == TeamFilter;
 
-	return OutBattlers;
-}
-
-TArray<AActor*> ASweetDreamsBattleManager::GetAliveBattlers() const
-{
-	TArray<AActor*> OutBattlers;
-	OutBattlers.Reserve(Battlers.Num());
-
-	for (const TWeakObjectPtr<AActor>& WeakBattler : Battlers)
-	{
-		if (AActor* Battler = WeakBattler.Get())
-		{
-			if (UBattleActorComponent* Component = UBattleActorComponent::GetBattleActorComponent(Battler))
+			if (bIsValidTeam)
 			{
-				if (Component->IsAlive())
-				{
-					OutBattlers.Add(Battler);
-				}
+				OutBattlers.Add(Battler);
 			}
 		}
 	}
+}
 
-	return OutBattlers;
+void ASweetDreamsBattleManager::GetAliveBattlers(TArray<UBattleActorComponent*>& OutBattlers, ETeamType TeamFilter) const
+{
+	OutBattlers.Reset();
+	OutBattlers.Reserve(Battlers.Num());
+
+	for (const TWeakObjectPtr<UBattleActorComponent>& WeakBattler : Battlers)
+	{
+		if (UBattleActorComponent* Battler = WeakBattler.Get())
+		{
+			bool bIsValidTeam = TeamFilter == ETeamType::None || Battler->GetTeam() == TeamFilter;
+
+			if (Battler->IsAlive() && bIsValidTeam)
+			{
+				OutBattlers.Add(Battler);
+			}
+		}
+	}
+}
+
+void ASweetDreamsBattleManager::GetLastBattleBattlers(TArray<UBattleActorComponent*>& OutBattlers, ETeamType TeamFilter) const
+{
+	OutBattlers.Reset();
+	OutBattlers.Reserve(LastBattleBattlers.Num());
+
+	for (const TWeakObjectPtr<UBattleActorComponent>& WeakBattler : LastBattleBattlers)
+	{
+		if (UBattleActorComponent* Battler = WeakBattler.Get())
+		{
+			bool bIsValidTeam = TeamFilter == ETeamType::None || Battler->GetTeam() == TeamFilter;
+
+			if (bIsValidTeam)
+			{
+				OutBattlers.Add(Battler);
+			}
+		}
+	}
 }
 

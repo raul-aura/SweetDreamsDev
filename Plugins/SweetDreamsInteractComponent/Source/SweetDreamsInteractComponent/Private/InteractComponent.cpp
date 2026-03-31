@@ -48,13 +48,17 @@ void UInteractComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 	if (bDrawDebugRanged)
 	{
-		DrawDebugSphere(GetWorld(), RangeOrigin, InteractRadius, 12, FColor::Green, false, -1.f, 0, 5.f);
+		DrawDebugSphere(GetWorld(), RangeOrigin, RangedRadius, 12, FColor::Green, false, -1.f, 0, 5.f);
 	}
-	if (bDrawDebugLine)
+
+	if (bDrawDebugLine && IsValid(GetOwner()))
 	{
 		UCameraComponent* Camera = GetOwner()->FindComponentByClass<UCameraComponent>();
+
+		if (!IsValid(Camera)) return;
+
 		FVector Start = Camera->GetComponentLocation();
-		FVector End = Start + (Camera->GetForwardVector() * InteractTraceDistance);
+		FVector End = Start + (Camera->GetForwardVector() * TraceDistance);
 		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, -1.f, 0, 5.f);
 	}
 }
@@ -81,15 +85,15 @@ TArray<AActor*> UInteractComponent::FindInteractablesInRange()
 		{
 			TObjectPtr<AActor> HitActor = Result.GetActor();
 
-			if (!IsValid(HitActor)) continue;
-
-			const bool bIsInteractable = (bLimitToInteractableInterface && HitActor->Implements<USweetDreamsInteractInterface>()) || IsClassAccepted(HitActor);
-			if (bIsInteractable)
+			if (IsValid(HitActor))
 			{
-				UniqueOverlaps.Add(HitActor);
-				if (!PreviousActors.Contains(HitActor) && HitActor->Implements<USweetDreamsInteractInterface>())
+				if (IsActorInteractable(HitActor))
 				{
-					ISweetDreamsInteractInterface::Execute_OnEnterInteractRange(HitActor, GetOwner());
+					UniqueOverlaps.Add(HitActor);
+					if (!PreviousActors.Contains(HitActor) && HitActor->Implements<USweetDreamsInteractInterface>())
+					{
+						ISweetDreamsInteractInterface::Execute_OnEnterInteractRange(HitActor, GetOwner());
+					}
 				}
 			}
 		}
@@ -103,9 +107,14 @@ TArray<AActor*> UInteractComponent::FindInteractablesInRange()
 
 AActor* UInteractComponent::FindInteractableTraced()
 {
+	if (!IsValid(GetOwner())) return nullptr;
+
 	TObjectPtr<UCameraComponent> Camera = GetOwner()->FindComponentByClass<UCameraComponent>();
+
+	if (!IsValid(Camera)) return nullptr;
+
 	FVector Start = Camera->GetComponentLocation();
-	FVector End = Start + (Camera->GetForwardVector() * InteractTraceDistance);
+	FVector End = Start + (Camera->GetForwardVector() * TraceDistance);
 
 	FHitResult HitResult;
 	FCollisionQueryParams QueryParams;
@@ -118,8 +127,7 @@ AActor* UInteractComponent::FindInteractableTraced()
 
 		if (IsValid(HitActor))
 		{
-			const bool bIsInteractable = (bLimitToInteractableInterface && HitActor->Implements<USweetDreamsInteractInterface>()) || IsClassAccepted(HitActor);
-			if (bIsInteractable)
+			if (IsActorInteractable(HitActor))
 			{
 				if (ActorTraceHit != HitActor)
 				{
@@ -174,9 +182,14 @@ bool UInteractComponent::InteractActor(AActor* Interactable)
 
 void UInteractComponent::InvalidateActorTraced()
 {
-	if (IsValid(ActorTraceHit) && ActorTraceHit->Implements<USweetDreamsInteractInterface>())
+	if (IsValid(ActorTraceHit))
 	{
-		ISweetDreamsInteractInterface::Execute_OnEndTrace(ActorTraceHit, GetOwner());
+		OnTracedInteractableInvalidated.Broadcast();
+
+		if (ActorTraceHit->Implements<USweetDreamsInteractInterface>())
+		{
+			ISweetDreamsInteractInterface::Execute_OnEndTrace(ActorTraceHit, GetOwner());
+		}
 	}
 
 	ActorTraceHit = nullptr;
@@ -184,6 +197,11 @@ void UInteractComponent::InvalidateActorTraced()
 
 void UInteractComponent::InvalidateActorsInRange(const TArray<TObjectPtr<AActor>>& PreviousActors)
 {
+	if (ActorsWithinRange != PreviousActors)
+	{
+		OnRangedInteractablesInvalidated.Broadcast();
+	}
+
 	for (TObjectPtr<AActor> PrevActor : PreviousActors)
 	{
 		if (!ActorsWithinRange.Contains(PrevActor) && IsValid(PrevActor) && PrevActor->Implements<USweetDreamsInteractInterface>())
@@ -197,15 +215,17 @@ FCollisionShape UInteractComponent::MakeRangedShape() const
 {
 	switch (RangedShape)
 	{
-	case ERangedTraceShape::Sphere: return FCollisionShape::MakeSphere(InteractRadius);
-	case ERangedTraceShape::Box:    return FCollisionShape::MakeBox(FVector(InteractRadius));
-	case ERangedTraceShape::Capsule:return FCollisionShape::MakeCapsule(InteractRadius, InteractHalfHeight);
-	default:                        return FCollisionShape::MakeSphere(InteractRadius);
+	case ERangedTraceShape::Sphere: return FCollisionShape::MakeSphere(RangedRadius);
+	case ERangedTraceShape::Box:    return FCollisionShape::MakeBox(FVector(RangedRadius));
+	case ERangedTraceShape::Capsule:return FCollisionShape::MakeCapsule(RangedRadius, RangedHalfHeight);
+	default:                        return FCollisionShape::MakeSphere(RangedRadius);
 	}
 }
 
 FVector UInteractComponent::GetRangedOrigin_Implementation() const
 {
+	if (!IsValid(GetOwner())) return FVector::Zero();
+
 	return GetOwner()->GetActorLocation();
 }
 
@@ -213,28 +233,41 @@ TArray<TObjectPtr<AActor>> UInteractComponent::GetIgnoredActors() const
 {
 	TArray<TObjectPtr<AActor>> IgnoredActors;
 
-	if (bIgnoreOwner)
+	if (IsValid(GetOwner()))
 	{
-		IgnoredActors.AddUnique(GetOwner());
-	}
+		if (bIgnoreOwner)
+		{
+			IgnoredActors.AddUnique(GetOwner());
+		}
 
-	if (bIgnoreChildActors)
-	{
-		TArray<AActor*> ChildActors;
-		GetOwner()->GetAllChildActors(ChildActors);
-		IgnoredActors.Append(ChildActors);
+		if (bIgnoreChildActors)
+		{
+			TArray<AActor*> ChildActors;
+			GetOwner()->GetAllChildActors(ChildActors);
+			IgnoredActors.Append(ChildActors);
+		}
 	}
 
 	return IgnoredActors;
 }
 
-bool UInteractComponent::IsClassAccepted(TObjectPtr<AActor> Actor) const
+bool UInteractComponent::IsClassAccepted(const AActor* Actor) const
 {
+	if (!IsValid(Actor))
+	{
+		return false;
+	}
+
+	const UClass* ActorClass = Actor->GetClass();
+
 	if (!FilteredClasses.IsEmpty())
 	{
 		for (const TSubclassOf<AActor> Class : FilteredClasses)
 		{
-			if (Actor->GetClass()->IsChildOf(Class)) return true;
+			if (ActorClass->IsChildOf(Class))
+			{
+				return true;
+			}
 		}
 
 		return false;
@@ -242,8 +275,26 @@ bool UInteractComponent::IsClassAccepted(TObjectPtr<AActor> Actor) const
 
 	for (const TSubclassOf<AActor> Class : ExcludedClasses)
 	{
-		if (Actor->GetClass()->IsChildOf(Class)) return false;
+		if (ActorClass->IsChildOf(Class))
+		{
+			return false;
+		}
 	}
 
 	return true;
+}
+
+bool UInteractComponent::IsActorInteractable(const AActor* Actor) const
+{
+	if (!IsValid(Actor))
+	{
+		return false;
+	}
+
+	if (bLimitToInteractableInterface)
+	{
+		return Actor->Implements<USweetDreamsInteractInterface>();
+	}
+
+	return IsClassAccepted(Actor);
 }

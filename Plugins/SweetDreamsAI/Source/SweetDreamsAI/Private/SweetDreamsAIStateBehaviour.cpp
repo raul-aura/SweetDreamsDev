@@ -18,4 +18,14 @@ AActor* USweetDreamsAIStateBehaviour::GetOwner() const
     return StateOwner;
 }
 
+void USweetDreamsAIStateBehaviour::SetState(USweetDreamsAIState* Data)
+{
+    StateData = Data;
+}
+
+USweetDreamsAIState* USweetDreamsAIStateBehaviour::GetStateData() const
+{
+    return StateData;
+}
+
 

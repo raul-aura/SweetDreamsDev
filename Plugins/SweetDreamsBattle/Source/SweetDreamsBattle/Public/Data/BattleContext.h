@@ -8,8 +8,6 @@
 class UBattleElement;
 class UBattleActorComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBattleContextDelegate, FBattleContextWrapper, ContextData);
-
 UCLASS(BlueprintType, Blueprintable)
 class SWEETDREAMSBATTLE_API UBattleContext : public UObject
 {
@@ -17,42 +15,47 @@ class SWEETDREAMSBATTLE_API UBattleContext : public UObject
 
 public:
 
-    void Initialize(UBattleElement* Owner, TObjectPtr<UBattleActorComponent> InInstigator, TArray<UBattleActorComponent*> InTargets);
+    void Initialize(UBattleElement* Owner, TObjectPtr<UBattleActorComponent> InInstigator, TArray<UBattleActorComponent*> InCandidates);
+    
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    void UpdateCandidates(TArray<UBattleActorComponent*> InCandidates);
 
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
     UBattleElement* GetOwnerElement() const;
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    UBattleActorComponent* GetInstigator() const;
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    TArray<UBattleActorComponent*> GetSelectedTargets(const FSelectedTargetsSettings& Settings) const;
 
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
-    void Damage(const FBattleParamater& Value, float FlatValue);
+    FDamageHealResult Damage(float Value, FGameplayTagContainer EffectTags, const FSelectedTargetsSettings& Settings);
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
-    void Heal(const FBattleParamater& Value, float FlatValue);
+    FDamageHealResult Heal(float Value, FGameplayTagContainer EffectTags, const FSelectedTargetsSettings& Settings);
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
-    void Kill();
+    void Kill(const FSelectedTargetsSettings& Settings);
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
-    void Ressurect();
+    void Ressurect(const FSelectedTargetsSettings& Settings);
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    FBattleParameterModifier AddModifierToParameter(FGameplayTag ParameterTag, EParameterModifierType ModifierType, float ModifierValue, const FSelectedTargetsSettings& Settings);
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    void RemoveModifierFromParameter(FGameplayTag ParameterTag, const FBattleParameterModifier& Modifier, const FSelectedTargetsSettings& Settings);
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    void IncreaseParameterResource(FGameplayTag ParameterTag, float Value, const FSelectedTargetsSettings& Settings);
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    void DecreaseParameterResource(FGameplayTag ParameterTag, float Value, const FSelectedTargetsSettings& Settings);
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    AActor* SpawnActor(TSubclassOf<AActor> ActorClass, FTransform Transform);
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
     void RequestBattleElementEnd();
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
     float GetDeltaTime() const;
-
-    // start animation, start sequence, create particle
-    // play sound, trigger another event, start dialogue
-
-    UPROPERTY(BlueprintAssignable, Category = "Battle Context")
-    FOnBattleContextDelegate OnDamageDealt;
-    UPROPERTY(BlueprintAssignable, Category = "Battle Context")
-    FOnBattleContextDelegate OnHealingDealt;
-    UPROPERTY(BlueprintAssignable, Category = "Battle Context")
-    FOnBattleContextDelegate OnKill;
-    UPROPERTY(BlueprintAssignable, Category = "Battle Context")
-    FOnBattleContextDelegate OnRessurect;
 
 protected:
 
     UPROPERTY(BlueprintReadOnly, Category = "Battle Context")
     TObjectPtr<UBattleActorComponent> Instigator = nullptr;
     UPROPERTY(BlueprintReadOnly, Category = "Battle Context")
-    TArray<TObjectPtr<UBattleActorComponent>> Targets;
+    TArray<TObjectPtr<UBattleActorComponent>> CandidateActors;
     UPROPERTY()
     TWeakObjectPtr<UBattleElement> OwnerElement;
 

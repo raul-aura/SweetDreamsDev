@@ -47,7 +47,7 @@ public:
 	virtual bool IsAnyWidgetVisible() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	USweetDreamsWidget* GetHighestPriorityWidget() const;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player", meta = (DeterminesOutputType = "WidgetClass"))
 	USweetDreamsWidget* FindWidgetByClass(TSubclassOf<USweetDreamsWidget> WidgetClass) const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Player")
 	USweetDreamsWidget* FindWidgetByName(FName WidgetName) const;

@@ -9,7 +9,28 @@
 class USweetDreamsAIState;
 class USweetDreamsAIStateBehaviour;
 
-UCLASS( ClassGroup=("SweetDreams"), meta=(BlueprintSpawnableComponent) )
+USTRUCT(BlueprintType)
+struct SWEETDREAMSAI_API FSweetDreamsStateRuntime
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadOnly, Category = "AI")
+	TObjectPtr<USweetDreamsAIState> Data;
+
+	UPROPERTY(BlueprintReadOnly, Category = "AI")
+	TObjectPtr<USweetDreamsAIStateBehaviour> Behaviour;
+
+	FSweetDreamsStateRuntime() = default;
+
+	FSweetDreamsStateRuntime(USweetDreamsAIState* InData, USweetDreamsAIStateBehaviour* InBehaviour)
+		: Data(InData),
+		Behaviour(InBehaviour)
+	{}
+};
+
+UCLASS( ClassGroup=("SweetDreams"), Blueprintable, meta=(BlueprintSpawnableComponent) )
 class SWEETDREAMSAI_API UAIStateMachineComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -20,25 +41,36 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|AI")
-	bool AddState(USweetDreamsAIState* InState, USweetDreamsAIStateBehaviour*& OutBehaviour, int32& Index, bool bEnterStateOnAdd = false);
+	void CreateInitialStates();
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|AI")
-	bool SetState(USweetDreamsAIState* InState, USweetDreamsAIStateBehaviour*& OutBehaviour);
+	bool AddState(USweetDreamsAIState* StateData, FSweetDreamsStateRuntime& OutState, int32& Index, bool bEnterStateOnAdd = false);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|AI")
+	bool SetState(FGameplayTag InStateTag, FSweetDreamsStateRuntime& OutState);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|AI")
 	void ClearCurrentState();
 
-protected:
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|AI")
+	bool GetStateByTag(FGameplayTag InStateTag, FSweetDreamsStateRuntime& OutState) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|AI")
+	float GetStateDuration(FGameplayTag InStateTag) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|AI")
+	USweetDreamsAIStateBehaviour* GetStateBehaviour(FGameplayTag InStateTag) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|AI")
+	bool IsInState(FGameplayTag InStateTag) const;
 
-	virtual void BeginPlay() override;
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|AI")
+	void OnInitialStatesCreated();
+	UFUNCTION(BlueprintNativeEvent, Category = "Sweet Dreams|AI")
+	bool CanUpdateCurrentState() const;
+	virtual bool CanUpdateCurrentState_Implementation() const;
+
+protected:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "AI")
 	TArray<TObjectPtr<USweetDreamsAIState>> InitialStates;
 	UPROPERTY(BlueprintReadOnly, Category = "AI")
-	TArray<TObjectPtr<USweetDreamsAIState>> States;
+	TArray<FSweetDreamsStateRuntime> States;
 	UPROPERTY(BlueprintReadOnly, Category = "AI")
-	TMap<FName, TObjectPtr<USweetDreamsAIStateBehaviour>> Behaviours;
-	UPROPERTY(BlueprintReadOnly, Category = "AI")
-	TObjectPtr<USweetDreamsAIState> CurrentState = nullptr;
-	UPROPERTY(BlueprintReadOnly, Category = "AI")
-	TObjectPtr<USweetDreamsAIStateBehaviour> CurrentBehaviour = nullptr;
+	FSweetDreamsStateRuntime CurrentState;
 	
 };

@@ -2,3 +2,7 @@
 
 #include "Data/BattleEvent.h"
 
+bool UBattleEvent::IsFinished_Implementation() const
+{
+	return true;
+}

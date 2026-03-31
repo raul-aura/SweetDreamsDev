@@ -24,7 +24,9 @@ public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Logout(AController* Exiting) override;
 	
+	UFUNCTION()
 	void StartLoadingLevel(UWorld* LoadingLevel);
+	UFUNCTION()
 	void FinishLoadingLevel(UWorld* LoadingLevel);
 	void BeginPlayNewLevel(UWorld* LoadingLevel);
 

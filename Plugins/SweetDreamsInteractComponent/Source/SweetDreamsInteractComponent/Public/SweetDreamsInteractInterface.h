@@ -17,17 +17,17 @@ class SWEETDREAMSINTERACTCOMPONENT_API ISweetDreamsInteractInterface
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")
 	void OnInteract(AActor* InteractionInstigator);
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")
 	void OnBeginTrace(AActor* TraceInstigator);
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")
 	void OnEndTrace(AActor* TraceInstigator);
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")
 	void OnEnterInteractRange(AActor* TraceInstigator);
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")
 	void OnExitInteractRange(AActor* TraceInstigator);
 
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Sweet Dreams|Interact")

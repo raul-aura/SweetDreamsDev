@@ -3,16 +3,40 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Data/BattleParameterData.h"
+#include "GameplayTagContainer.h"
 #include "BattleDataTypes.generated.h"
 
 class UBattleEvent;
+class UBattleParameterData;
 class UBattleActorComponent;
+class UBattleParameterEvent;
 
 UENUM(BlueprintType)
-enum class EBattleElementEndMode : uint8
+enum class ETargetSelectionScope : uint8
 {
-	Auto,      
-	Manual  
+	Candidates,
+	CandidatesAndInstigator UMETA(DisplayName = "Candidates and Instigator"),
+	InstigatorOnly UMETA(DisplayName = "Instigator Only")
+};
+
+USTRUCT(BlueprintType)
+struct SWEETDREAMSBATTLE_API FSelectedTargetsSettings
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Selected Targets Settings")
+	ETargetSelectionScope TargetType = ETargetSelectionScope::Candidates;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Selected Targets Settings", meta = (EditCondition = "TargetType!=ETargetSelectionScope::InstigatorOnly", EditConditionHides))
+	int32 MaxAmount = 0;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Selected Targets Settings", meta = (EditCondition = "TargetType!=ETargetSelectionScope::InstigatorOnly", EditConditionHides))
+	bool bRandomizeSelection = false;
+
+	FSelectedTargetsSettings() = default;
 };
 
 UENUM(BlueprintType)
@@ -21,6 +45,83 @@ enum class ETeamType : uint8
 	None,
 	Player,
 	Hostile
+};
+
+USTRUCT(BlueprintType)
+struct SWEETDREAMSBATTLE_API FDamageHealTargetResult
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadOnly, Category = "Damage/Heal Result")
+	TObjectPtr<class UBattleActorComponent> Target = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Damage/Heal Result")
+	float AppliedValue = 0.f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Damage/Heal Result")
+	bool bKilled = false;
+
+	FDamageHealTargetResult() = default;
+
+	FDamageHealTargetResult(UBattleActorComponent* InTarget, float InValue, bool bInKilled)
+		: Target(InTarget)
+		, AppliedValue(InValue)
+		, bKilled(bInKilled)
+	{
+	}
+};
+
+USTRUCT(BlueprintType)
+struct SWEETDREAMSBATTLE_API FDamageHealResult
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadOnly, Category = "Damage/Heal Result")
+	TObjectPtr<UBattleActorComponent> Instigator = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Damage/Heal Result")
+	FGameplayTagContainer EffectTags;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Damage/Heal Result")
+	TArray<FDamageHealTargetResult> Targets;
+
+	FDamageHealResult() = default;
+
+	FDamageHealResult(
+		UBattleActorComponent* InInstigator,
+		FGameplayTagContainer InEffectTag)
+		: Instigator(InInstigator)
+		, EffectTags(InEffectTag)
+	{}
+
+	float GetTotalAppliedValue() const
+	{
+		float Total = 0.f;
+
+		for (const FDamageHealTargetResult& Target : Targets)
+		{
+			Total += Target.AppliedValue;
+		}
+
+		return Total;
+	}
+
+	bool HasKilledAny() const
+	{
+		for (const FDamageHealTargetResult& Target : Targets)
+		{
+			if (Target.bKilled)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
 };
 
 UENUM(BlueprintType)
@@ -32,31 +133,6 @@ enum class EParameterModifierType : uint8
 };
 
 USTRUCT(BlueprintType)
-struct SWEETDREAMSBATTLE_API FBattleContextWrapper
-{
-	GENERATED_BODY()
-
-public:
-
-	UPROPERTY(BlueprintReadOnly, Category = "Battle Context Wrapper")
-	TObjectPtr<UBattleActorComponent> Instigator = nullptr;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Battle Context Wrapper")
-	TArray<TObjectPtr<UBattleActorComponent>> Targets;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Battle Context Wrapper")
-	float EffectValue = 0.f;
-
-	FBattleContextWrapper() {}
-
-	FBattleContextWrapper(UBattleActorComponent* InInstigator, TArray<UBattleActorComponent*> InTargets, float Value)
-		:Instigator(InInstigator),
-		Targets(InTargets),
-		EffectValue(Value)
-	{}
-};
-
-USTRUCT(BlueprintType)
 struct SWEETDREAMSBATTLE_API FBattleParameterModifier
 {
 	GENERATED_BODY()
@@ -64,15 +140,12 @@ struct SWEETDREAMSBATTLE_API FBattleParameterModifier
 public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle Parameter")
-	EParameterModifierType ModifierType;
+	EParameterModifierType ModifierType = EParameterModifierType::Absolute;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle Parameter")
-	float Value;
+	float Value = 0.f;
 
-	FBattleParameterModifier()
-		: ModifierType(EParameterModifierType::Absolute),
-		Value(0.f)
-	{}
+	FBattleParameterModifier() = default;
 
 	FBattleParameterModifier(EParameterModifierType InType, float InValue)
 		: ModifierType(InType),
@@ -87,31 +160,34 @@ public:
 
 
 USTRUCT(BlueprintType)
-struct SWEETDREAMSBATTLE_API FBattleParamater
+struct SWEETDREAMSBATTLE_API FBattleParameter
 {
 	GENERATED_BODY()
 
 public:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Battle Parameter")
-	float BaseValue;
-
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Battle Parameter")
-	float MinValue;
-
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Battle Parameter")
-	float MaxValue;
-
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Battle Parameter")
-	float CurrentValue;
+	TObjectPtr<UBattleParameterData> Data;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Battle Parameter")
 	TArray<FBattleParameterModifier> Modifiers;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Battle Parameter")
+	TObjectPtr<UBattleParameterEvent> Event;
+
+	void InitializeParameter()
+	{
+		if (Data)
+		{
+			ParameterValue = GetUpdatedParameterValue();
+			ResourceValue = ParameterValue * Data->InitialResourceValueRatio;
+		}
+	}
+
 	void AddModifier(const FBattleParameterModifier& Modifier)
 	{
 		Modifiers.Add(Modifier);
-		EvaluateModifiers();
+		UpdateParameter();
 	}
 
 	void RemoveModifier(const FBattleParameterModifier& Modifier)
@@ -119,126 +195,122 @@ public:
 		if (Modifiers.Contains(Modifier))
 		{
 			Modifiers.Remove(Modifier);
-			EvaluateModifiers();
+			UpdateParameter();
 		}
+	}
+
+	void UpdateParameter()
+	{
+		const float PreviousParameterValue = ParameterValue;
+
+		ParameterValue = GetUpdatedParameterValue();
+		ResourceValue = GetUpdatedResourceValue(PreviousParameterValue);
 	}
 	
-	void EvaluateModifiers() 
+	float GetUpdatedParameterValue() const
 	{
-		if (Modifiers.IsEmpty())
+		if (!Data)
 		{
-			CurrentValue = BaseValue;
-			return;
+			return 0.f;
 		}
 
-		float Additive = 0.f;
-		float Percentage = 0.f;
-		float Multiplier = 1.f;
-		for (const FBattleParameterModifier& Mod : Modifiers)
+		float Value = Data->InitialValue;
+
+		if (!Modifiers.IsEmpty())
 		{
-			switch (Mod.ModifierType)
+			float Additive = 0.f;
+			float Percentage = 0.f;
+			float Multiplier = 1.f;
+			for (const FBattleParameterModifier& Mod : Modifiers)
 			{
-			case EParameterModifierType::Absolute:   Additive += Mod.Value; break;
-			case EParameterModifierType::Percentage: Percentage += Mod.Value; break;
-			case EParameterModifierType::Multiplier: Multiplier *= Mod.Value; break;
-			}
-		}
-		CurrentValue = (BaseValue + Additive + (BaseValue * (Percentage / 100.0f))) * Multiplier;
-
-		if (MaxValue >= 0)
-		{
-			CurrentValue = FMath::Clamp(CurrentValue, MinValue, MaxValue);
-		}
-		else
-		{
-			CurrentValue = FMath::Max(CurrentValue, MinValue);
-		}
-	}
-
-	FBattleParamater()
-		: BaseValue(0.f),
-		MinValue(0.f),
-		MaxValue(-1.f),
-		CurrentValue(0.f),
-		Modifiers(TArray<FBattleParameterModifier>())
-	{}
-
-	FBattleParamater(float InValue)
-		: BaseValue(InValue),
-		MinValue(0.f),
-		MaxValue(InValue),
-		CurrentValue(InValue),
-		Modifiers(TArray<FBattleParameterModifier>())
-	{}
-};
-
-USTRUCT(BlueprintType)
-struct SWEETDREAMSBATTLE_API FHealthParameter
-{
-	GENERATED_BODY()
-
-public:
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Health")
-	FBattleParamater MaxHealth;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Health")
-	float CurrentHealth;
-
-	void Initialize()
-	{
-		MaxHealth.EvaluateModifiers();
-		CurrentHealth = MaxHealth.CurrentValue;
-	}
-
-	void Damage(float Value)
-	{
-		if (Value <= 0.f) return;
-
-		CurrentHealth = FMath::Clamp(CurrentHealth - Value, 0.f, MaxHealth.CurrentValue);
-	}
-
-	void Heal(float Value)
-	{
-		if (Value <= 0.f) return;
-
-		CurrentHealth = FMath::Clamp(CurrentHealth + Value, 0.f, MaxHealth.CurrentValue);
-	}
-
-	void OnMaxHealthChanged(bool bPreserveRatio = true)
-	{
-		if (bPreserveRatio)
-		{
-			const float PreviousHealth = MaxHealth.CurrentValue;
-			if (PreviousHealth <= 0.f)
-			{
-				CurrentHealth = 0.f;
+				switch (Mod.ModifierType)
+				{
+				case EParameterModifierType::Absolute:   Additive += Mod.Value; break;
+				case EParameterModifierType::Percentage: Percentage += Mod.Value; break;
+				case EParameterModifierType::Multiplier: Multiplier *= Mod.Value; break;
+				}
 			}
 
-			const float Ratio = CurrentHealth / PreviousHealth;
-
-			CurrentHealth = FMath::Clamp(Ratio * MaxHealth.CurrentValue, 0.f, MaxHealth.CurrentValue);
+			Value = (Data->InitialValue + Additive + (Data->InitialValue * (Percentage / 100.0f))) * Multiplier;
 		}
-		else
+
+		if (Data->bUseMinValue)
 		{
-			CurrentHealth = FMath::Clamp(CurrentHealth, 0.f, MaxHealth.CurrentValue);
+			Value = FMath::Max(Value, Data->MinValue);
 		}
+
+		if (Data->bUseMaxValue)
+		{
+			Value = FMath::Min(Value, Data->MaxValue);
+		}
+
+		return Value;
 	}
 
-	float GetHealthPercent() const
+	float GetUpdatedResourceValue(const float OldMaxValue) const
 	{
-		return MaxHealth.CurrentValue > 0.f ? CurrentHealth / MaxHealth.CurrentValue : 0.f;
+		if (!Data || !Data->bIsResource) return 0.f;
+
+		const float NewMax = GetUpdatedParameterValue();
+		float Value = ResourceValue;
+
+		if (Data->bPreserveResourceRatioOnUpdate && OldMaxValue > 0.f)
+		{
+			const float Ratio = ResourceValue / OldMaxValue;
+			Value = Ratio * NewMax;
+		}
+
+		if (Data->bUseMinValue)
+		{
+			Value = FMath::Max(Value, Data->MinValue);
+		}
+
+		return FMath::Min(Value, NewMax);
 	}
 
-	FHealthParameter()
-		: CurrentHealth(0.f)
+	void AddResourceValue(const float Value)
+	{
+		ResourceValue += Value;
+		ClampResourceValue();
+	}
+
+	void RemoveResourceValue(const float Value)
+	{
+		ResourceValue -= Value;
+		ClampResourceValue();
+	}
+
+	void ClampResourceValue()
+	{
+		if (Data && Data->bUseMinValue)
+		{
+			ResourceValue = FMath::Max(ResourceValue, Data->MinValue);
+		}
+
+		ResourceValue = FMath::Min(ResourceValue, ParameterValue);
+	}
+
+	float GetParameterValue() const
+	{
+		return ParameterValue;
+	}
+
+	float GetResourceValue() const
+	{
+		return ResourceValue;
+	}
+
+	FBattleParameter()
+		: Data(nullptr),
+		Modifiers(TArray<FBattleParameterModifier>()),
+		Event(nullptr),
+		ParameterValue(0.f),
+		ResourceValue(0.f)
 	{}
 
-	FHealthParameter(float InBaseHealth)
-		: MaxHealth(InBaseHealth),
-		CurrentHealth(InBaseHealth)
-	{
-		MaxHealth.EvaluateModifiers();
-	}
+private:
+
+	float ParameterValue = 0.f;
+	float ResourceValue = 0.f;
 };
 

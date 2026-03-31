@@ -1,6 +1,5 @@
 
 
-
 #include "AIStateMachineComponent.h"
 #include "SweetDreamsAIState.h"
 #include "SweetDreamsAIStateBehaviour.h"
@@ -10,60 +9,72 @@ UAIStateMachineComponent::UAIStateMachineComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-void UAIStateMachineComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	for (TObjectPtr<USweetDreamsAIState> State : InitialStates)
-	{
-		int32 Index = INDEX_NONE;
-		USweetDreamsAIStateBehaviour* Behaviour = nullptr;
-
-		AddState(State, Behaviour, Index, false);
-	}
-}
-
 void UAIStateMachineComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (IsValid(CurrentBehaviour))
+	if (CurrentState.Behaviour)
 	{
-		CurrentBehaviour->Tick(DeltaTime);
+		CurrentState.Behaviour->Tick(DeltaTime);
 	}
 }
 
-bool UAIStateMachineComponent::AddState(USweetDreamsAIState* InState, USweetDreamsAIStateBehaviour*& OutBehaviour, int32& Index, bool bEnterStateOnAdd)
+void UAIStateMachineComponent::CreateInitialStates()
 {
-	if (IsValid(InState))
+	for (TObjectPtr<USweetDreamsAIState> State : InitialStates)
+	{
+		int32 Index = INDEX_NONE;
+		FSweetDreamsStateRuntime TempState;
+
+		AddState(State, TempState, Index, false);
+	}
+
+	OnInitialStatesCreated();
+}
+
+bool UAIStateMachineComponent::AddState(USweetDreamsAIState* StateData, FSweetDreamsStateRuntime& OutState, int32& Index, bool bEnterStateOnAdd)
+{
+	if (IsValid(StateData))
 	{
 		bool bAdded = false;
 
-		if (States.Contains(InState))
+		for (int32 i = 0; i < States.Num(); i++)
 		{
-			Index = States.IndexOfByKey(InState);
-			return false;
-		}
-		else
-		{
-			Index = States.Add(InState);
-			bAdded = true;
-
-			if (IsValid(InState->Behaviour))
+			if (States.IsValidIndex(i))
 			{
-				TObjectPtr<USweetDreamsAIStateBehaviour> NewBehaviour = DuplicateObject<USweetDreamsAIStateBehaviour>(InState->Behaviour, this, InState->StateName);
-				if (IsValid(NewBehaviour))
+				const FSweetDreamsStateRuntime& State = States[i];
+
+				if (State.Data && State.Data->StateTag.MatchesTagExact(StateData->StateTag))
 				{
-					NewBehaviour->SetOwner(GetOwner());
-					Behaviours.Add(InState->StateName, NewBehaviour);
-					OutBehaviour = NewBehaviour;
+					Index = i;
+					OutState = State;
+					return false;
 				}
 			}
 		}
 
+		USweetDreamsAIStateBehaviour* NewBehaviour = nullptr;
+
+		if (IsValid(StateData->Behaviour))
+		{
+			NewBehaviour = DuplicateObject<USweetDreamsAIStateBehaviour>(StateData->Behaviour, this);
+			if (IsValid(NewBehaviour))
+			{
+				NewBehaviour->SetOwner(GetOwner());
+				NewBehaviour->SetState(StateData);
+				NewBehaviour->OnInitialized();
+			}
+		}
+
+		const FSweetDreamsStateRuntime State(StateData, NewBehaviour);
+
+		Index = States.Add(State);
+		bAdded = true;
+
 		if (bEnterStateOnAdd)
 		{
-			SetState(InState, OutBehaviour);
+			FSweetDreamsStateRuntime TempState;
+			SetState(StateData->StateTag, TempState);
 		}
 
 		return bAdded;
@@ -72,31 +83,26 @@ bool UAIStateMachineComponent::AddState(USweetDreamsAIState* InState, USweetDrea
 	return false;
 }
 
-bool UAIStateMachineComponent::SetState(USweetDreamsAIState* InState, USweetDreamsAIStateBehaviour*& OutBehaviour)
+bool UAIStateMachineComponent::SetState(FGameplayTag InStateTag, FSweetDreamsStateRuntime& OutState)
 {
+	if (!CanUpdateCurrentState()) return false;
+
 	ClearCurrentState();
 
-	if (IsValid(InState))
+	for (const FSweetDreamsStateRuntime& State : States)
 	{
-		CurrentState = InState;
-
-		if (IsValid(InState->Behaviour))
+		if (State.Data && State.Data->StateTag.MatchesTagExact(InStateTag))
 		{
-			if (TObjectPtr<USweetDreamsAIStateBehaviour>* Found = Behaviours.Find(InState->StateName))
+			CurrentState = State;
+			OutState = State;
+
+			if (IsValid(State.Behaviour) && State.Behaviour->CanEnterState())
 			{
-				USweetDreamsAIStateBehaviour* BehaviourPtr = Found->Get();
-				if (BehaviourPtr && BehaviourPtr->CanEnterState())
-				{
-					CurrentBehaviour = *Found;
-					CurrentBehaviour->OnEnter();
-					OutBehaviour = CurrentBehaviour.Get();
-
-					return true;
-				}
+				State.Behaviour->OnEnter();
 			}
-		}
 
-		return true;
+			return true;
+		}
 	}
 
 	return false;
@@ -104,13 +110,69 @@ bool UAIStateMachineComponent::SetState(USweetDreamsAIState* InState, USweetDrea
 
 void UAIStateMachineComponent::ClearCurrentState()
 {
-	if (IsValid(CurrentBehaviour))
+	if (IsValid(CurrentState.Behaviour))
 	{
-		CurrentBehaviour->OnExit();
-		CurrentBehaviour = nullptr;
+		CurrentState.Behaviour->OnExit();
 	}
 
-	CurrentState = nullptr;
+	CurrentState = FSweetDreamsStateRuntime();
+}
+
+bool UAIStateMachineComponent::GetStateByTag(FGameplayTag InStateTag, FSweetDreamsStateRuntime& OutState) const
+{
+	for (const FSweetDreamsStateRuntime& State : States)
+	{
+		if (State.Data && State.Data->StateTag.MatchesTagExact(InStateTag))
+		{
+			OutState = State;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+float UAIStateMachineComponent::GetStateDuration(FGameplayTag InStateTag) const
+{
+	for (const FSweetDreamsStateRuntime& State : States)
+	{
+		if (State.Data && State.Data->StateTag.MatchesTagExact(InStateTag))
+		{
+			if (State.Data->bUseRandomizedDuration)
+			{
+				return FMath::RandRange(State.Data->MinDuration, State.Data->MaxDuration);
+			}
+
+			return State.Data->Duration;
+		}
+	}
+
+	return INDEX_NONE;
+}
+
+USweetDreamsAIStateBehaviour* UAIStateMachineComponent::GetStateBehaviour(FGameplayTag InStateTag) const
+{
+	for (const FSweetDreamsStateRuntime& State : States)
+	{
+		if (State.Data && State.Data->StateTag.MatchesTagExact(InStateTag))
+		{
+			return State.Behaviour;
+		}
+	}
+
+	return nullptr;
+}
+
+bool UAIStateMachineComponent::IsInState(FGameplayTag InStateTag) const
+{
+	if (!CurrentState.Data) return false;
+
+	return CurrentState.Data->StateTag.MatchesTagExact(InStateTag);
+}
+
+bool UAIStateMachineComponent::CanUpdateCurrentState_Implementation() const
+{
+	return true;
 }
 
 

@@ -19,7 +19,7 @@ ASweetDreamsCharacter::ASweetDreamsCharacter()
 
 	GetCharacterMovement()->bOrientRotationToMovement = true; 	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); 
-	GetCharacterMovement()->GravityScale = 2.0f;
+	GetCharacterMovement()->GravityScale = 3.0f;
 	GetCharacterMovement()->JumpZVelocity = 800.f;
 	GetCharacterMovement()->AirControl = 1.0f;
 
@@ -29,7 +29,7 @@ ASweetDreamsCharacter::ASweetDreamsCharacter()
 
 	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
 	Camera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-	Camera->SetFieldOfView(80.0f);
+	Camera->SetFieldOfView(70.0f);
 	Camera->bUsePawnControlRotation = false;
 
 	GetCapsuleComponent()->SetCanEverAffectNavigation(true);
@@ -53,7 +53,7 @@ void ASweetDreamsCharacter::BeginPlay()
 
 void ASweetDreamsCharacter::MoveForward(float Value)
 {
-	if (IsValid(Controller) && Value != 0.0f && bCanMove)
+	if (IsValid(Controller) && Value != 0.f && bCanMove)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -64,7 +64,7 @@ void ASweetDreamsCharacter::MoveForward(float Value)
 
 void ASweetDreamsCharacter::MoveRight(float Value)
 {
-	if (IsValid(Controller) && Value != 0.0f && bCanMove)
+	if (IsValid(Controller) && Value != 0.f && bCanMove)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);

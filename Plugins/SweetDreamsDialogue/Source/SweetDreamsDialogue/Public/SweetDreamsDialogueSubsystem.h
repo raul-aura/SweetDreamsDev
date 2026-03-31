@@ -9,14 +9,6 @@
 
 class UDialogueData;
 
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogueEvent);
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDialogueUpdated, FSweetDreamsDialogue, Dialogue, int32, Index);
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueFunction, FSweetDreamsDialogue, Dialogue, int32, Index, TArray<FDialogueFunction>, Functions);
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueAnimation, FSweetDreamsDialogue, Dialogue, int32, Index, FText, AnimatedText);
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueChoice, FSweetDreamsDialogue, Dialogue, int32, Index, TArray<FChoice>, Choices);
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogueAudio, USoundBase*, Audio);
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueSequence, FSweetDreamsDialogue, Dialogue, int32, Index, ULevelSequence*, Sequence);
-
 UCLASS(Category = "SweetDreams|Dialogue")
 class SWEETDREAMSDIALOGUE_API USweetDreamsDialogueSubsystem : public UGameInstanceSubsystem
 {

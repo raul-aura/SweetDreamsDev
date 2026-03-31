@@ -4,7 +4,7 @@
 #include "Battle/SweetDreamsBattleCore.h"
 #include "Battle/SweetDreamsBattle.h"
 #include "Core/SweetDreamsBPLibrary.h"
-
+#include "Battle/BattleActorComponent.h"
 
 USweetDreamsBattleBPLibrary::USweetDreamsBattleBPLibrary(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -25,6 +25,22 @@ USweetDreamsBattleCore* USweetDreamsBattleBPLibrary::GetSweetDreamsBattleCore(co
 bool USweetDreamsBattleBPLibrary::AreTeamsHostile(const ETeamType TeamA, const ETeamType TeamB)
 {
 	return TeamA != TeamB;
+}
+
+TArray<UBattleActorComponent*> USweetDreamsBattleBPLibrary::GetTargetsFromDamageHealResult(const FDamageHealResult& Result)
+{
+	TArray<FDamageHealTargetResult> LocalTargets = Result.Targets;
+	TArray<UBattleActorComponent*> BattleActors;
+
+	for (const FDamageHealTargetResult& LocalTarget : LocalTargets)
+	{
+		if (IsValid(LocalTarget.Target))
+		{
+			BattleActors.Add(LocalTarget.Target);
+		}
+	}
+
+	return BattleActors;
 }
 
 int32 USweetDreamsBattleBPLibrary::GetDifficulty(const UObject* WorldContext)

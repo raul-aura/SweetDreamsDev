@@ -13,6 +13,10 @@ class SWEETDREAMSAI_API USweetDreamsAIStateBehaviour : public UObject
 
 public:
 
+	// Called by State Machine Component when this behaviour is constructed. 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|AI")
+	void OnInitialized();
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|AI")
 	void OnEnter();
 
@@ -30,14 +34,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|AI")
 	AActor* GetOwner() const;
 
+	void SetState(USweetDreamsAIState* Data);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|AI")
+	USweetDreamsAIState* GetStateData() const;
 
 protected:
 
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<AActor> StateOwner;
-
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "AI Behaviour")
 	bool bIsStateActive = false;
 
+private:
+
+	TObjectPtr<AActor> StateOwner;
+
+	TObjectPtr<USweetDreamsAIState> StateData;
 };
 
