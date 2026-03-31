@@ -19,11 +19,11 @@ public:
 	UAIStateMachineComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|AI")
-	bool AddState(USweetDreamsAIState* InState, USweetDreamsAIStateBehaviour*& Behaviour, int32& Index, bool bEnterStateOnAdd = false);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|AI")
-	bool SetState(USweetDreamsAIState* InState, USweetDreamsAIStateBehaviour*& Behaviour);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|AI")
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|AI")
+	bool AddState(USweetDreamsAIState* InState, USweetDreamsAIStateBehaviour*& OutBehaviour, int32& Index, bool bEnterStateOnAdd = false);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|AI")
+	bool SetState(USweetDreamsAIState* InState, USweetDreamsAIStateBehaviour*& OutBehaviour);
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|AI")
 	void ClearCurrentState();
 
 protected:

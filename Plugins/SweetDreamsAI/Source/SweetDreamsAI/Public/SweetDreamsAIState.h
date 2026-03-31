@@ -8,7 +8,7 @@
 
 class USweetDreamsAIStateBehaviour;
 
-UCLASS()
+UCLASS(Blueprintable, BlueprintType)
 class SWEETDREAMSAI_API USweetDreamsAIState : public UDataAsset
 {
 	GENERATED_BODY()
@@ -18,6 +18,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI State")
 	FName StateName = TEXT("State");
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI State")
-	TSubclassOf<USweetDreamsAIStateBehaviour> BehaviourClass = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "AI State")
+	TObjectPtr<USweetDreamsAIStateBehaviour> Behaviour = nullptr;
 };

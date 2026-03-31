@@ -13,22 +13,21 @@ class SWEETDREAMSAI_API USweetDreamsAIStateBehaviour : public UObject
 
 public:
 
-	UFUNCTION(BlueprintNativeEvent, Category = "Sweet Dreams|Core|AI")
-	bool OnEnter();
-	virtual bool OnEnter_Implementation();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|AI")
+	void OnEnter();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core|AI")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|AI")
 	void OnExit();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|Core|AI")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|AI")
 	void Tick(float DeltaTime);
 
-	UFUNCTION(BlueprintNativeEvent, Category = "Sweet Dreams|Core|AI")
+	UFUNCTION(BlueprintNativeEvent, Category = "Sweet Dreams|AI")
 	bool CanEnterState() const;
 	virtual bool CanEnterState_Implementation() const;
 	
 	void SetOwner(AActor* InOwner);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|AI")
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|AI")
 	AActor* GetOwner() const;
 
 

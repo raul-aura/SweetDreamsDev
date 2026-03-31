@@ -2,12 +2,6 @@
 
 #include "SweetDreamsAIStateBehaviour.h"
 
-bool USweetDreamsAIStateBehaviour::OnEnter_Implementation()
-{
-    bIsStateActive = CanEnterState();
-    return bIsStateActive;
-}
-
 bool USweetDreamsAIStateBehaviour::CanEnterState_Implementation() const
 {
     return true;
