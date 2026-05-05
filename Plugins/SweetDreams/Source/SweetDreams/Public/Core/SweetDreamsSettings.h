@@ -46,10 +46,4 @@ public:
 	//Class of the Persistent Save
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Save", meta = (DisplayName = "Persistent Save Class"))
 	TSubclassOf<USweetDreamsSaveFile> PersistentClass;
-	//Name of the Local Save File
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Save", meta = (DisplayName = "Local File Name"))
-	FString LocalSlot = "SweetDream_LOCAL";
-	//Class of the Local Save
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Save", meta = (DisplayName = "Local Save Class"))
-	TSubclassOf<USweetDreamsSaveFile> LocalClass;
 };

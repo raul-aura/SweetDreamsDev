@@ -46,6 +46,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void EvaluateBattleEnd();
 
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	TArray<UBattleActorComponent*> GetBattlers(ETeamType TeamFilter) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	TArray<UBattleActorComponent*> GetAliveBattlers(ETeamType TeamFilter) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	TArray<UBattleActorComponent*> GetLastBattleBattlers(ETeamType TeamFilter) const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
+	TArray<AActor*> GetBattlersActors(ETeamType TeamFilter) const;
+
 	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|RPG|Battle Manager")
 	FOnBattleDelegate OnBattleStarted;
 	UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|RPG|Battle Manager")
@@ -65,6 +74,10 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|RPG|Battle Manager")
 	void OnBattleDefeat();
 	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|RPG|Battle Manager")
+	void OnBattlerAdded(UBattleActorComponent* Battler);
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|RPG|Battle Manager")
+	void OnBattlerRemoved(UBattleActorComponent* Battler);
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sweet Dreams|RPG|Battle Manager")
 	void OnBattlerKilled(UBattleActorComponent* Battler);
 	UFUNCTION(BlueprintNativeEvent, Category = "Sweet Dreams|RPG|Battle Manager")
 	bool EvaluateBattleVictory() const;
@@ -72,12 +85,6 @@ protected:
 	
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
 	void RemoveInvalidBattlers();
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	void GetBattlers(TArray<UBattleActorComponent*>& OutBattlers, ETeamType TeamFilter) const;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	void GetAliveBattlers(TArray<UBattleActorComponent*>& OutBattlers, ETeamType TeamFilter) const;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|RPG|Battle Manager")
-	void GetLastBattleBattlers(TArray<UBattleActorComponent*>& OutBattlers, ETeamType TeamFilter) const;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Battle Manager")
 	bool bIsBattleActive = false;

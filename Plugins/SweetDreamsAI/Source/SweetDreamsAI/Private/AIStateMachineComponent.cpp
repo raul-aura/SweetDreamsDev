@@ -99,6 +99,8 @@ bool UAIStateMachineComponent::SetState(FGameplayTag InStateTag, FSweetDreamsSta
 			if (IsValid(State.Behaviour) && State.Behaviour->CanEnterState())
 			{
 				State.Behaviour->OnEnter();
+
+				OnStateUpdated.Broadcast(this, State);
 			}
 
 			return true;

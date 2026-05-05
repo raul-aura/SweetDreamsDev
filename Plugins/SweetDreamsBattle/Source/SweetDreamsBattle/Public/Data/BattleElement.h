@@ -61,11 +61,16 @@ protected:
     void EvaluateAsyncEvents(float DeltaTime);
     void StartCurrentEvent();
     void AdvanceEvent();
+    void HandleEventsComplete();
 
     UPROPERTY(BlueprintReadOnly, Category = "Data")
     TObjectPtr<UBattleActorComponent> Owner = nullptr;
     UPROPERTY(BlueprintReadOnly, Category = "Data")
     TObjectPtr<UBattleContext> BattleContext = nullptr;
+    UPROPERTY(BlueprintReadOnly, Category = "Data")
+    bool bAllEventsCompleted = false;
+    UPROPERTY(BlueprintReadOnly, Category = "Data")
+    bool bAutoEnd = false;
 
     UPROPERTY(BlueprintReadOnly, Category = "Events")
     TArray<TObjectPtr<UBattleEvent>> Events;

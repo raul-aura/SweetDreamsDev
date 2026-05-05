@@ -6,6 +6,9 @@
 #include "Data/BattleDataTypes.h"
 #include "SweetDreamsBattleBPLibrary.generated.h"
 
+class USweetDreamsBattleCore;
+class UBattleElement;
+
 UCLASS()
 class USweetDreamsBattleBPLibrary : public UBlueprintFunctionLibrary
 {
@@ -21,6 +24,10 @@ public:
 	static bool AreTeamsHostile(const ETeamType TeamA, const ETeamType TeamB);
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG")
 	static TArray<UBattleActorComponent*> GetTargetsFromDamageHealResult(const FDamageHealResult& Result);
+
+	// ELEMENTS
+	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG")
+	static UBattleElementData* GetRandomBattleElement(const TArray<UBattleElement*>& Elements);
 
 	// DIFFICULTY
 	UFUNCTION(BlueprintPure, Category = "Sweet Dreams|RPG", meta = (WorldContext = "WorldContext", CallableWithoutWorldContext))

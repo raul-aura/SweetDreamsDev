@@ -56,6 +56,8 @@ void ASweetDreamsBattleManager::AddBattler(UBattleActorComponent* Battler)
 		BindFunctionsToBattler(Battler);
 
 		Battlers.AddUnique(Battler);
+
+		OnBattlerAdded(Battler);
 	}
 }
 
@@ -81,6 +83,8 @@ void ASweetDreamsBattleManager::RemoveBattler(UBattleActorComponent* Battler, bo
 		}
 
 		Battlers.Remove(Battler);
+
+		OnBattlerRemoved(Battler);
 	}
 }
 
@@ -106,6 +110,8 @@ void ASweetDreamsBattleManager::ClearBattlers(bool bExitFromCombat)
 			{
 				Battler->SetInCombat(false);
 			}
+
+			OnBattlerRemoved(Battler);
 		}
 	}
 
@@ -194,6 +200,7 @@ void ASweetDreamsBattleManager::EvaluateBattleEnd()
 	EndBattle();
 }
 
+
 bool ASweetDreamsBattleManager::EvaluateBattleVictory_Implementation() const
 {
 	return VictoriousTeam == ETeamType::Player;
@@ -223,7 +230,6 @@ void ASweetDreamsBattleManager::BindFunctionsToBattler(UBattleActorComponent* Ba
 	if (IsValid(Battler))
 	{
 		Battler->OnKilled.AddUniqueDynamic(this, &ASweetDreamsBattleManager::OnBattlerKilled_Internal);
-
 	}
 }
 
@@ -237,15 +243,15 @@ void ASweetDreamsBattleManager::UnbindFunctionsFromBattler(UBattleActorComponent
 
 void ASweetDreamsBattleManager::RemoveInvalidBattlers()
 {
-	Battlers.RemoveAll([](const TWeakObjectPtr<UBattleActorComponent>& Ptr)
+	Battlers.RemoveAll([this](const TWeakObjectPtr<UBattleActorComponent>& Ptr)
 	{
 		return !Ptr.IsValid();
 	});
 }
 
-void ASweetDreamsBattleManager::GetBattlers(TArray<UBattleActorComponent*>& OutBattlers, ETeamType TeamFilter) const
+TArray<UBattleActorComponent*> ASweetDreamsBattleManager::GetBattlers(ETeamType TeamFilter) const
 {
-	OutBattlers.Reset();
+	TArray<UBattleActorComponent*> OutBattlers;
 	OutBattlers.Reserve(Battlers.Num());
 
 	for (const TWeakObjectPtr<UBattleActorComponent>& WeakBattler : Battlers)
@@ -260,11 +266,13 @@ void ASweetDreamsBattleManager::GetBattlers(TArray<UBattleActorComponent*>& OutB
 			}
 		}
 	}
+
+	return OutBattlers;
 }
 
-void ASweetDreamsBattleManager::GetAliveBattlers(TArray<UBattleActorComponent*>& OutBattlers, ETeamType TeamFilter) const
+TArray<UBattleActorComponent*> ASweetDreamsBattleManager::GetAliveBattlers(ETeamType TeamFilter) const
 {
-	OutBattlers.Reset();
+	TArray<UBattleActorComponent*> OutBattlers;
 	OutBattlers.Reserve(Battlers.Num());
 
 	for (const TWeakObjectPtr<UBattleActorComponent>& WeakBattler : Battlers)
@@ -279,11 +287,14 @@ void ASweetDreamsBattleManager::GetAliveBattlers(TArray<UBattleActorComponent*>&
 			}
 		}
 	}
+
+	return OutBattlers;
 }
 
-void ASweetDreamsBattleManager::GetLastBattleBattlers(TArray<UBattleActorComponent*>& OutBattlers, ETeamType TeamFilter) const
+TArray<UBattleActorComponent*> ASweetDreamsBattleManager::GetLastBattleBattlers(ETeamType TeamFilter) const
 {
-	OutBattlers.Reset();
+	TArray<UBattleActorComponent*> OutBattlers;
+
 	OutBattlers.Reserve(LastBattleBattlers.Num());
 
 	for (const TWeakObjectPtr<UBattleActorComponent>& WeakBattler : LastBattleBattlers)
@@ -298,5 +309,31 @@ void ASweetDreamsBattleManager::GetLastBattleBattlers(TArray<UBattleActorCompone
 			}
 		}
 	}
+
+	return OutBattlers;
+}
+
+TArray<AActor*> ASweetDreamsBattleManager::GetBattlersActors(ETeamType TeamFilter) const
+{
+	TArray<AActor*> Actors;
+	Actors.Reserve(Battlers.Num());
+
+	for (const TWeakObjectPtr<UBattleActorComponent>& WeakBattler : Battlers)
+	{
+		if (UBattleActorComponent* Battler = WeakBattler.Get())
+		{
+			bool bIsValidTeam = TeamFilter == ETeamType::None || Battler->GetTeam() == TeamFilter;
+
+			if (bIsValidTeam)
+			{
+				if (AActor* Actor = Battler->GetOwner())
+				{
+					Actors.Add(Actor);
+				}
+			}
+		}
+	}
+
+	return Actors;
 }
 

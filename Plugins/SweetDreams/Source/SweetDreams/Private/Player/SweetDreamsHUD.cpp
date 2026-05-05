@@ -52,15 +52,17 @@ USweetDreamsWidget* ASweetDreamsHUD::CreateAndStoreWidget(TSubclassOf<USweetDrea
 void ASweetDreamsHUD::ShowWidget(USweetDreamsWidget* Widget)
 {
 	if (!IsValid(Widget)) return;
-	UpdatePlayerInputMode();
+
 	Widget->ShowWidget_Internal();
+	UpdatePlayerInputMode();
 }
 
 void ASweetDreamsHUD::HideWidget(USweetDreamsWidget* Widget)
 {
 	if (!IsValid(Widget)) return;
-	UpdatePlayerInputMode();
+
 	Widget->HideWidget_Internal();
+	UpdatePlayerInputMode();
 }
 
 void ASweetDreamsHUD::OverridePlayerInputMode(USweetDreamsWidget* WidgetToFocus)
@@ -158,7 +160,7 @@ bool ASweetDreamsHUD::IsAnyWidgetVisible() const
 {
 	return AllWidgets.ContainsByPredicate([](const USweetDreamsWidget* Widget)
 	{
-		return !Widget->bIgnoreThisForVisibility && Widget->IsVisible();
+		return IsValid(Widget) && !Widget->bIgnoreThisForVisibility && Widget->IsVisible();
 	});
 }
 
@@ -166,6 +168,7 @@ USweetDreamsWidget* ASweetDreamsHUD::GetHighestPriorityWidget() const
 {
 	USweetDreamsWidget* TopWidget = nullptr;
 	int32 HighestZOrder = TNumericLimits<int32>::Min();
+
 	for (USweetDreamsWidget* Widget : AllWidgets)
 	{
 		if (!IsValid(Widget) || Widget->bIgnoreThisForVisibility || !Widget->IsVisible())
@@ -178,6 +181,7 @@ USweetDreamsWidget* ASweetDreamsHUD::GetHighestPriorityWidget() const
 			TopWidget = Widget;
 		}
 	}
+
 	return TopWidget;
 }
 

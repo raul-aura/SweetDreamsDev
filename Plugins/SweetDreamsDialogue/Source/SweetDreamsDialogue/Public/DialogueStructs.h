@@ -32,20 +32,26 @@ public:
 	FAnimatedDialogueSettings() {}
 };
 
-
+// A wrapper representing choices from a dialogue to easily send through delegates.
 USTRUCT(BlueprintType)
 struct SWEETDREAMSDIALOGUE_API FChoice
 {
 	GENERATED_BODY()
 
 public:
+
+	FChoice() = default;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue")
+	FGameplayTag Tag;
+
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue")
 	FText Body;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue")
-	FName Result;
-
-	FChoice() {}
+	FChoice(FGameplayTag InTag, FText InBody)
+		:Tag(InTag),
+		Body(InBody)
+	{}
 };
 
 USTRUCT(BlueprintType)
@@ -68,7 +74,7 @@ public:
 	FText Body;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue", meta = (MultiLine = "true", ForceInlineRow, EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
-	TArray<FChoice> Choices;
+	TMap<FGameplayTag, FText> Choices;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
 	TObjectPtr<UTexture2D> SpeakerImage;
@@ -82,7 +88,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
 	TObjectPtr<USoundBase> Audio;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Animated Dialogue")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Animated Dialogue", meta = (EditCondition = "Mode==EDialogueMode::DIALOGUE", EditConditionHides))
 	FAnimatedDialogueSettings AnimatedSettings;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Extra")
@@ -139,6 +145,7 @@ public:
 		Body(NSLOCTEXT("Dialogue", "DialogueBody", "Hello, I'm Name.")),
 		SelectedChoice(NSLOCTEXT("Dialogue", "DialogueChoice", "This is my choice."))
 	{}
+
 	FSweetDreamsDialogueLog(FText NameValue, FText BodyValue, FText ChoiceValue)
 		: SpeakerName(NameValue),
 		Body(BodyValue),

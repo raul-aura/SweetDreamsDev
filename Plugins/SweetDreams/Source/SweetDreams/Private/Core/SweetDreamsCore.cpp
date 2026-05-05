@@ -20,17 +20,11 @@ void USweetDreamsCore::LoadSettings()
 	CoreSettings = GetMutableDefault<USweetDreamsSettings>();
 
 	SaveSlotPersistent = CoreSettings->PersistentSlot;
-	SaveSlotLocal = CoreSettings->LocalSlot;
 	SaveClassPersistent = CoreSettings->PersistentClass;
-	SaveClassLocal = CoreSettings->LocalClass;
 
 	if (SaveSlotPersistent == "")
 	{
 		SaveSlotPersistent = "SweetDreams_PERSISTENT";
-	}
-	if (SaveSlotLocal == "")
-	{
-		SaveSlotLocal = "SweetDreams_LOCAL";
 	}
 }
 
@@ -43,7 +37,6 @@ void USweetDreamsCore::Initialize(FSubsystemCollectionBase& Collection)
 	{
 		bool bSuccess = false;
 		CreateSave(SaveClassPersistent, SaveSlotPersistent, bSuccess);
-		CreateSave(SaveClassLocal, SaveSlotLocal, bSuccess);
 	}
 
 	Super::Initialize(Collection);
@@ -51,7 +44,6 @@ void USweetDreamsCore::Initialize(FSubsystemCollectionBase& Collection)
 
 void USweetDreamsCore::Deinitialize()
 {
-	DeleteSave(SaveSlotLocal);
 	Log_Internal("Deinitializing Sweet Dreams Core subsystem.");
 
 	Super::Deinitialize();
@@ -147,10 +139,12 @@ USweetDreamsSaveFile* USweetDreamsCore::CreateSave(TSubclassOf<USweetDreamsSaveF
 		{
 			Log_Internal(FString::Printf(TEXT("%s CREATED with SUCCESS."), *Slot));
 		}
+
 		bSuccess = true;
 		USweetDreamsSaveFile* SweetSave = Cast<USweetDreamsSaveFile>(SaveObj);
 		UpdateSaveReference(SweetSave, Slot);
 		Save(Slot);
+
 		return SweetSave;
 	}
 
@@ -210,10 +204,11 @@ TObjectPtr<USweetDreamsSaveFile> USweetDreamsCore::LoadSave(const FString& Slot,
 
 		TArray<AActor*> Actors;
 		UGameplayStatics::GetAllActorsWithInterface(GetWorld(), USweetDreamsSaveInterface::StaticClass(), Actors);
+
 		for (AActor* Actor : Actors)
 		{
 			if (!IsValid(Actor)) continue;
-			ISweetDreamsSaveInterface::Execute_OnGameSaved(Actor, SweetSave, Slot);
+			ISweetDreamsSaveInterface::Execute_OnGameLoaded(Actor, SweetSave, Slot);
 		}
 
 		return SweetSave;
@@ -255,19 +250,15 @@ void USweetDreamsCore::UpdateSaveReference(TObjectPtr<USweetDreamsSaveFile> Save
 	{
 		SavePersistentRef = Save;
 	}
-	else if (Slot == SaveSlotLocal)
-	{
-		SaveLocalRef = Save;
-	}
 	else
 	{
 		CustomSaveFiles.FindOrAdd(Slot) = Save;
 	}
 }
 
-FString USweetDreamsCore::GetCoreSaveSlot(bool bIsPersistent) const
+FString USweetDreamsCore::GetCoreSaveSlot() const
 {
-	return bIsPersistent ? SaveSlotPersistent : SaveSlotLocal;
+	return SaveSlotPersistent;
 }
 
 TObjectPtr<USweetDreamsSaveFile> USweetDreamsCore::GetSaveObject(const FString& Slot) const
@@ -275,10 +266,6 @@ TObjectPtr<USweetDreamsSaveFile> USweetDreamsCore::GetSaveObject(const FString& 
 	if (Slot == SaveSlotPersistent)
 	{
 		return SavePersistentRef;
-	}
-	else if (Slot == SaveSlotLocal)
-	{
-		return SaveLocalRef;
 	}
 	else
 	{
@@ -297,7 +284,7 @@ void USweetDreamsCore::SaveData(TObjectPtr<USweetDreamsSaveFile> Save)
 		return Data.LevelName == CurrentLevelName;
 	});
 
-	for (AActor* Actor : GetAllActorsWorld())
+	for (AActor* Actor : TActorRange<AActor>(GetWorld()))
 	{
 		if (!IsValid(Actor) || !Actor->Implements<USweetDreamsSaveInterface>()) continue;
 
@@ -306,8 +293,8 @@ void USweetDreamsCore::SaveData(TObjectPtr<USweetDreamsSaveFile> Save)
 		Data.LevelName = CurrentLevelName;
 		Data.CustomData = ISweetDreamsSaveInterface::Execute_GetCustomData(Actor);
 
-		FMemoryWriter MemoryWriter(Data.ByteData);
-		FObjectAndNameAsStringProxyArchive Archive(MemoryWriter, true);
+		FMemoryWriter MemoryWriter(Data.ByteData, true);
+		FObjectAndNameAsStringProxyArchive Archive(MemoryWriter, false);
 		Archive.ArIsSaveGame = true;
 		Actor->Serialize(Archive);
 
@@ -321,7 +308,6 @@ void USweetDreamsCore::SaveData(TObjectPtr<USweetDreamsSaveFile> Save)
 void USweetDreamsCore::LoadCoreSaves()
 {
 	LoadSave(SaveSlotPersistent);
-	LoadSave(SaveSlotLocal);
 }
 
 void USweetDreamsCore::LoadData(TObjectPtr<USweetDreamsSaveFile> Save)
@@ -348,7 +334,7 @@ TObjectPtr<AActor> USweetDreamsCore::FindActorByName(FName Name)
 {
 	if (!GetWorld()) return nullptr;
 
-	for (AActor* Actor : GetAllActorsWorld())
+	for (AActor* Actor : TActorRange<AActor>(GetWorld()))
 	{
 		if (IsValid(Actor) && Actor->GetFName().IsEqual(Name))
 		{
@@ -357,21 +343,6 @@ TObjectPtr<AActor> USweetDreamsCore::FindActorByName(FName Name)
 	}
 
 	return nullptr;
-}
-
-TArray<TObjectPtr<AActor>> USweetDreamsCore::GetAllActorsWorld() const
-{
-	TArray<TObjectPtr<AActor>> OutActors;
-
-	for (TActorIterator<AActor> It(GetWorld()); It; ++It)
-	{
-		if (TObjectPtr<AActor> Actor = *It)
-		{
-			OutActors.Add(Actor);
-		}
-	}
-
-	return OutActors;
 }
 
 void USweetDreamsCore::LoadLevel(TSoftObjectPtr<UWorld> Level)

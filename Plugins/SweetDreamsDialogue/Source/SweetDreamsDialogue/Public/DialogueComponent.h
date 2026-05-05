@@ -10,84 +10,69 @@
 class UDialogueData;
 class USweetDreamsDialogueSubsystem;
 
-// An option wrapper component that accesses and updates the Dialogue Subsystem.
+// An actor component that is in charge of executing dialogues and communicating with the subsystem.
 UCLASS( ClassGroup=("SweetDreams"), meta=(BlueprintSpawnableComponent) )
 class SWEETDREAMSDIALOGUE_API UDialogueComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
+
 	UDialogueComponent();
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	void SetDialogueData(UDialogueData* InData);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
 	void StartDialogue(UDialogueData* Dialogue);
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	void UpdateDialogue();
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
+	void ProcessDialogue();
+	void SelectChoice(FGameplayTag Choice);
+	void EndDialogue();
+
 	void SkipAnimatedDialogue();
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	void SelectChoiceAndUpdate(FChoice Choice);
 
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Dialogue")
-	USweetDreamsDialogueSubsystem* GetDialogueSubsystem() const;
+	bool CanAdvanceDialogue();
+	bool ShouldDialogueEnd() const;
 
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueEvent OnDialogueStarted;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueEvent OnDialogueEnded;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueUpdated OnDialogueUpdated;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueAnimation OnDialogueAnimating;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueAnimation OnDialogueAnimationFinished;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueChoice OnDialogueChoices;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueEvent OnDialogueNoChoices;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueAudio OnDialogueAudio;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueSequence OnDialogueSequence;
-	UPROPERTY(BlueprintAssignable)
-	FOnDialogueUpdated OnCustomDialogueMode;
+	TArray<FSweetDreamsDialogue>& GetDialogueArray();
+	const FSweetDreamsDialogue& GetCurrentDialogue() const;
+	int32 GetCurrentDialogueIndex() const;
+	bool IsInExecution() const;
+	FText GetCurrentAnimatedText() const;
+	bool IsAnimatingDialogue() const;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dialogue Component")
+	FOnDialogueDelegate OnDialogueStarted;
+	UPROPERTY(BlueprintAssignable, Category = "Dialogue Component")
+	FOnDialogueDelegate OnDialogueEnded;
 
 protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue Component")
 	bool bDialogueInExecution = false;
-
-	UPROPERTY()
-	TObjectPtr<UDialogueData> DialogueData;
-
-	TArray<FSweetDreamsDialogue> Dialogues;
-	TArray<FSweetDreamsDialogueLog> DialogueLog;
-
-	FSweetDreamsDialogue CurrentDialogue;
-	int32 CurrentDialogueID = 0;
-
+	UPROPERTY(BlueprintReadOnly, Category = "Dialogue Component")
 	bool bIsSelectingChoices = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Dialogue Component")
+	TObjectPtr<UDialogueData> DialogueData;
+	UPROPERTY(BlueprintReadOnly, Category = "Dialogue Component")
+	TArray<FSweetDreamsDialogue> Dialogues;
+	UPROPERTY(BlueprintReadOnly, Category = "Dialogue Component")
+	TArray<FSweetDreamsDialogueLog> DialogueLog;
+	UPROPERTY(BlueprintReadOnly, Category = "Dialogue Component")
+	FSweetDreamsDialogue CurrentDialogue;
+	UPROPERTY(BlueprintReadOnly, Category = "Dialogue Component")
+	int32 CurrentDialogueID = -1;
 
 	// Animation
 	bool bIsAnimating = false;
-
 	float LetterDisplayElapsed = 0.f;
 	int32 CurrentLetterIndex = 0;
-
 	FString TaglessDialogueBody;
-
 	FText AnimatedDialogueBody;
 	FAnimatedDialogueSettings CurrentAnimatedSettings;
 
 private:
 
-	void ProcessDialogue();
-	void EndDialogue();
-
-	// Animation
 	void StartAnimatedDialogue(const FSweetDreamsDialogue& Dialogue);
 	void BuildAnimatedDialogue();
+
+	USweetDreamsDialogueSubsystem* GetDialogueSubsystem() const;
 };

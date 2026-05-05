@@ -6,16 +6,20 @@
 
 class USoundBase;
 class ULevelSequence;
+class UDialogueComponent;
 
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogueEvent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogueDelegate);
+
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDialogueUpdated, FSweetDreamsDialogue, Dialogue, int32, Index);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogueUpdated, FSweetDreamsDialogue, Dialogue);
+
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueAnimation, FSweetDreamsDialogue, Dialogue, int32, Index, FText, AnimatedText);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogueAnimatedText, FText, AnimatedText);
+
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueChoice, FSweetDreamsDialogue, Dialogue, int32, Index, const TArray<FChoice>&, Choices);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogueChoice, const TArray<FChoice>&, Choices);
+
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogueAudio, USoundBase*, Audio);
-UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDialogueSequence, FSweetDreamsDialogue, Dialogue, int32, Index, ULevelSequence*, Sequence);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogueSequence, ULevelSequence*, Sequence);
+

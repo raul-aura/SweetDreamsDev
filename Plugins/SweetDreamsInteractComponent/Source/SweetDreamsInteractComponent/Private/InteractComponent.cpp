@@ -161,9 +161,24 @@ bool UInteractComponent::InteractTraced(AActor*& ActorTraced)
 	return InteractActor(ActorTraced);
 }
 
-bool UInteractComponent::InteractRanged(int32 Index, TArray<AActor*>& ActorsFound)
+bool UInteractComponent::InteractRanged()
 {
-	if (ActorsWithinRange.Num() == 0 || !ActorsWithinRange.IsValidIndex(Index)) return false;
+	if (ActorsWithinRange.IsEmpty()) return false;
+
+	bool bValid = true;
+
+	for (AActor* Actor : ActorsWithinRange)
+	{
+		bValid = InteractActor(Actor);
+	}
+
+	return bValid;
+}
+
+bool UInteractComponent::InteractRangedIndexed(int32 Index)
+{
+	if (ActorsWithinRange.IsEmpty() || !ActorsWithinRange.IsValidIndex(Index)) return false;
+
 	return InteractActor(ActorsWithinRange[Index]);
 }
 

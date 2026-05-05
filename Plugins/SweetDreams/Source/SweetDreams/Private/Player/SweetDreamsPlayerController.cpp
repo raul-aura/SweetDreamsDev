@@ -68,14 +68,6 @@ void ASweetDreamsPlayerController::CameraHorizontal(float Value, float Sensitivi
 void ASweetDreamsPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	if (IsLocalController())
-	{
-		USweetDreamsCore* SweetDreamsCore = USweetDreamsBPLibrary::GetSweetDreamsCore(this);
-		if (IsValid(SweetDreamsCore) && SweetDreamsCore->CoreSettings->bEnableAutoLoadSave)
-		{
-			SweetDreamsCore->LoadCoreSaves();
-		}
-	}
 }
 
 void ASweetDreamsPlayerController::ToggleInputTimer(float Duration)

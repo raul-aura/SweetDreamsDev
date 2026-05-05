@@ -22,6 +22,7 @@ UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* Battl
 			Element->BattleElementData = Data;
 			Element->Owner = BattleComponent;
 			Element->bUnregisterOnEnd = bShouldUnregisterOnEnd;
+			Element->bAutoEnd = Data->bAutoEndOnEventsComplete;
 
 			Element->CreateBattleContext(Targets, ContextClass);
 			Element->DuplicateEvents();
@@ -75,6 +76,9 @@ void UBattleElement::Tick(float DeltaTime)
 
 void UBattleElement::End()
 {
+	EndBattleEvents();
+
+	bAllEventsCompleted = false;
 	bElementInExecution = false;
 	CurrentEvent = nullptr;
 	CurrentEventIndex = 0;
@@ -161,7 +165,6 @@ void UBattleElement::EvaluateAsyncEvents(float DeltaTime)
 	for (int32 i = ActiveAsyncEvents.Num() - 1; i >= 0; --i)
 	{
 		UBattleEvent* Event = ActiveAsyncEvents[i];
-
 		if (!Event)
 		{
 			ActiveAsyncEvents.RemoveAtSwap(i);
@@ -169,20 +172,20 @@ void UBattleElement::EvaluateAsyncEvents(float DeltaTime)
 		}
 
 		const bool bFinished = Event->IsFinished();
-
 		if (bFinished)
 		{
 			Event->EndEvent();
 			ActiveAsyncEvents.RemoveAtSwap(i);
-			continue;
 		}
-
-		Event->Tick(DeltaTime);
+		else
+		{
+			Event->Tick(DeltaTime);
+		}
 	}
 
 	if (ActiveAsyncEvents.Num() == 0 && CurrentEventIndex >= Events.Num())
 	{
-		End();
+		HandleEventsComplete();
 	}
 }
 
@@ -219,7 +222,22 @@ void UBattleElement::AdvanceEvent()
 	{
 		if (ActiveAsyncEvents.Num() == 0)
 		{
-			End();
+			HandleEventsComplete();
 		}
+	}
+}
+
+void UBattleElement::HandleEventsComplete()
+{
+	if (bAllEventsCompleted)
+	{
+		return;
+	}
+
+	bAllEventsCompleted = true;
+
+	if (bAutoEnd)
+	{
+		End();
 	}
 }

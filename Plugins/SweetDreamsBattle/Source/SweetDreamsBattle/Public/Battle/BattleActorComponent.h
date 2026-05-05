@@ -33,6 +33,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnElementExecuted, UBattleActorComponent*, BattleActor, UBattleElement*, Element);
 
 class UBattleElement;
+class UBattleElementData;
 
 UCLASS( ClassGroup=("SweetDreams"), Blueprintable, meta = (BlueprintSpawnableComponent))
 class SWEETDREAMSBATTLE_API UBattleActorComponent : public UActorComponent
@@ -82,6 +83,8 @@ public:
 	TArray<UBattleElement*> GetBattleElements() const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	TArray<UBattleElement*> GetBattleElementsInExecution() const;
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
+	TArray<UBattleElement*> GetBattleElementsByDatas(const TArray<UBattleElementData*>& ElementDatas) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void InitializeParameter(UPARAM(ref) FBattleParameter& Parameter);
@@ -94,13 +97,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	void DecreaseParameterResource(FGameplayTag ParameterTag, float Value);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	bool GetParameter(FGameplayTag ParameterTag, FBattleParameter& OutParam) const;
+	bool GetParameter(FGameplayTag ParameterTag, FBattleParameter& OutParam, float& OutParameterValue, float& OutResourceValue) const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	bool GetHealthParameter(FBattleParameter& OutParam) const;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	bool GetParameterValues(FGameplayTag ParameterTag, float& OutParameterValue, float& OutResourceValue) const;
-	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
-	bool GetHealthParameterValues(float& OutParameterValue, float& OutResourceValue) const;
+	bool GetHealthParameter(FBattleParameter& OutParam, float& OutParameterValue, float& OutResourceValue) const;
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Actor")
 	float GetSimpleParameter(FGameplayTag ParameterTag, float Percentage = 1.f) const;
 
@@ -147,7 +146,12 @@ public:
 	TArray<TObjectPtr<UBattleElement>> BattleElements;
 
 protected:
+
 	virtual void BeginPlay() override;
+
+	// Which battle elements will be initially created and registered on BeginPlay.
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Elements", meta = (ExposeOnSpawn = true))
+	TArray<TObjectPtr<UBattleElementData>> InitialBattleElements;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Battle Actor")
 	bool bIsAlive = true;

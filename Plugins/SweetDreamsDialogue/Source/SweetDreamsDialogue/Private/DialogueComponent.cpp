@@ -28,93 +28,139 @@ void UDialogueComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	if (CurrentLetterIndex >= TaglessDialogueBody.Len())
 	{
 		bIsAnimating = false;
-		//OnDialogueAnimationFinished.Broadcast();
+		SkipAnimatedDialogue();
 	}
-}
-
-void UDialogueComponent::SetDialogueData(UDialogueData* InData)
-{
-	DialogueData = InData;
 }
 
 void UDialogueComponent::StartDialogue(UDialogueData* Dialogue)
 {
 	if (bDialogueInExecution || !IsValid(Dialogue)) return;
 
-	SetDialogueData(Dialogue);
+	DialogueData = Dialogue;
 	Dialogues = DialogueData->Dialogues;
 
 	if (Dialogues.IsEmpty()) return;
 
 	bDialogueInExecution = true;
-	CurrentDialogueID = 0;
+	CurrentDialogueID = -1;
 
 	OnDialogueStarted.Broadcast();
-
-	ProcessDialogue();
-}
-
-void UDialogueComponent::UpdateDialogue()
-{
-	if (bIsAnimating)
-	{
-		SkipAnimatedDialogue();
-		return;
-	}
-
-	if (bIsSelectingChoices) return;
-
-	if (CurrentDialogueID >= Dialogues.Num() - 1)
-	{
-		EndDialogue();
-		return;
-	}
-
-	CurrentDialogueID++;
-	ProcessDialogue();
-}
-
-void UDialogueComponent::SkipAnimatedDialogue()
-{
-	CurrentLetterIndex = TaglessDialogueBody.Len();
-	bIsAnimating = false;
-
-	BuildAnimatedDialogue();
-	//OnDialogueAnimationFinished.Broadcast();
-}
-
-void UDialogueComponent::SelectChoiceAndUpdate(FChoice Choice)
-{
-
-}
-
-USweetDreamsDialogueSubsystem* UDialogueComponent::GetDialogueSubsystem() const
-{
-	return GetWorld()->GetGameInstance()->GetSubsystem<USweetDreamsDialogueSubsystem>();
 }
 
 void UDialogueComponent::ProcessDialogue()
 {
+	CurrentDialogueID++;
 	CurrentDialogue = Dialogues[CurrentDialogueID];
-
-	DialogueLog.Add(FSweetDreamsDialogueLog(CurrentDialogue.Body, CurrentDialogue.SpeakerName, FText()));
-
-	OnDialogueUpdated.Broadcast(CurrentDialogue, CurrentDialogueID);
 
 	StartAnimatedDialogue(CurrentDialogue);
 
-	bIsSelectingChoices = CurrentDialogue.Choices.Num() > 0;
+	bIsSelectingChoices = !CurrentDialogue.Choices.IsEmpty();
+
+	if (!bIsSelectingChoices)
+	{
+		if (USweetDreamsDialogueSubsystem* Subsystem = GetDialogueSubsystem())
+		{
+			FSweetDreamsDialogueLog Log = Subsystem->ConvertDialogueToLog(CurrentDialogue, FText());
+			DialogueLog.Add(Log);
+		}
+	}
+}
+
+bool UDialogueComponent::CanAdvanceDialogue()
+{
+	if (bIsAnimating || bIsSelectingChoices || ShouldDialogueEnd())
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool UDialogueComponent::ShouldDialogueEnd() const
+{
+	return CurrentDialogueID >= Dialogues.Num() - 1;
+}
+
+void UDialogueComponent::SkipAnimatedDialogue()
+{
+	const bool bWasAnimating = bIsAnimating;
+
+	CurrentLetterIndex = TaglessDialogueBody.Len();
+	bIsAnimating = false;
+
+	if (bWasAnimating)
+	{
+		BuildAnimatedDialogue();
+	}
+}
+
+TArray<FSweetDreamsDialogue>& UDialogueComponent::GetDialogueArray()
+{
+	return Dialogues;
+}
+
+const FSweetDreamsDialogue& UDialogueComponent::GetCurrentDialogue() const
+{
+	return CurrentDialogue;
+}
+
+int32 UDialogueComponent::GetCurrentDialogueIndex() const
+{
+	return CurrentDialogueID;
+}
+
+bool UDialogueComponent::IsInExecution() const
+{
+	return bDialogueInExecution;
+}
+
+FText UDialogueComponent::GetCurrentAnimatedText() const
+{
+	return AnimatedDialogueBody;
+}
+
+bool UDialogueComponent::IsAnimatingDialogue() const
+{
+	return bIsAnimating;
+}
+
+void UDialogueComponent::SelectChoice(FGameplayTag Choice)
+{
+	if (const FText* SelectedChoice = CurrentDialogue.Choices.Find(Choice))
+	{
+		if (const FChoiceDialogue* ChoiceDialogues = DialogueData->ChoiceResults.Find(Choice))
+		{
+			Dialogues.Insert(ChoiceDialogues->Dialogues, ChoiceDialogues->IndexToInsert);
+
+			if (USweetDreamsDialogueSubsystem* Subsystem = GetDialogueSubsystem())
+			{
+				FSweetDreamsDialogueLog Log = Subsystem->ConvertDialogueToLog(CurrentDialogue, *SelectedChoice);
+				DialogueLog.Add(Log);
+			}
+
+			bIsSelectingChoices = false;
+		}
+	}
 }
 
 void UDialogueComponent::EndDialogue()
 {
-	bDialogueInExecution = false;
+	if (bDialogueInExecution)
+	{
+		bDialogueInExecution = false;
 
-	DialogueData = nullptr;
-	Dialogues.Empty();
-	DialogueLog.Empty();
+		DialogueData = nullptr;
+		Dialogues.Empty();
+		DialogueLog.Empty();
+		CurrentDialogue = FSweetDreamsDialogue();
+		CurrentDialogueID = -1;
 
-	OnDialogueEnded.Broadcast();
+		bIsAnimating = false;
+		TaglessDialogueBody = "";
+		AnimatedDialogueBody = FText::FromString("");
+
+		OnDialogueEnded.Broadcast();
+	}
 }
 
 void UDialogueComponent::StartAnimatedDialogue(const FSweetDreamsDialogue& Dialogue)
@@ -135,8 +181,11 @@ void UDialogueComponent::BuildAnimatedDialogue()
 	{
 		AnimatedDialogueBody = Subsystem->GetAnimatedDialogue(CurrentDialogue, CurrentLetterIndex);
 	}
+}
 
-	//OnDialogueAnimating.Broadcast(AnimatedDialogueBody);
+USweetDreamsDialogueSubsystem* UDialogueComponent::GetDialogueSubsystem() const
+{
+	return GetWorld()->GetSubsystem<USweetDreamsDialogueSubsystem>();
 }
 
 

@@ -38,7 +38,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Interact")
 	bool InteractTraced(AActor*& ActorTraced);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Interact")
-	bool InteractRanged(int32 Index, TArray<AActor*>& ActorsFound);
+	bool InteractRanged();
+	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Interact")
+	bool InteractRangedIndexed(int32 Index);
 	UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Core|Interact", meta = (DisplayName = "Interact With Actor"))
 	bool InteractActor(AActor* Interactable);
 

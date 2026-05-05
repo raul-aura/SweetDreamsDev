@@ -45,45 +45,30 @@ public:
 	// Manually creates a Persistent Save Object using the specified class. Persistent Saves are not destroyed upon game shutdown.
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext, DeterminesOutputType = "SaveClass"), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* CreatePersistentSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, bool& bSuccessful); 
-	// Manually creates a Local Save Object using the specified class. Local Saves are destroyed upon game shutdown.
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext, DeterminesOutputType = "SaveClass"), Category = "Sweet Dreams|Core|Save")
-	static USweetDreamsSaveFile* CreateLocalSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, bool& bSuccessful); 
 	// Saves a custom Game Object to disk if found on the SweetDreamsCore Subsystem using the custom slot.
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static bool SaveCustomGame(const UObject* WorldContext, FString CustomSlot);
 	// Saves the Persistent Save to disk.
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static bool SavePersistentGame(const UObject* WorldContext);
-	// Saves the Local Save to disk.
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
-	static bool SaveLocalGame(const UObject* WorldContext);
 	// Loads a custom Save from disk and updates the variable on the SweetDreamsCore Subsystem if found using the custom slot.
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* LoadCustomGame(const UObject* WorldContext, FString CustomSlot);
 	// Loads the Persistent Save file from disk.
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* LoadPersistentGame(const UObject* WorldContext);
-	// Loads the Local Save file from disk.
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
-	static USweetDreamsSaveFile* LoadLocalGame(const UObject* WorldContext);
 	// Deletes a custom Save Object from disk if found using the custom slot.
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static bool DeleteCustomGame(const UObject* WorldContext, FString CustomSlot);
 	// Deletes the Persistent Save file from disk.
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static bool DeletePersistentGame(const UObject* WorldContext);
-	// Deletes the Local Save file from disk.
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
-	static bool DeleteLocalGame(const UObject* WorldContext);
 	// Gets the custom Save Object from the SweetDreamsCore Subsystem using the custom slot.
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* GetCustomSave(const UObject* WorldContext, FString Slot);
 	// Gets the saved Persistent Save Object from the SweetDreamsCore Subsystem.
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
 	static USweetDreamsSaveFile* GetPersistentSave(const UObject* WorldContext);
-	// Gets the saved Local Save Object from the SweetDreamsCore Subsystem.
-	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext", CallableWithoutWorldContext), Category = "Sweet Dreams|Core|Save")
-	static USweetDreamsSaveFile* GetLocalSave(const UObject* WorldContext);
 
 	// WORLD
 

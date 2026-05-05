@@ -15,6 +15,7 @@ class SWEETDREAMSBATTLE_API UBattleElementData : public UDataAsset
     GENERATED_BODY()
 
 public:
+
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Element")
     FName ElementUniqueName;
 
@@ -26,6 +27,11 @@ public:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Element", meta = (MultiLine = true))
     FText Message;
+
+    /* If true, the element will automatically end when all its events finish.
+    If false, the element remains active and must be ended manually with End(). */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Element")
+    bool bAutoEndOnEventsComplete = true;
 
     UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Events")
     TArray<TObjectPtr<UBattleEvent>> Events;

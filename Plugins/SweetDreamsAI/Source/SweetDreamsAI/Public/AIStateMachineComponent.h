@@ -30,6 +30,8 @@ public:
 	{}
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStateUpdated, UAIStateMachineComponent*, Component, const FSweetDreamsStateRuntime&, State);
+
 UCLASS( ClassGroup=("SweetDreams"), Blueprintable, meta=(BlueprintSpawnableComponent) )
 class SWEETDREAMSAI_API UAIStateMachineComponent : public UActorComponent
 {
@@ -63,6 +65,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Sweet Dreams|AI")
 	bool CanUpdateCurrentState() const;
 	virtual bool CanUpdateCurrentState_Implementation() const;
+
+	UPROPERTY(BlueprintAssignable, Category = "AI")
+	FOnStateUpdated OnStateUpdated;
 
 protected:
 

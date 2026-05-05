@@ -11,39 +11,129 @@ void USweetDreamsDialogueSubsystem::Initialize(FSubsystemCollectionBase& Collect
 	Super::Initialize(Collection);
 }
 
-void USweetDreamsDialogueSubsystem::Deinitialize()
+USweetDreamsDialogueSubsystem* USweetDreamsDialogueSubsystem::Get(const UObject* WorldContextObject)
 {
-	Super::Deinitialize();
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
+
+	return World->GetSubsystem<USweetDreamsDialogueSubsystem>();
 }
 
-FSweetDreamsDialogueLog USweetDreamsDialogueSubsystem::ConvertDialogueToLog(const FSweetDreamsDialogue& Dialogue, const FChoice SelectedChoice) const
+void USweetDreamsDialogueSubsystem::StartDialogue(UDialogueComponent* Component, UDialogueData* Dialogue)
 {
-	FText LogText = Dialogue.Body;
-	FText LogName = Dialogue.SpeakerName;
-
-	return FSweetDreamsDialogueLog(LogText, LogName, SelectedChoice.Body);
-}
-
-void USweetDreamsDialogueSubsystem::InsertDialogue(TArray<FSweetDreamsDialogue>& CurrentDialogue, const UDialogueData* ToInsert, int32 Index)
-{
-	if (IsValid(ToInsert))
+	if (IsValid(Component))
 	{
-		TArray<FSweetDreamsDialogue> NewDialogue = ToInsert->Dialogues;
+		CurrentDialogueComponent = Component;
 
-		if (Index > 0)
+		Component->StartDialogue(Dialogue);
+
+		OnDialogueStarted.Broadcast();
+
+		UpdateDialogue();
+	}
+}
+
+void USweetDreamsDialogueSubsystem::UpdateDialogue()
+{
+	if (UDialogueComponent* Component = CurrentDialogueComponent.Get())
+	{
+		if (Component->CanAdvanceDialogue())
 		{
-			CurrentDialogue.Insert(NewDialogue, Index);
+			Component->ProcessDialogue();
+
+			const FSweetDreamsDialogue& CurrentDialogue = Component->GetCurrentDialogue();
+			OnDialogueUpdated.Broadcast(CurrentDialogue);
+
+			if (!CurrentDialogue.Choices.IsEmpty())
+			{
+				TArray<FChoice> Choices;
+				Choices.Reserve(CurrentDialogue.Choices.Num());
+
+				for (const TPair<FGameplayTag, FText>& Pair : CurrentDialogue.Choices)
+				{
+					Choices.Emplace(Pair.Key, Pair.Value);
+				}
+
+				OnDialogueChoices.Broadcast(Choices);
+			}
 		}
-		else
+		else if (Component->IsAnimatingDialogue())
 		{
-			CurrentDialogue.Append(NewDialogue);
+			Component->SkipAnimatedDialogue();
+		}
+		else if (Component->ShouldDialogueEnd())
+		{
+			EndDialogue();
 		}
 	}
 }
 
-void USweetDreamsDialogueSubsystem::SelectChoice(const FChoice& Choice)
+void USweetDreamsDialogueSubsystem::EndDialogue()
 {
+	if (UDialogueComponent* Component = CurrentDialogueComponent.Get())
+	{
+		Component->EndDialogue();
 
+		OnDialogueEnded.Broadcast();
+	}
+
+	CurrentDialogueComponent = nullptr;
+}
+
+void USweetDreamsDialogueSubsystem::SelectChoiceAndUpdate(FGameplayTag Choice)
+{
+	if (UDialogueComponent* Component = CurrentDialogueComponent.Get())
+	{
+		Component->SelectChoice(Choice);
+
+		UpdateDialogue();
+	}
+}
+
+void USweetDreamsDialogueSubsystem::SkipAnimatedDialogue()
+{
+	if (UDialogueComponent* Component = CurrentDialogueComponent.Get())
+	{
+		Component->SkipAnimatedDialogue();
+
+		OnDialogueAnimationFinished.Broadcast(Component->GetCurrentAnimatedText());
+	}
+}
+
+bool USweetDreamsDialogueSubsystem::IsAnyDialogueInExecution() const
+{
+	return CurrentDialogueComponent.IsValid();
+}
+
+FSweetDreamsDialogueLog USweetDreamsDialogueSubsystem::ConvertDialogueToLog(const FSweetDreamsDialogue& Dialogue, const FText SelectedChoice) const
+{
+	FText LogText = Dialogue.Body;
+	FText LogName = Dialogue.SpeakerName;
+
+	return FSweetDreamsDialogueLog(LogText, LogName, SelectedChoice);
+}
+
+bool USweetDreamsDialogueSubsystem::InsertDialogue(const UDialogueData* ToInsert, int32 Index)
+{
+	if (UDialogueComponent* Component = CurrentDialogueComponent.Get())
+	{
+		TArray<FSweetDreamsDialogue>& CurrentDialogue = Component->GetDialogueArray();
+
+		if (IsValid(ToInsert))
+		{
+			if (Index >= 0 && Index <= CurrentDialogue.Num())
+			{
+				CurrentDialogue.Insert(ToInsert->Dialogues, Index);
+			}
+			else
+			{
+				CurrentDialogue.Append(ToInsert->Dialogues);
+			}
+
+			return true;
+		}
+	}
+
+	return false;
 }
 
 FString USweetDreamsDialogueSubsystem::GetTaglessAnimatedDialogue(const FSweetDreamsDialogue& Dialogue) const
@@ -100,5 +190,8 @@ FText USweetDreamsDialogueSubsystem::GetAnimatedDialogue(const FSweetDreamsDialo
 		}
 	}
 
-	return FText::FromString(DisplayText);
+	FText AnimatedText = FText::FromString(DisplayText);
+	OnDialogueAnimating.Broadcast(AnimatedText);
+
+	return AnimatedText;
 }

@@ -7,7 +7,7 @@
 #include "DialogueStructs.h"
 #include "DialogueData.generated.h"
 
-UCLASS()
+UCLASS(BlueprintType)
 class SWEETDREAMSDIALOGUE_API UDialogueData : public UDataAsset
 {
 	GENERATED_BODY()

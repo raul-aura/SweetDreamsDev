@@ -25,6 +25,13 @@ void UBattleActorComponent::BeginPlay()
 	{
 		InitializeParameter(Parameter.Value);
 	}
+
+	for (TObjectPtr<UBattleElementData> Data : InitialBattleElements)
+	{
+		TArray<UBattleActorComponent*> OutTargets;
+		UBattleElement* Element = UBattleElement::CreateBattleElement(this, Data, OutTargets, nullptr, nullptr);
+		RegisterBattleElement(Element);
+	}
 }
 
 void UBattleActorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -87,6 +94,9 @@ void UBattleActorComponent::UnregisterBattleElement(UBattleElement* BattleElemen
 	{
 		if (BattleElements.Contains(BattleElement))
 		{
+			// TO DO: make event remove itself when removed from battle actor component
+			OnBattleElementExecuted.RemoveAll(BattleElement);
+
 			BattleElements.Remove(BattleElement);
 		}
 	}
@@ -276,6 +286,30 @@ TArray<UBattleElement*> UBattleActorComponent::GetBattleElementsInExecution() co
 	return ElementsInExecution;
 }
 
+TArray<UBattleElement*> UBattleActorComponent::GetBattleElementsByDatas(const TArray<UBattleElementData*>& ElementDatas) const
+{
+	TArray<UBattleElement*> Result;
+
+	if (BattleElements.IsEmpty() || ElementDatas.IsEmpty())
+	{
+		return Result;
+	}
+
+	TSet<UBattleElementData*> DataSet(ElementDatas);
+
+	for (UBattleElement* Element : BattleElements)
+	{
+		if (!IsValid(Element)) continue;
+
+		if (DataSet.Contains(Element->BattleElementData))
+		{
+			Result.Add(Element);
+		}
+	}
+
+	return Result;
+}
+
 void UBattleActorComponent::InitializeParameter(UPARAM(ref)FBattleParameter& Parameter)
 {
 	if (Parameter.Data)
@@ -348,46 +382,28 @@ void UBattleActorComponent::DecreaseParameterResource(FGameplayTag ParameterTag,
 	}
 }
 
-bool UBattleActorComponent::GetParameter(FGameplayTag ParameterTag, FBattleParameter& OutParam) const
+bool UBattleActorComponent::GetParameter(FGameplayTag ParameterTag, FBattleParameter& OutParam, float& OutParameterValue, float& OutResourceValue) const
 {
 	if (const FBattleParameter* Parameter = Parameters.Find(ParameterTag))
 	{
 		OutParam = *Parameter;
+		OutParameterValue = Parameter->GetParameterValue();
+		OutResourceValue = Parameter->GetResourceValue();
+
 		return true;
 	}
 
 	return false;
 }
 
-bool UBattleActorComponent::GetHealthParameter(FBattleParameter& OutParam) const
+bool UBattleActorComponent::GetHealthParameter(FBattleParameter& OutParam, float& OutParameterValue, float& OutResourceValue) const
 {
 	if (const FBattleParameter* Health = Parameters.Find(HealthParameterTag))
 	{
 		OutParam = *Health;
-		return true;
-	}
-
-	return false;
-}
-
-bool UBattleActorComponent::GetParameterValues(FGameplayTag ParameterTag, float& OutParameterValue, float& OutResourceValue) const
-{
-	if (const FBattleParameter* Parameter = Parameters.Find(ParameterTag))
-	{
-		OutParameterValue = Parameter->GetParameterValue();
-		OutResourceValue = Parameter->GetResourceValue();
-		return true;
-	}
-
-	return false;
-}
-
-bool UBattleActorComponent::GetHealthParameterValues(float& OutParameterValue, float& OutResourceValue) const
-{
-	if (const FBattleParameter* Health = Parameters.Find(HealthParameterTag))
-	{
 		OutParameterValue = Health->GetParameterValue();
 		OutResourceValue = Health->GetResourceValue();
+
 		return true;
 	}
 

@@ -63,13 +63,12 @@ public:
 	void LoadCoreSaves();
 	void LoadData(TObjectPtr<USweetDreamsSaveFile> Save);
 	void UpdateSaveReference(TObjectPtr<USweetDreamsSaveFile> Save, FString Slot);
-	FString GetCoreSaveSlot(bool bIsPersistent = true) const;
+	FString GetCoreSaveSlot() const;
 	TObjectPtr<USweetDreamsSaveFile> GetSaveObject(const FString& Slot) const;
 	/*
 	Helper functions for the save system to get actors.
 	*/
 	TObjectPtr<AActor> FindActorByName(FName Name);
-	TArray<TObjectPtr<AActor>> GetAllActorsWorld() const;
 
 	/*
 	Level loading system that communicates with the ASweetDreamsGameMode class.
@@ -101,9 +100,6 @@ protected:
 	*/
 	TMap<FString, TObjectPtr<USweetDreamsSaveFile>> CustomSaveFiles;
 	TObjectPtr<USweetDreamsSaveFile> SavePersistentRef = nullptr;
-	TObjectPtr<USweetDreamsSaveFile> SaveLocalRef = nullptr;
 	TSubclassOf<USweetDreamsSaveFile> SaveClassPersistent = nullptr;
-	TSubclassOf<USweetDreamsSaveFile> SaveClassLocal = nullptr;
 	FString SaveSlotPersistent = "SweetDream_PERSISTENT";
-	FString SaveSlotLocal = "SweetDream_LOCAL";
 };

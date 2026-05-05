@@ -28,8 +28,8 @@ UInventoryComponent* UInventoryComponent::GetInventoryFromActor(const AActor* Ac
 	{
 		return nullptr;
 	}
-	UInventoryComponent* Component = Actor->FindComponentByClass<UInventoryComponent>();
-	return Component;
+
+	return Actor->FindComponentByClass<UInventoryComponent>();
 }
 
 USweetDreamsItem* UInventoryComponent::GetItemData(UInventoryItem* Item, bool& ValidData)
@@ -42,9 +42,12 @@ USweetDreamsItem* UInventoryComponent::GetItemData(UInventoryItem* Item, bool& V
 int32 UInventoryComponent::AddItem(UInventoryItem*& ItemAdded, USweetDreamsItem* ItemData, int32 Count, bool bAddAsUnique)
 {
     int32 Index = -1;
+
     if (!IsValid(ItemData) || Count <= 0) return Index;
+
     UInventoryItem* Item = nullptr;
     bool bCreated = false;
+
     if (!bAddAsUnique && HasItem(ItemData, Item, Index))
     {
         //HasItem filled Item and Index.
@@ -54,6 +57,7 @@ int32 UInventoryComponent::AddItem(UInventoryItem*& ItemAdded, USweetDreamsItem*
         Item = NewObject<UInventoryItem>(this);
         bCreated = true;
     }
+
     if (IsValid(Item))
     {
         if (bCreated)
@@ -70,6 +74,7 @@ int32 UInventoryComponent::AddItem(UInventoryItem*& ItemAdded, USweetDreamsItem*
         ItemAdded = Item;
         OnItemAdded.Broadcast(Item, Index);
     }
+
     return Index;
 }
 
@@ -133,6 +138,7 @@ void UInventoryComponent::RemoveItemAll(UPARAM(ref)UInventoryItem*& Item)
 bool UInventoryComponent::HasItem(USweetDreamsItem* ItemData, UInventoryItem*& FoundItem, int32& Index) const
 {
     if (!IsValid(ItemData)) return false;
+
     for (int32 i = 0; i < Items.Num(); i++)
     {
         if (IsValid(Items[i]) && Items[i]->GetItemData() == ItemData)
@@ -142,17 +148,32 @@ bool UInventoryComponent::HasItem(USweetDreamsItem* ItemData, UInventoryItem*& F
             return true;
         }
     }
+
     return false;
 }
 
 UInventoryItem* UInventoryComponent::GetItemByIndex(int32 Index, bool& bFound) const
 {
     bFound = false;
+
     if (Items.Num() > 0 && Items.IsValidIndex(Index))
     {
         bFound = true;
         return Items[Index];
     }
+
+    return nullptr;
+}
+
+UInventoryItem* UInventoryComponent::GetItemByTag(const FGameplayTag& Tag, bool& bFound) const
+{
+    bFound = false;
+
+    for (UInventoryItem* Item : GetItems())
+    {
+        if (Item && Item->GetItemData()->Identifier.MatchesTagExact(Tag)) return Item;
+    }
+
     return nullptr;
 }
 

@@ -7,5 +7,4 @@
 USweetDreamsSettings::USweetDreamsSettings()
 {
 	PersistentClass = USweetDreamsSaveFile::StaticClass();
-	LocalClass = USweetDreamsSaveFile::StaticClass();
 }

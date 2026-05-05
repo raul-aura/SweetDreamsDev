@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "GameplayTagContainer.h"
 #include "SweetDreamsItem.generated.h"
 
 class UItemParameters;
@@ -14,11 +15,12 @@ class SWEETDREAMSITEMSYSTEM_API USweetDreamsItem : public UDataAsset
 	GENERATED_BODY()
 
 public:
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
-    FName ItemUniqueName;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
-    FText ItemName;
+    FGameplayTag Identifier;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
+    FText DisplayText;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item", meta = (MultiLine = true))
     FText Description;

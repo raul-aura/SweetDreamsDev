@@ -68,17 +68,7 @@ USweetDreamsSaveFile* USweetDreamsBPLibrary::CreatePersistentSave(const UObject*
 {
 	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		FString Slot = Core->GetCoreSaveSlot(true);
-		return Core->CreateSave(SaveClass, Slot, bSuccessful);
-	}
-	return nullptr;
-}
-
-USweetDreamsSaveFile* USweetDreamsBPLibrary::CreateLocalSave(const UObject* WorldContext, TSubclassOf<USweetDreamsSaveFile> SaveClass, bool& bSuccessful)
-{
-	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
-	{
-		FString Slot = Core->GetCoreSaveSlot(false);
+		FString Slot = Core->GetCoreSaveSlot();
 		return Core->CreateSave(SaveClass, Slot, bSuccessful);
 	}
 	return nullptr;
@@ -97,17 +87,7 @@ bool USweetDreamsBPLibrary::SavePersistentGame(const UObject* WorldContext)
 {
 	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		FString Slot = Core->GetCoreSaveSlot(true);
-		return Core->Save(Slot);
-	}
-	return false;
-}
-
-bool USweetDreamsBPLibrary::SaveLocalGame(const UObject* WorldContext)
-{
-	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
-	{
-		FString Slot = Core->GetCoreSaveSlot(false);
+		FString Slot = Core->GetCoreSaveSlot();
 		return Core->Save(Slot);
 	}
 	return false;
@@ -126,17 +106,7 @@ USweetDreamsSaveFile* USweetDreamsBPLibrary::LoadPersistentGame(const UObject* W
 {
 	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		FString Slot = Core->GetCoreSaveSlot(true);
-		return Core->LoadSave(Slot);
-	}
-	return nullptr;
-}
-
-USweetDreamsSaveFile* USweetDreamsBPLibrary::LoadLocalGame(const UObject* WorldContext)
-{
-	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
-	{
-		FString Slot = Core->GetCoreSaveSlot(false);
+		FString Slot = Core->GetCoreSaveSlot();
 		return Core->LoadSave(Slot);
 	}
 	return nullptr;
@@ -155,17 +125,7 @@ bool USweetDreamsBPLibrary::DeletePersistentGame(const UObject* WorldContext)
 {
 	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		FString Slot = Core->GetCoreSaveSlot(true);
-		return Core->DeleteSave(Slot);
-	}
-	return false;
-}
-
-bool USweetDreamsBPLibrary::DeleteLocalGame(const UObject* WorldContext)
-{
-	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
-	{
-		FString Slot = Core->GetCoreSaveSlot(false);
+		FString Slot = Core->GetCoreSaveSlot();
 		return Core->DeleteSave(Slot);
 	}
 	return false;
@@ -184,17 +144,7 @@ USweetDreamsSaveFile* USweetDreamsBPLibrary::GetPersistentSave(const UObject* Wo
 {
 	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
 	{
-		FString Slot = Core->GetCoreSaveSlot(true);
-		return Core->GetSaveObject(Slot);
-	}
-	return nullptr;
-}
-
-USweetDreamsSaveFile* USweetDreamsBPLibrary::GetLocalSave(const UObject* WorldContext)
-{
-	if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
-	{
-		FString Slot = Core->GetCoreSaveSlot(false);
+		FString Slot = Core->GetCoreSaveSlot();
 		return Core->GetSaveObject(Slot);
 	}
 	return nullptr;
@@ -209,12 +159,12 @@ void USweetDreamsBPLibrary::PauseAllActors(UObject* WorldContext, TSubclassOf<AA
 {
 	if (UWorld* World = GetValidWorld(WorldContext))
 	{
-		TArray<AActor*> AllActors;
-		if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+		for (AActor* Actor : TActorRange<AActor>(World))
 		{
-			AllActors = Core->GetAllActorsWorld();
+			if (!IsValid(Actor) || (IsValid(IgnoreActorClass) && Actor->IsA(IgnoreActorClass))) continue;
+
+			Actor->CustomTimeDilation = 0.f;
 		}
-		SetTimeDilationActors(WorldContext, AllActors, 0.f, IgnoreActorClass);
 	}
 }
 
@@ -227,12 +177,12 @@ void USweetDreamsBPLibrary::ResumeAllActors(UObject* WorldContext, TSubclassOf<A
 {
 	if (UWorld* World = GetValidWorld(WorldContext))
 	{
-		TArray<AActor*> AllActors;
-		if (USweetDreamsCore* Core = GetSweetDreamsCore(WorldContext))
+		for (AActor* Actor : TActorRange<AActor>(World))
 		{
-			AllActors = Core->GetAllActorsWorld();
+			if (!IsValid(Actor) || (IsValid(IgnoreActorClass) && Actor->IsA(IgnoreActorClass))) continue;
+
+			Actor->CustomTimeDilation = 1.f;
 		}
-		SetTimeDilationActors(WorldContext, AllActors, 1.f, IgnoreActorClass);
 	}
 }
 
@@ -243,6 +193,7 @@ void USweetDreamsBPLibrary::SetTimeDilationActors(UObject* WorldContext, TArray<
 		for (AActor* Actor : InActors)
 		{
 			if (!IsValid(Actor) || (IsValid(IgnoreActorClass) && Actor->IsA(IgnoreActorClass))) continue;
+
 			Actor->CustomTimeDilation = NewTimeDilation;
 		}
 	}
