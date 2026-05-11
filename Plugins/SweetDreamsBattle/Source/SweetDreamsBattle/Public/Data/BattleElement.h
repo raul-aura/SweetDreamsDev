@@ -11,7 +11,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBattleElementDelegateBP);
 class UBattleEvent;
 class UBattleElementData;
 class UBattleActorComponent;
-class UBattleContext;
 
 UCLASS(BlueprintType, Blueprintable)
 class SWEETDREAMSBATTLE_API UBattleElement : public UObject
@@ -21,8 +20,9 @@ class SWEETDREAMSBATTLE_API UBattleElement : public UObject
 public:
 
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Element", meta = (DeterminesOutputType = "CustomClass", AdvancedDisplay = 2, AutoCreateRefTerm = "Targets"))
-    static UBattleElement* CreateBattleElement(UBattleActorComponent* BattleComponent, UBattleElementData* Data, const TArray<UBattleActorComponent*>& Targets, TSubclassOf<UBattleElement> CustomClass, TSubclassOf<UBattleContext> CustomContextClass, bool bShouldUnregisterOnEnd = false, bool bAutoExecute = false);
-    
+    static UBattleElement* CreateBattleElement(UBattleActorComponent* InOwner, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass);
+    bool InitializeBattleElement(UBattleActorComponent* InOwner, UBattleElementData* Data);
+
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Element")
     void Execute(bool bResetExecution = true);
     void Tick(float DeltaTime);
@@ -31,17 +31,18 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Element")
     void EndBattleEvents();
 
+    UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Context")
+    TArray<UBattleActorComponent*> GetSelectedTargets(const FSelectedTargetsSettings& Settings) const;
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Element")
-    void UpdateContextCandidates(TArray<UBattleActorComponent*> InCandidates);
+    UBattleActorComponent* GetOwner() const;
     UFUNCTION(BlueprintCallable, Category = "Sweet Dreams|Battle|Battle Element")
     TArray<UBattleEvent*> GetBattleEvents() const;
 
+    FOnBattleElementDelegate OnBattleElementEnd;
     UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Battle|Battle Element")
     FOnBattleElementDelegateBP OnBattleElementExecuted;
     UPROPERTY(BlueprintAssignable, Category = "Sweet Dreams|Battle|Battle Element")
     FOnBattleElementDelegateBP OnBattleElementEnded;
-
-    FOnBattleElementDelegate OnBattleElementEnd;
 
     UPROPERTY(BlueprintReadOnly, Category = "Data")
     TObjectPtr<UBattleElementData> BattleElementData = nullptr;
@@ -54,19 +55,18 @@ public:
 
 protected:
 
-    void CreateBattleContext(TArray<UBattleActorComponent*> InTargets, TSubclassOf<UBattleContext> CustomContextClass);
     void DuplicateEvents();
 
     void EvaluateEvents(float DeltaTime);
-    void EvaluateAsyncEvents(float DeltaTime);
     void StartCurrentEvent();
     void AdvanceEvent();
     void HandleEventsComplete();
 
     UPROPERTY(BlueprintReadOnly, Category = "Data")
     TObjectPtr<UBattleActorComponent> Owner = nullptr;
-    UPROPERTY(BlueprintReadOnly, Category = "Data")
-    TObjectPtr<UBattleContext> BattleContext = nullptr;
+    UPROPERTY(BlueprintReadWrite, Category = "Battle Context")
+    TArray<TObjectPtr<UBattleActorComponent>> CandidateBattleActors;
+
     UPROPERTY(BlueprintReadOnly, Category = "Data")
     bool bAllEventsCompleted = false;
     UPROPERTY(BlueprintReadOnly, Category = "Data")
@@ -74,8 +74,6 @@ protected:
 
     UPROPERTY(BlueprintReadOnly, Category = "Events")
     TArray<TObjectPtr<UBattleEvent>> Events;
-    UPROPERTY(BlueprintReadOnly, Category = "Events")
-    TArray<TObjectPtr<UBattleEvent>> ActiveAsyncEvents;
     UPROPERTY(BlueprintReadOnly, Category = "Events")
     TObjectPtr<UBattleEvent> CurrentEvent;
     UPROPERTY(BlueprintReadOnly, Category = "Events")

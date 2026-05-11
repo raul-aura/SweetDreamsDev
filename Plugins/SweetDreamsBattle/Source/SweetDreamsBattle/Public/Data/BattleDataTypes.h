@@ -16,8 +16,8 @@ UENUM(BlueprintType)
 enum class ETargetSelectionScope : uint8
 {
 	Candidates,
-	CandidatesAndInstigator UMETA(DisplayName = "Candidates and Instigator"),
-	InstigatorOnly UMETA(DisplayName = "Instigator Only")
+	CandidatesAndOwner UMETA(DisplayName = "Candidates and Owner"),
+	OwnerOnly UMETA(DisplayName = "Owner Only")
 };
 
 USTRUCT(BlueprintType)
@@ -30,10 +30,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Selected Targets Settings")
 	ETargetSelectionScope TargetType = ETargetSelectionScope::Candidates;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Selected Targets Settings", meta = (EditCondition = "TargetType!=ETargetSelectionScope::InstigatorOnly", EditConditionHides))
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Selected Targets Settings", meta = (EditCondition = "TargetType!=ETargetSelectionScope::OwnerOnly", EditConditionHides))
 	int32 MaxAmount = 0;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Selected Targets Settings", meta = (EditCondition = "TargetType!=ETargetSelectionScope::InstigatorOnly", EditConditionHides))
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Selected Targets Settings", meta = (EditCondition = "TargetType!=ETargetSelectionScope::OwnerOnly", EditConditionHides))
 	bool bRandomizeSelection = false;
 
 	FSelectedTargetsSettings() = default;
@@ -45,83 +45,6 @@ enum class ETeamType : uint8
 	None,
 	Player,
 	Hostile
-};
-
-USTRUCT(BlueprintType)
-struct SWEETDREAMSBATTLE_API FDamageHealTargetResult
-{
-	GENERATED_BODY()
-
-public:
-
-	UPROPERTY(BlueprintReadOnly, Category = "Damage/Heal Result")
-	TObjectPtr<class UBattleActorComponent> Target = nullptr;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Damage/Heal Result")
-	float AppliedValue = 0.f;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Damage/Heal Result")
-	bool bKilled = false;
-
-	FDamageHealTargetResult() = default;
-
-	FDamageHealTargetResult(UBattleActorComponent* InTarget, float InValue, bool bInKilled)
-		: Target(InTarget)
-		, AppliedValue(InValue)
-		, bKilled(bInKilled)
-	{
-	}
-};
-
-USTRUCT(BlueprintType)
-struct SWEETDREAMSBATTLE_API FDamageHealResult
-{
-	GENERATED_BODY()
-
-public:
-
-	UPROPERTY(BlueprintReadOnly, Category = "Damage/Heal Result")
-	TObjectPtr<UBattleActorComponent> Instigator = nullptr;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Damage/Heal Result")
-	FGameplayTagContainer EffectTags;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Damage/Heal Result")
-	TArray<FDamageHealTargetResult> Targets;
-
-	FDamageHealResult() = default;
-
-	FDamageHealResult(
-		UBattleActorComponent* InInstigator,
-		FGameplayTagContainer InEffectTag)
-		: Instigator(InInstigator)
-		, EffectTags(InEffectTag)
-	{}
-
-	float GetTotalAppliedValue() const
-	{
-		float Total = 0.f;
-
-		for (const FDamageHealTargetResult& Target : Targets)
-		{
-			Total += Target.AppliedValue;
-		}
-
-		return Total;
-	}
-
-	bool HasKilledAny() const
-	{
-		for (const FDamageHealTargetResult& Target : Targets)
-		{
-			if (Target.bKilled)
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
 };
 
 UENUM(BlueprintType)

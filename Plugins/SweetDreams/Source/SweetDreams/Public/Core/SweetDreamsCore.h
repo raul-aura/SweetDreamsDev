@@ -14,7 +14,8 @@ namespace ELogVerbosity { enum Type : uint8; }
 DECLARE_LOG_CATEGORY_EXTERN(LogSweetDreams, Log, All);
 using FNativeLogFn = TFunction<void(ELogVerbosity::Type, const TCHAR*)>;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelLoadOperation, UWorld*, Level);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FLevelLoadOperation, UWorld*, Level);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSaveOperation, USweetDreamsSaveFile*, SaveFile);
 
 UENUM(BlueprintType)
 enum class EPrintType : uint8
@@ -25,7 +26,7 @@ enum class EPrintType : uint8
 };
 
 UCLASS(Category = "SweetDreams|Core")
-class SWEETDREAMS_API USweetDreamsCore : public UGameInstanceSubsystem
+class SWEETDREAMS_API USweetDreamsCore final : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
@@ -89,11 +90,15 @@ public:
 	TMap<FName, bool> GlobalBools;
 
 	UPROPERTY(BlueprintAssignable)
-	FOnLevelLoadOperation OnLevelLoadStarted;
+	FLevelLoadOperation OnLevelLoadStarted;
 	UPROPERTY(BlueprintAssignable)
-	FOnLevelLoadOperation OnLevelLoadFinished;
+	FLevelLoadOperation OnLevelLoadFinished;
+	UPROPERTY(BlueprintAssignable)
+	FSaveOperation OnGameSaved;
+	UPROPERTY(BlueprintAssignable)
+	FSaveOperation OnGameLoaded;
 
-protected:
+private:
 
 	/*
 	Variables for the save system.

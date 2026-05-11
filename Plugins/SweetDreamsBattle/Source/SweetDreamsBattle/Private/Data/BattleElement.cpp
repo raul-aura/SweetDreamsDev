@@ -2,39 +2,24 @@
 #include "Data/BattleElement.h"
 #include "Data/BattleElementData.h"
 #include "Data/BattleEvent.h"
-#include "Data/BattleContext.h"
 #include "Battle/BattleActorComponent.h"
 
-UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* BattleComponent, 
-	UBattleElementData* Data, const TArray<UBattleActorComponent*>& Targets,
-	TSubclassOf<UBattleElement> CustomClass, TSubclassOf<UBattleContext> CustomContextClass, 
-	bool bShouldUnregisterOnEnd, bool bAutoExecute)
+#include "Algo/RandomShuffle.h"
+
+UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* InOwner, UBattleElementData* Data, TSubclassOf<UBattleElement> CustomClass)
 {
-	if (IsValid(BattleComponent) && IsValid(Data))
+	if (IsValid(InOwner) && IsValid(Data))
 	{
 		TSubclassOf<UBattleElement> ElementClass = CustomClass.Get() ? CustomClass.Get() : UBattleElement::StaticClass();
-		TSubclassOf<UBattleContext> ContextClass = CustomContextClass.Get() ? CustomContextClass.Get() : UBattleContext::StaticClass();
 
-		UBattleElement* Element = NewObject<UBattleElement>(BattleComponent, ElementClass, Data->ElementUniqueName, RF_Transient);
+		UBattleElement* Element = NewObject<UBattleElement>(InOwner, ElementClass, Data->ElementUniqueName, RF_Transient);
 
 		if (IsValid(Element))
 		{
-			Element->BattleElementData = Data;
-			Element->Owner = BattleComponent;
-			Element->bUnregisterOnEnd = bShouldUnregisterOnEnd;
-			Element->bAutoEnd = Data->bAutoEndOnEventsComplete;
-
-			Element->CreateBattleContext(Targets, ContextClass);
-			Element->DuplicateEvents();
-
-			BattleComponent->RegisterBattleElement(Element);
-
-			if (bAutoExecute)
+			if (Element->InitializeBattleElement(InOwner, Data))
 			{
-				Element->Execute();
+				return Element;
 			}
-
-			return Element;
 		}
 	}
 	else
@@ -43,6 +28,30 @@ UBattleElement* UBattleElement::CreateBattleElement(UBattleActorComponent* Battl
 	}
 
 	return nullptr;
+}
+
+bool UBattleElement::InitializeBattleElement(UBattleActorComponent* InOwner, UBattleElementData* Data)
+{
+	if (IsValid(InOwner) && IsValid(Data))
+	{
+		BattleElementData = Data;
+		Owner = InOwner;
+		bUnregisterOnEnd = Data->bShouldUnregisterOnEnd;
+		bAutoEnd = Data->bAutoEndOnEventsComplete;
+
+		DuplicateEvents();
+
+		Owner->RegisterBattleElement(this);
+
+		if (BattleElementData->bAutoExecute)
+		{
+			Execute();
+		}
+
+		return true;
+	}
+
+	return false;
 }
 
 void UBattleElement::Execute(bool bResetExecution)
@@ -70,7 +79,6 @@ void UBattleElement::Tick(float DeltaTime)
 	if (bElementInExecution)
 	{
 		EvaluateEvents(DeltaTime);
-		EvaluateAsyncEvents(DeltaTime);
 	}
 }
 
@@ -82,7 +90,6 @@ void UBattleElement::End()
 	bElementInExecution = false;
 	CurrentEvent = nullptr;
 	CurrentEventIndex = 0;
-	ActiveAsyncEvents.Empty();
 
 	OnBattleElementEnded.Broadcast();
 	OnBattleElementEnd.ExecuteIfBound(this);
@@ -92,30 +99,58 @@ void UBattleElement::EndBattleEvents()
 {
 	for (UBattleEvent* Event : Events)
 	{
-		if (IsValid(Event) && !Event->IsFinished())
+		if (IsValid(Event))
 		{
 			Event->EndEvent();
 		}
 	}
 }
 
-void UBattleElement::UpdateContextCandidates(TArray<UBattleActorComponent*> InCandidates)
+TArray<UBattleActorComponent*> UBattleElement::GetSelectedTargets(const FSelectedTargetsSettings& Settings) const
 {
-	if (BattleContext)
+	TArray<UBattleActorComponent*> SelectedTargets;
+	TArray<UBattleActorComponent*> CachedTargets = CandidateBattleActors;
+
+	switch (Settings.TargetType)
 	{
-		BattleContext->UpdateCandidates(InCandidates);
+	case ETargetSelectionScope::Candidates:
+		break;
+	case ETargetSelectionScope::CandidatesAndOwner:
+		CachedTargets.Add(Owner);
+		break;
+	case ETargetSelectionScope::OwnerOnly:
+		SelectedTargets.Add(Owner);
+		return SelectedTargets;
+	default:
+		break;
 	}
+
+	if (Settings.bRandomizeSelection)
+	{
+		Algo::RandomShuffle(CachedTargets);
+	}
+
+	if (Settings.MaxAmount > 0)
+	{
+		const int32 Count = FMath::Min(Settings.MaxAmount, CachedTargets.Num());
+		SelectedTargets.Append(CachedTargets.GetData(), Count);
+	}
+	else
+	{
+		SelectedTargets = CachedTargets;
+	}
+
+	return SelectedTargets;
+}
+
+UBattleActorComponent* UBattleElement::GetOwner() const
+{
+	return Owner;
 }
 
 TArray<UBattleEvent*> UBattleElement::GetBattleEvents() const
 {
 	return Events;
-}
-
-void UBattleElement::CreateBattleContext(TArray<UBattleActorComponent*> InTargets, TSubclassOf<UBattleContext> CustomContextClass)
-{
-	BattleContext = NewObject<UBattleContext>(this, CustomContextClass);
-	BattleContext->Initialize(this, Owner, InTargets);
 }
 
 void UBattleElement::DuplicateEvents()
@@ -131,9 +166,9 @@ void UBattleElement::DuplicateEvents()
 
 			if (IsValid(RuntimeEvent))
 			{
-				RuntimeEvent->BattleContext = BattleContext;
 				Events.Add(RuntimeEvent);
 
+				RuntimeEvent->InitializeBattleEvent(this);
 				RuntimeEvent->OnEventCreated();
 			}
 		}
@@ -155,37 +190,7 @@ void UBattleElement::EvaluateEvents(float DeltaTime)
 
 	if (CurrentEvent->IsFinished())
 	{
-		CurrentEvent->EndEvent();
 		AdvanceEvent();
-	}
-}
-
-void UBattleElement::EvaluateAsyncEvents(float DeltaTime)
-{
-	for (int32 i = ActiveAsyncEvents.Num() - 1; i >= 0; --i)
-	{
-		UBattleEvent* Event = ActiveAsyncEvents[i];
-		if (!Event)
-		{
-			ActiveAsyncEvents.RemoveAtSwap(i);
-			continue;
-		}
-
-		const bool bFinished = Event->IsFinished();
-		if (bFinished)
-		{
-			Event->EndEvent();
-			ActiveAsyncEvents.RemoveAtSwap(i);
-		}
-		else
-		{
-			Event->Tick(DeltaTime);
-		}
-	}
-
-	if (ActiveAsyncEvents.Num() == 0 && CurrentEventIndex >= Events.Num())
-	{
-		HandleEventsComplete();
 	}
 }
 
@@ -202,15 +207,7 @@ void UBattleElement::StartCurrentEvent()
 		return;
 	}
 
-	const bool bIsAsync = Event->bAsynchronousEvent;
-
 	Event->ExecuteEvent();
-
-	if (bIsAsync)
-	{
-		ActiveAsyncEvents.Add(Event);
-		AdvanceEvent();
-	}
 }
 
 void UBattleElement::AdvanceEvent()
@@ -220,10 +217,7 @@ void UBattleElement::AdvanceEvent()
 
 	if (CurrentEventIndex >= Events.Num())
 	{
-		if (ActiveAsyncEvents.Num() == 0)
-		{
-			HandleEventsComplete();
-		}
+		HandleEventsComplete();
 	}
 }
 

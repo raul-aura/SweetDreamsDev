@@ -28,8 +28,7 @@ void UBattleActorComponent::BeginPlay()
 
 	for (TObjectPtr<UBattleElementData> Data : InitialBattleElements)
 	{
-		TArray<UBattleActorComponent*> OutTargets;
-		UBattleElement* Element = UBattleElement::CreateBattleElement(this, Data, OutTargets, nullptr, nullptr);
+		UBattleElement* Element = UBattleElement::CreateBattleElement(this, Data, nullptr);
 		RegisterBattleElement(Element);
 	}
 }
@@ -94,7 +93,7 @@ void UBattleActorComponent::UnregisterBattleElement(UBattleElement* BattleElemen
 	{
 		if (BattleElements.Contains(BattleElement))
 		{
-			// TO DO: make event remove itself when removed from battle actor component
+			// TO DO: make element remove itself from battle actor component delegates
 			OnBattleElementExecuted.RemoveAll(BattleElement);
 
 			BattleElements.Remove(BattleElement);
@@ -102,66 +101,33 @@ void UBattleActorComponent::UnregisterBattleElement(UBattleElement* BattleElemen
 	}
 }
 
-FDamageHealTargetResult UBattleActorComponent::ReceiveDamage(UBattleActorComponent* Instigator, FGameplayTagContainer DamageTags, float Value)
+void UBattleActorComponent::IncreaseCurrentHealth(float Value, float& Applied)
 {
-	FDamageHealTargetResult Result;
-	Result.Target = this;
-
-	if (!IsAlive())
-	{
-		return Result;
-	}
-
 	if (FBattleParameter* Health = Parameters.Find(HealthParameterTag))
 	{
 		const float Previous = Health->GetResourceValue();
 
-		Value = ModifyDamageReceived(Value);
-		Health->RemoveResourceValue(Value);
-
-		const float NewValue = Health->GetResourceValue();
-		const float AppliedDamage = Previous - Health->GetResourceValue();
-
-		Result.AppliedValue = AppliedDamage;
-
-		if (NewValue <= 0.f)
-		{
-			SetIsAlive(false);
-			Result.bKilled = true;
-		}
-
-		OnDamageReceived.Broadcast(this, Instigator, DamageTags, AppliedDamage, Previous, NewValue);
-	}
-
-	return Result;
-}
-
-FDamageHealTargetResult UBattleActorComponent::ReceiveHeal(UBattleActorComponent* Instigator, FGameplayTagContainer HealTags, float Value)
-{
-	FDamageHealTargetResult Result;
-	Result.Target = this;
-
-	if (!IsAlive())
-	{
-		return Result;
-	}
-
-	if (FBattleParameter* Health = Parameters.Find(HealthParameterTag))
-	{
-		const float Previous = Health->GetResourceValue();
-
-		Value = ModifyHealingReceived(Value);
 		Health->AddResourceValue(Value);
 
-		const float NewValue = Health->GetResourceValue();
-		const float AppliedHeal = Previous - NewValue;
-
-		Result.AppliedValue = AppliedHeal;
-
-		OnHealingReceived.Broadcast(this, Instigator, HealTags, AppliedHeal, Previous, NewValue);
+		Applied = Health->GetResourceValue() - Previous;
 	}
+}
 
-	return Result;
+void UBattleActorComponent::DecreaseCurrentHealth(float Value, float& Applied)
+{
+	if (FBattleParameter* Health = Parameters.Find(HealthParameterTag))
+	{
+		const float Previous = Health->GetResourceValue();
+
+		Health->RemoveResourceValue(Value);
+
+		Applied = Health->GetResourceValue() - Previous;
+
+		if (Health->GetResourceValue() <= 0.f)
+		{
+			SetIsAlive(false);
+		}
+	}
 }
 
 void UBattleActorComponent::SetIsAlive(bool bInIsAlive)

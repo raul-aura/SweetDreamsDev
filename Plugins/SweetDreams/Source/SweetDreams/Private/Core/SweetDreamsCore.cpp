@@ -178,6 +178,8 @@ bool USweetDreamsCore::Save(const FString& Slot, int32 UserIndex)
 			ISweetDreamsSaveInterface::Execute_OnGameSaved(Actor, Save, Slot);
 		}
 
+		OnGameSaved.Broadcast(Save);
+
 		return true;
 	}
 
@@ -198,9 +200,9 @@ TObjectPtr<USweetDreamsSaveFile> USweetDreamsCore::LoadSave(const FString& Slot,
 			Log_Internal(FString::Printf(TEXT("%s LOADED and returned with SUCCESS."), *Slot));
 		}
 
-		USweetDreamsSaveFile* SweetSave = Cast<USweetDreamsSaveFile>(SaveObject);
-		UpdateSaveReference(SweetSave, Slot);
-		LoadData(SweetSave);
+		USweetDreamsSaveFile* Save = Cast<USweetDreamsSaveFile>(SaveObject);
+		UpdateSaveReference(Save, Slot);
+		LoadData(Save);
 
 		TArray<AActor*> Actors;
 		UGameplayStatics::GetAllActorsWithInterface(GetWorld(), USweetDreamsSaveInterface::StaticClass(), Actors);
@@ -208,10 +210,12 @@ TObjectPtr<USweetDreamsSaveFile> USweetDreamsCore::LoadSave(const FString& Slot,
 		for (AActor* Actor : Actors)
 		{
 			if (!IsValid(Actor)) continue;
-			ISweetDreamsSaveInterface::Execute_OnGameLoaded(Actor, SweetSave, Slot);
+			ISweetDreamsSaveInterface::Execute_OnGameLoaded(Actor, Save, Slot);
 		}
 
-		return SweetSave;
+		OnGameLoaded.Broadcast(Save);
+
+		return Save;
 	}
 
 	if (CoreSettings && CoreSettings->bSaveOperations)

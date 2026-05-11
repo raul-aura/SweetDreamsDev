@@ -30,8 +30,17 @@ public:
 
     /* If true, the element will automatically end when all its events finish.
     If false, the element remains active and must be ended manually with End(). */
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Element")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings")
     bool bAutoEndOnEventsComplete = true;
+
+    /* If true, this element will unregister from the Battle Actor component that owns this element,
+    thus, will be garbage collected if not referenced anywhere else. */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings")
+    bool bShouldUnregisterOnEnd = false;
+    
+    /* If true, this element will execute as soon as it is initialized upon creation. */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings")
+    bool bAutoExecute = false;
 
     UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Events")
     TArray<TObjectPtr<UBattleEvent>> Events;
